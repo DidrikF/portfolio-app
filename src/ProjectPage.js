@@ -5,29 +5,33 @@ import axios from 'axios';
 
 // everything must be top down
 
-export default class ProjectPage extends React.Component {
+class ProjectPage extends React.Component {
     constructor(props) {
         super(props)
         this.state = {
             title: '', 
             description: '',
             show: '', 
-            page_state: [],
+            page_state: [], // the article is stored here
             id: props.match.params.id,
             message: '', 
         }
         this.addAsset = this.addAsset.bind(this)
         this.updatePageState = this.updatePageState.bind(this)
         this.updateAssetState = this.updateAssetState.bind(this)
-        this.changeTitle = this.changeTitle.bind(this)
+        this.handleInputChange = this.handleInputChange.bind(this)
         this.savePage = this.savePage.bind(this)
         this.loadPage = this.loadPage.bind(this)
     }
 
-    changeTitle(e) {
+    handleInputChange(e) {
+        const target = e.target;
+        const value = target.type === 'checkbox' ? target.checked : target.value;
+        const name = target.name;
+
         this.setState({
-            title: e.target.value
-        })
+            [name]: value
+        });
     }
 
     getComponentId() {
@@ -184,7 +188,15 @@ export default class ProjectPage extends React.Component {
             <div>
                 <h2>Project Page</h2>
                 <AddAsset addAsset={this.addAsset}/>
-                <input value={this.state.title} onChange={this.changeTitle}/>
+                <label>Title</label>
+                <input name="title" value={this.state.title} onChange={this.handleInputChange}/>
+                <label>Show</label>
+                <input name="show" type="checkbox" checked={this.state.show} onChange={this.handleInputChange} />
+                <label>Description</label>
+                <textarea name="description" value={this.state.description} onChange={this.handleInputChange} />
+                 
+                <hr></hr>
+                                
                 {
                     this.state.page_state.map((assetState) => {
                         console.log('page state: ', this.state.page_state)
@@ -197,6 +209,12 @@ export default class ProjectPage extends React.Component {
         )
     }
 }
+
+
+
+
+
+
 
 class AddAsset extends React.Component {
     constructor (props) {
@@ -244,6 +262,8 @@ class AddAsset extends React.Component {
         )
     }
 } 
+
+export default ProjectPage
 
 
 /*

@@ -16,8 +16,8 @@ const publicRouter = new Router();
 const protectedRouter = new Router()
 
 const User = require('./user_model')
-const Project = require('./project_model')
-
+const Project = require('./project_model') 
+const Cards = require('./card_model')
 // let db_uri = 'mongodb://' + process.env.DB_USERNAME + ':' + process.env.DB_PASSWORD + '/localhost:27017/' + process.env.DB_NAME
 let db_uri = 'mongodb://localhost:27017/' + process.env.DB_NAME
 mongoose.connect(db_uri, { useNewUrlParser: true })
@@ -206,7 +206,17 @@ protectedRouter.put('/projects/:id', async (ctx, next) => {
     ctx.body = project
 }) 
 
-
+protectedRouter.get('/cards', async (ctx, next) => {
+    let cards = await Cards.find().catch(error => {
+        ctx.status = 400
+        ctx.body = {
+            error: 'Failed to load cards from database'
+        }
+        return 
+    })
+    ctx.status = 200
+    ctx.body = cards
+})
 
 app.use(protectedRouter.routes())
 

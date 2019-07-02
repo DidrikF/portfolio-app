@@ -4,15 +4,30 @@ import { BrowserRouter as Router, Route, Link } from "react-router-dom";
 
 import {Login, Register} from './auth'
 import ProjectPage from './ProjectPage'
+import Section from './Section'
+import About from './About'
+import ProjectCard from './ProjectCard'
+import Resume from './Resume'
+import Contact from './Contact'
+import Footer from './Footer'
+import { GlobalContext } from './contexts' 
+
 
 // theme context
 // logged in user context
 // have different themes based on time of day
+ 
 
+// is this component the owner of Project Card States?
+// I need a way to connect a project card with a project page...
   
-export default class HomePage extends React.Component {
+class HomePage extends React.Component {
     constructor(props) {
         super(props)
+        this.state = {
+            cards: [],
+            sections: []
+        }
         
     }
     // This page allows one to create a new project page and manage the home page
@@ -39,14 +54,80 @@ export default class HomePage extends React.Component {
         you can update contact info 
     */
 
+    loadCards() {
+        axios.get('/cards').then(response => {
+            this.setState({
+                cards: response.data
+            })
+        }).catch(console.log)
+
+    }
+
+    // this.context contains the context
+
+    componentDidMount(){
+        this.loadCards()
+    }
     
     render() {
+        // It should be unessesary to wrap in a consumer component...
         return (
-            <div>
-                <Login></Login>
-                <Register></Register>
-                
-            </div>
+            <GlobalContext.Consumer>
+                {(context) => (
+                    <div>
+                        <Login></Login>
+                        <Register></Register>
+                        <a name="home"></a>
+                        <div className="Banner">
+                            <div className="Banner__frame">
+                                <img className="Banner__profilepicture" src={context.pathPrefix + "/images/profile_picture.png"} alt="banner portrait"/>
+                            </div>
+
+                            <div className="Banner__text">
+                                <h1 className="Banner__heading">DIDRIK FLEISCHER</h1>
+                                <p className="Banner__subheading">MSc student in industrial economics and<br/>aspiring web developer</p>
+                            </div>
+
+
+                            <nav className="Banner__navigation">
+                                <ul className="Navigation__list">
+                                    <li className="Navigation__element"><a href="#home">HOME</a></li>
+                                    <li className="Navigation__element"><a href="#about">ABOUT</a></li>
+                                    <li className="Navigation__element"><a href="#portfolio">PORTFOLIO</a></li>
+                                    <li className="Navigation__element"><a href="#cv">CV</a></li>
+                                    <li className="Navigation__element"><a href="#contact">CONTACT</a></li>
+                                </ul>
+                            </nav>
+                        </div>
+
+
+                        <Section />
+
+                        <About />
+
+                        <div className="Portfolio">
+                            <a name="portfolio"></a>
+                            <h2 className="Section__title">Portfolio</h2>
+                            <div className="Portfolio__container">
+                                {
+                                    this.state.cards.map(card => {
+                                        return (<ProjectCard card={card} />)
+                                    })
+                                }
+                            </div>
+                        </div>
+
+                        <Resume />
+                        <Contact />
+                        
+                        <Footer />
+
+                    </div>
+                )}
+            </GlobalContext.Consumer>
         )
     }
 }
+HomePage.contextType = GlobalContext;
+
+export default HomePage

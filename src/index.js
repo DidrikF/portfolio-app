@@ -1,7 +1,11 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import './index.css';
 import * as serviceWorker from './serviceWorker';
+
+import './css/style.css'
+import './css/portfolio_style.css'
+import './css/app.css'
+
 import App from './App'
 import HomePage from './HomePage';
 import {Login, Register} from './auth';

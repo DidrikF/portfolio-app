@@ -1,0 +1,49 @@
+
+ 
+.Section__container {
+    position: relative;
+    padding: 15px;
+    min-height: 3em;
+    box-sizing: border-box;
+    width: 100%;
+    display: grid;
+}
+
+.Section__toolbar {
+    position: absolute; 
+    top: 0;
+    right: 0;
+    width: 350px;
+}
+
+.Section__toolbarMenu {
+    border: solid black 1px;
+    text-align: center;
+}
+.Section__toolbarWidgets {
+    position: relative;
+    text-align: center;
+}
+
+.Section__toolbarButton {
+    font-size: 12px; 
+    color: #0B1946;
+    margin: 5px 15px;
+}
+
+.Section__toolbarButton > i {
+    font-size: 20px; 
+}
+
+.Section__colorpicker {
+    position: relative;
+}
+
+.Grid__1 {
+
+}  
+
+
+.Grid__2 {
+
+}
