@@ -160,10 +160,10 @@ protectedRouter.get('/projects/:id', async ctx => {
 
 protectedRouter.post('/projects', async (ctx, next) => {
     let project = new Project({
-        page_state: {},
+        state: ctx.request.body.title,
         title: ctx.request.body.title,
-        description: '',
-        show: true
+        id: ctx.request.body.id,
+        show: ctx.request.body.show,
     })
     project = await project.save().catch(error => {
         console.log(error)

@@ -1,5 +1,122 @@
+.App {
+    display: grid; 
+    grid-template-areas: "nav main" "nav main";
+    grid-template-columns: 250px 1fr;
+}
 
- 
+.App__grid--top {
+    grid-area: editor; 
+}
+
+.App__grid--side {
+    grid-area: nav; 
+}
+
+.App__grid--main {
+    grid-area: main;
+    margin-top: 72px;
+}
+
+.Editor {
+    position: fixed;
+    height: 72px;
+    width: calc(100% - 250px); 
+    top: 0;
+    right: 0; 
+    background-color: white; 
+    /*background-color: #212329;*/
+    z-index: 100000;
+    
+}
+
+#Toolbar__portal {
+
+}
+
+.ql-toolbar.ql-snow {
+    border: none !important;
+}
+
+.ql-snow.ql-toolbar button{
+    /*color: #8B8F9E !important; */
+} 
+
+.Editor__dropdown-btn {
+    background-color: #4CAF50;
+    color: white;
+    padding: 16px;
+    font-size: 16px;
+    border: none;
+    cursor: pointer;
+  }
+  
+.Editor__dropdown {
+    position: relative;
+    display: inline-block;
+  }
+  
+.Editor__dropdown-content {
+    display: none;
+    position: absolute;
+    background-color: #f9f9f9;
+    min-width: 160px;
+    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+    z-index: 1;
+}
+  
+.Editor__dropdown-content span {
+    color: black;
+    padding: 12px 16px;
+    text-decoration: none;
+    display: block;
+}
+  
+.Editor__dropdown-content span:hover {
+    background-color: #f1f1f1
+}
+  
+.Editor__dropdown:hover .Editor__dropdown-content {
+    display: block;
+}
+  
+.Editor__dropdown:hover .Editor__dropdown-btn  {
+    background-color: #3e8e41;
+}
+
+
+.tooltip-controls {
+    background-color: #111;
+    border-radius: 4px;
+    /*display: none;*/
+    padding: 5px 10px;
+    position: absolute;
+}
+.tooltip-controls::before {
+    box-sizing: border-box;
+    border-bottom: 6px solid #111;
+    border-left: 6px solid transparent;
+    border-right: 6px solid transparent;
+    content: ' ';
+    display: block;
+    height: 6px;
+    left: 50%;
+    position: absolute;
+    margin-left: -6px;
+    margin-top: -6px;
+    top: 0;
+    width: 6px;
+}
+.tooltip-controls button {
+    background-color: transparent;
+    color: #fff;
+    border: none;
+}
+.tooltip-controls button.active {
+    color: #21b384;
+}
+  
+
+
 .Section__container {
     position: relative;
     padding: 15px;
@@ -10,10 +127,8 @@
 }
 
 .Section__toolbar {
-    position: absolute; 
-    top: 0;
-    right: 0;
-    width: 350px;
+    width: 100%; 
+
 }
 
 .Section__toolbarMenu {
@@ -23,6 +138,7 @@
 .Section__toolbarWidgets {
     position: relative;
     text-align: center;
+    z-index: 100;
 }
 
 .Section__toolbarButton {
@@ -47,3 +163,42 @@
 .Grid__2 {
 
 }
+
+
+
+
+
+.Project > * {
+    box-sizing: border-box;
+}
+  
+.Project > #editor-container {
+    border: 1px solid #ccc;
+    font-family: 'Open Sans', Helvetica, sans-serif;
+    font-size: 1.2em;
+    height: 200px;
+    margin: 0 auto;
+    width: 450px;
+}
+
+.Project > #tooltip-controls, #sidebar-controls {
+    text-align: center;
+}
+
+.Project > button {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    display: inline-block;
+    font-size: 18px;
+    padding: 0;
+    height: 32px;
+    width: 32px;
+    text-align: center;
+}
+.Project > button:active, button:focus {
+    outline: none;
+}
+  
+
+

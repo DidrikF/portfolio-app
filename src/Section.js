@@ -1,11 +1,11 @@
 
 import React from 'react';
-import { SketchPicker } from 'react-color'
-import update from 'immutability-helper';
 import { GlobalContext } from './contexts';
-import { RichText } from './assets'
-import uuidv4 from 'uuid/v4'
+import RichText from './RichText'
 import * as _ from 'lodash'
+import 'react-quill/dist/quill.snow.css';
+import { getId, gridLayouts } from './helpers' 
+
 
 class Section extends React.Component {
     constructor(props) {
@@ -13,262 +13,56 @@ class Section extends React.Component {
         this.containerRef = React.createRef()
 
         this.state = {
-            // the state should be set via props, or fetch by an api call using the 
-            // sections 'id' passed down from the parent component
-            showColorPicker: false,
-            background: '#FFF',
-            selectedLayout: 'oneColumn', 
-            content: [], // array of  gridSections
- 
-            /*
-            I need to invent a data structure for the state of a section
-            I need to express attributes of the section as a whole: layout, background ...
-            I need to express attributes of each section of the grid, which changes as the layout is changed
-            
-            The content of each section of the grid can vary a lot, I need to support an arbitrary 
-            number of different "objects"
-
-            I need to be able to persist the state to a database and later be able to recreate the
-            react elements, html and css of the section and its columns
-
-            The columns must express which column takes up which space.
-
-
-            I end up with vary many quill instances...
-            */
-
-            gridLayouts: {
-                oneColumn: {
-                    'gridTemplateColumns': 'minmax(0, 1fr)',
-                    numColumns: 1 // not the best... as it does not express a 3D layout, need to update as some point
-                },
-                twoColumns: {
-                    'gridTemplateColumns': 'minmax(0, 1fr) minmax(0, 1fr)',
-                    numColumns: 2
-                },
-                threeColumns: {
-                    'gridTemplateColumns': 'minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr)',
-                    numColumns: 3
-                },
-            // add more layouts as needed, no need why you cant go 3D
-            },
-            
+            gridLayouts: gridLayouts
         }
         
-        this.handleColorChange = this.handleColorChange.bind(this)
-        this.toggleColorPicker = this.toggleColorPicker.bind(this) 
-        this.createLayout = this.createLayout.bind(this)
-        this.updateComponentState = this.updateComponentState.bind(this)
-        this.deleteComponent = this.deleteComponent.bind(this)
-    }
-
-    handleColorChange(color){
-        this.setState({ 
-            background: color.hex
-        });
-    }
-
-    toggleColorPicker() {
-        this.setState((state, props) => {
-            return {
-                showColorPicker: state.showColorPicker ? false : true 
-            }
-        }) 
-    }
-
-    handleLayoutChange(e) {
-        this.setState({
-            selectedLayout: e.target.value
-        })
-    }
-
-    getId() {
-        return uuidv4()
-    }
-
-    
-    // add logic to recreate columns from state objects
-    
-    createLayout(event) {
-        let gridLayout = this.state.gridLayouts[event.target.name]
-
-        console.log(gridLayout)
-        
-        if (this.state.content.length !== 0) {
-            // add logic to change the layout without loosing content 
-        }
-
-        const containerElement = document.getElementsByClassName('Section__container')[0]
-        const padding = window.getComputedStyle(containerElement).getPropertyValue('padding')
-        let width = this.containerRef.current.offsetWidth
-        const innerWidth = width - 2*parseInt(padding, 10)
-        const columnWidth = innerWidth / gridLayout.numColumns
-
-        let content = [{
-            id: this.getId(),
-            style: {
-                gridColumnStart: 1,
-                gridColumnEnd: gridLayout.numColumns+1,
-                width: innerWidth, // px
-            },
-            coordinates: [1, 0],
-            componentStates: [{
-                id: this.getId(),
-                type: 'rich text',
-                state: 'This is a heading or something',
-            }],
-            components: [],
-        }]
-
-        for(let i=1; i <= gridLayout.numColumns; i++) {
-            content.push({ // Do I want a column to be able to contain multiple components, quill and an image for instance?
-                id: this.getId(),
-                style: { // the style express fully which colum should get occupied 
-                    gridColumnStart: i,
-                    gridColumnEnd: i+1,
-                    width: columnWidth, // px
-                },
-                coordinates: [i, 1], // May extend to 3D layouts, this is somewhat redundant to style
-                componentStates: [{ // is the source of truth and state for components in the grid section
-                    id: this.getId(),
-                    type: 'rich text',
-                    state: '',
-                }], // React components and markup to be rendered, can be created from componentStates
-                components: [], // objects which holds the states of components, such that they can be recreated
-            })
-        }
-
-        content = this.buildComponents(content)
-
-        this.setState({
-            content: content, // array of  gridSections
-            selectedLayout: event.target.name,
-        })
-        
-        // this.updateDimensions(); // updates the content.gridSections width property
-    }
-
-    findComponentStateIndex(state, id) {
-        let contentIndex = undefined
-        let componentStateIndex = undefined
-        for(let i=0; i<state.content.length; i++) {
-            for(let j=0; j<state.content[i].componentStates.length; j++) {
-                if (state.content[i].componentStates[j].id === id) {
-                    contentIndex = i
-                    componentStateIndex = j 
-                    break
-                }
-            }
-            if (typeof contentIndex !== 'undefined') break
-        }
-        return [contentIndex, componentStateIndex]
-    }
-
-    findComponentIndex(state, id) {
-        let contentIndex = undefined
-        let componentIndex = undefined
-        for(let i=0; i<state.content.length; i++) {
-            for(let j=0; j<state.content[i].components.length; j++) {
-                if (state.content[i].components[j].id === id) {
-                    contentIndex = i
-                    componentIndex = j 
-                    break
-                }
-            }
-            if (typeof contentIndex !== 'undefined') break
-        }
-        return [contentIndex, componentIndex]
+        this.onFocus = this.onFocus.bind(this)
+        this.gridSectionOnFocus = this.gridSectionOnFocus.bind(this)
+        // this.onBlur = this.onBlur.bind(this)
     }
 
 
-
-    updateComponentState(componentState) {
-        this.setState((state, props) => {
-            // find the object
-            // need to iterate over both gridSections and component states
-            let [contentIndex, componentStateIndex] = this.findComponentStateIndex(state, componentState.id)
-
-            // update the object
-            for (let key in componentState) {
-                state.content[contentIndex].componentStates[componentStateIndex][key] = componentState[key]
-            }
-
-            return {
-                content: state.content
-            }
-        })
-    }
-
-    // This is only called once when the sections grid is first
-    // Build the components of a grid section from componentStates. 
-    // created or when loading the state from the database. 
-    buildComponents(content) {
-        // need to iterate over both gridSections and their componentStates. 
-        content.forEach(gridSection => {
-            gridSection.components = gridSection.componentStates.map(componentState => {
-                if (componentState.type === 'rich text') {
-                    var component = (<RichText 
-                        key={componentState.id}
-                        componentState={componentState} 
-                        updateComponentState={this.updateComponentState} 
-                        delete={this.deleteComponent.bind(this, componentState.id)}
-                    />)
-                } else if (componentState.type === 'unsplash image') {
-    
-                }
-
-                return component
-            })
-        })
-
-        return content
-    }
-
-    deleteComponent(id) {
-        this.setState((state, props) => {
-            let [contentIndex, componentStateIndex] = this.findComponentStateIndex(state, id)
-            let [contentIndex2, componentIndex] = this.findComponentIndex(state, id)
-
-            // delete the component state and re-render or delete the component as well 
-            state.content[contentIndex].componentStates.splice(componentStateIndex, 1)
-            state.content[contentIndex].components.splice(componentIndex, 1)
-
-            return {
-                content: state.content
-            }
-        })
-    }
      
-    updateDimensions() {
+    updateDimensions() { // Display dimentions are only interesting to this component, and it should therefore be possible to
+        // handle this state locally 
         // console.log(document.getElementsByClassName('Section__container'))
-        const containerElement = document.getElementsByClassName('Section__container')[0]
-        const padding = window.getComputedStyle(containerElement).getPropertyValue('padding')
-        let width = this.containerRef.current.offsetWidth
+        const containerElement = document.getElementsByClassName('Sections')[0] // The width will be equal for all Section containers
+        // window.getComputedStyle(containerElement).getPropertyValue('padding')
+        const padding = this.props.style.padding
+        //let width = this.containerRef.current.offsetWidth
+        const width = containerElement.offsetWidth
+        
         const innerWidth = width - 2*parseInt(padding, 10)
-        const columnWidth = innerWidth / this.state.gridLayouts[this.state.selectedLayout].numColumns
+        const columnWidth = innerWidth / this.state.gridLayouts[this.props.selectedLayout].numColumns
         // console.log('inner width: ', innerWidth)
         // console.log('num columns: ', this.state.gridLayouts[this.state.selectedLayout].numColumns)
         // console.log('column width: ', columnWidth)
         // console.log(parseInt(padding, 10))
         // console.log(this.containerRef.current.offsetWidth)
 
-        this.setState((state, props) => {
-            let content = state.content.map(gridSection => {
-                if (gridSection.coordinates[1] === 0) {
-                    gridSection = update(gridSection, {style: {width: {$set: innerWidth}}})
-                    // gridSection.style['width'] = innerWidth
-                } else if (gridSection.coordinates[1] === 1) { // only the second "row" has dynamic width
-                    gridSection = update(gridSection, {style: {width: {$set: columnWidth}}})
-                    // gridSection.style['width'] = columnWidth
-                } 
-                return gridSection
-            })
-            
-            return {
-                content: content
-            }
-        })
+        // Update section.gridSection state : 
+        this.props.updateSectionState({
+            innerWidth: innerWidth,
+            columnWidth: columnWidth
+        }, this.props.sectionIndex)
     }
+
+    onFocus () { 
+        // console.log('section on focus props: ', this.props.id, this.props.sectionIndex)
+        this.context.updateSectionInFocus(this.props.id, this.props.sectionIndex)
+    }
+
+    gridSectionOnFocus(gridSectionId, gridSectionIndex) {
+        this.context.updateGridSectionInFocus(gridSectionId, gridSectionIndex)
+    }
+    /*
+    onBlur() { 
+        console.log("section on blur: ", this.sectionsInFocus, this.props.id)
+        if (this.context.sectionInFocus === this.props.id) {
+            this.context.updateSectionInFocus('')
+        }
+    }
+    */
 
     componentDidMount() {
         this.updateDimensions();
@@ -282,37 +76,49 @@ class Section extends React.Component {
     render() {
         // things are either an input or a span
         return (
-            <div className="Section__container" ref={this.containerRef} style={{
-                'backgroundColor': this.state.background, 
-                'gridTemplateColumns': this.state.gridLayouts[this.state.selectedLayout]['gridTemplateColumns']}
-            }>
-                
-                {this.context.editable && 
-                    <div className="Section__toolbar">
-                        <div className='Section__toolbarMenu'>
-                            <i className="fas fa-palette Section__toolbarButton" onClick={this.toggleColorPicker}/>
-                            <button className="Section__toolbarButton" onClick={this.createLayout} name='oneColumn'>1 Column</button>
-                            <button className="Section__toolbarButton" onClick={this.createLayout} name='twoColumns'>2 Column</button>
-                            <button className="Section__toolbarButton" onClick={this.createLayout} name='threeColumns'>3 Column</button>
+            <div className="Section__container" ref={this.containerRef} onClick={this.onFocus} style={{ // onBlur={this.onBlur}
+                ...this.props.style,
+                //'backgroundColor': this.props.style.background, 
+                //'padding': this.props.style.padding, // can add more configurable styles below
+                'gridTemplateColumns': this.state.gridLayouts[this.props.selectedLayout]['gridTemplateColumns'],
+                'border': this.context.editable ? ((this.context.sectionInFocus === this.props.id) ? '1px solid red' : '1px dashed grey') : 'none',
+            }}>
+                {this.props.gridSections.map((gridSection, i) => {
+                    return (
+                        <div 
+                            style={{...gridSection.style,
+                                'border': this.context.editable ? ((this.context.gridSectionInFocus === gridSection.id) ? '1px solid blue' : '1px dashed grey') : 'none',
+                            }} 
+                            key={gridSection.id}
+                            onClick={() => { this.gridSectionOnFocus(gridSection.id, i) }}
+                        > {/* gridSection.style['width'] */}
+                        
+                        {gridSection.componentStates.map((componentState, j) => {
+                            // Need to accomedate for different component types here
+                            return (<RichText 
+                                key={componentState.id}
+                                sectionId={this.props.id}
+                                id={componentState.id}
+
+                                sectionIndex={this.props.sectionIndex}
+                                gridSectionIndex={i}
+                                componentStateIndex={j}
+
+                                componentState={componentState} 
+                                updateComponentState={this.props.updateComponentState} 
+                            />)
+                        })}
                         </div>
-                        <div className='Section__toolbarWidgets'>
-                            {this.state.showColorPicker &&
-                                
-                                <SketchPicker 
-                                    color={this.state.background}
-                                    onChangeComplete={this.handleColorChange}
-                                />
-                            }
-                        </div>
-                    </div>
-                }
-                
-                {this.state.content.map(gridSection => {
+                    )
+
+
+                    
+                    /*
                     return (
                         <div style={gridSection.style} key={gridSection.id}>
                             { gridSection.components }
                         </div>
-                    )
+                    )*/
                 })}
                 
 
@@ -326,3 +132,53 @@ class Section extends React.Component {
 Section.contextType = GlobalContext
 
 export default Section
+
+
+/*
+key={section.id} 
+sectionIndex={index}
+
+id={section.id}
+background={section.background}
+selectedLayout={section.selectedLayout} // could represent a banner too i guess...
+gridSections={section.gridSections}
+
+updateComponentState={this.props.updateComponentState} // to be used inside Section
+updateSectionState={this.props.updateSectionState}
+
+toolbar={(<ReactQuill.Toolbar
+id='Section__quillToolbar'
+theme='snow'
+items={[
+
+    { label:'Formats', type:'group', items: [
+        { label:'Font', type:'font', items: [
+            { label:'Sans Serif',  value:'sans-serif', selected:true },
+            { label:'Serif',       value:'serif' },
+            { label:'Monospace',   value:'monospace' }
+        ]},
+        { label:'Size', type:'size', items: [
+            { label:'Small',  value:'10px' },
+            { label:'Normal', value:'13px', selected:true },
+            { label:'Large',  value:'18px' },
+            { label:'Huge',   value:'32px' }
+        ]},
+        { label:'Alignment', type:'align', items: [
+            { label:'', value:'', selected:true },
+            { label:'', value:'center' },
+            { label:'', value:'right' },
+            { label:'', value:'justify' }
+        ]}
+    ]},             
+    { label:'Blocks', type:'group', items: [
+        { type:'list', value:'bullet' },
+        { type:'list', value:'ordered' }
+    ]},
+
+    { label:'Blocks', type:'group', items: [
+        { type:'image', label:'Image' }
+    ]}
+
+]}
+/>)}
+*/

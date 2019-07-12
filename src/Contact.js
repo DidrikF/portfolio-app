@@ -33,7 +33,6 @@ class Contact extends React.Component {
     }
 
     render() {
-        console.log('contact context: ', this.context)
         return (
             <div className="Contact">
                 <button onClick={this.context.toggleEdit}>{this.context.editable ? 'Disable Editing' : 'Enable Editing'}</button> 

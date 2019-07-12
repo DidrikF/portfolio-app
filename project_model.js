@@ -3,7 +3,7 @@ var Schema = mongoose.Schema
 
 
 var ProjectSchema = mongoose.Schema({
-	page_state: {
+	state: {
 		type: Object,
 	},
 	title: {

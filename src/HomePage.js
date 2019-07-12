@@ -10,7 +10,8 @@ import ProjectCard from './ProjectCard'
 import Resume from './Resume'
 import Contact from './Contact'
 import Footer from './Footer'
-import { GlobalContext } from './contexts' 
+import { GlobalContext } from './contexts'  
+import { getId } from './helpers'
 
 
 // theme context
@@ -25,109 +26,118 @@ class HomePage extends React.Component {
     constructor(props) {
         super(props)
         this.state = {
-            cards: [],
-            sections: []
+
         }
-        
-    }
-    // This page allows one to create a new project page and manage the home page
-    // The ProjectPage contains the functionality to both update and show the project's page.
-    // This page requires the user to be authenticated 
-    // This page has a logout button 
-
-    /*
-    Has the ability to edit itself
-    Banner
-        image <-- Editable
-        name <-- Editable 
-        sub-heading <-- Editable
-    About/Intro
-        intro <-- Editable
-        sections <-- Editable, can have multiple, use flexbox to make them look nice 
-        
-    Portfolio
-        list of projects <-- use flexbox, you can add new, and remove old ones, card design 
-        card with plus sign on to add new project <-- creates a new project page and redirects
-    cv
-        You can upload a new cv
-    contact
-        you can update contact info 
-    */
-
-    loadCards() {
-        axios.get('/cards').then(response => {
-            this.setState({
-                cards: response.data
-            })
-        }).catch(console.log)
-
-    }
-
-    // this.context contains the context
-
-    componentDidMount(){
-        this.loadCards()
     }
     
     render() {
-        // It should be unessesary to wrap in a consumer component...
         return (
-            <GlobalContext.Consumer>
-                {(context) => (
-                    <div>
-                        <Login></Login>
-                        <Register></Register>
-                        <a name="home"></a>
-                        <div className="Banner">
-                            <div className="Banner__frame">
-                                <img className="Banner__profilepicture" src={context.pathPrefix + "/images/profile_picture.png"} alt="banner portrait"/>
-                            </div>
+                <div>
+                    <a name="home"></a>
+                    <div className="Banner">
+                        <div className="Banner__frame">
+                            <img className="Banner__profilepicture" src={this.context.pathPrefix + "/images/profile_picture.png"} alt="banner portrait"/>
+                        </div>
 
-                            <div className="Banner__text">
-                                <h1 className="Banner__heading">DIDRIK FLEISCHER</h1>
-                                <p className="Banner__subheading">MSc student in industrial economics and<br/>aspiring web developer</p>
-                            </div>
-
-
-                            <nav className="Banner__navigation">
-                                <ul className="Navigation__list">
-                                    <li className="Navigation__element"><a href="#home">HOME</a></li>
-                                    <li className="Navigation__element"><a href="#about">ABOUT</a></li>
-                                    <li className="Navigation__element"><a href="#portfolio">PORTFOLIO</a></li>
-                                    <li className="Navigation__element"><a href="#cv">CV</a></li>
-                                    <li className="Navigation__element"><a href="#contact">CONTACT</a></li>
-                                </ul>
-                            </nav>
+                        <div className="Banner__text">
+                            <h1 className="Banner__heading">DIDRIK FLEISCHER</h1>
+                            <p className="Banner__subheading">MSc student in industrial economics and<br/>aspiring web developer</p>
                         </div>
 
 
-                        <Section />
-
-                        <About />
-
-                        <div className="Portfolio">
-                            <a name="portfolio"></a>
-                            <h2 className="Section__title">Portfolio</h2>
-                            <div className="Portfolio__container">
-                                {
-                                    this.state.cards.map(card => {
-                                        return (<ProjectCard card={card} />)
-                                    })
-                                }
-                            </div>
-                        </div>
-
-                        <Resume />
-                        <Contact />
-                        
-                        <Footer />
-
+                        <nav className="Banner__navigation">
+                            <ul className="Navigation__list">
+                                <li className="Navigation__element"><a href="#home">HOME</a></li>
+                                <li className="Navigation__element"><a href="#about">ABOUT</a></li>
+                                <li className="Navigation__element"><a href="#portfolio">PORTFOLIO</a></li>
+                                <li className="Navigation__element"><a href="#cv">CV</a></li>
+                                <li className="Navigation__element"><a href="#contact">CONTACT</a></li>
+                            </ul>
+                        </nav>
                     </div>
-                )}
-            </GlobalContext.Consumer>
-        )
+
+
+                    <div className="Sections">
+                    {
+                        this.props.sections.map((section, index) => {
+                            return (
+                                <Section 
+                                    key={section.id} 
+                                    sectionIndex={index}
+
+                                    id={section.id}
+                                    style={section.style}
+                                    selectedLayout={section.selectedLayout} // could represent a banner too i guess...
+                                    gridSections={section.gridSections}
+                                    containerRef={this.props.containerRef}
+
+                                    updateComponentState={this.props.updateComponentState} // to be used inside Section
+                                    updateSectionState={this.props.updateSectionState}
+                                />
+                            )
+                        })
+                    }
+                    </div>
+
+                    
+
+                    
+                </div>
+            )
     }
 }
 HomePage.contextType = GlobalContext;
 
 export default HomePage
+
+/*
+// Section Spedific:
+background
+selectedLayout
+id
+gridSections
+
+// Common for all components:
+updateComponentState
+deleteComponent
+
+// This page allows one to create a new project page and manage the home page
+// The ProjectPage contains the functionality to both update and show the project's page.
+// This page requires the user to be authenticated 
+// This page has a logout button 
+
+/*
+Has the ability to edit itself
+Banner
+    image <-- Editable
+    name <-- Editable 
+    sub-heading <-- Editable
+About/Intro
+    intro <-- Editable
+    sections <-- Editable, can have multiple, use flexbox to make them look nice 
+    
+Portfolio
+    list of projects <-- use flexbox, you can add new, and remove old ones, card design 
+    card with plus sign on to add new project <-- creates a new project page and redirects
+cv
+    You can upload a new cv
+contact
+    you can update contact info 
+
+        <About />
+        <Resume />
+        <div className="Portfolio">
+            <a name="portfolio"></a>
+            <h2 className="Section__title">Portfolio</h2>
+            <div className="Portfolio__container">
+                {
+                    this.state.cards.map(card => {
+                        return (<ProjectCard card={card} />)
+                    })
+                }
+            </div>
+        </div>
+        <Contact />
+        
+        <Footer />
+*/

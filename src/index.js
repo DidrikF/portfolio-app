@@ -4,11 +4,19 @@ import * as serviceWorker from './serviceWorker';
 
 import './css/style.css'
 import './css/portfolio_style.css'
-import './css/app.css'
+import './css/app.css' 
+import './css/navigation.sass'
 
 import App from './App'
-import HomePage from './HomePage';
-import {Login, Register} from './auth';
+import katex from 'katex';
+
+
+window.katex = katex
+
+
+window.hljs.configure({   // optionally configure hljs
+    languages: ['javascript', 'python', 'go', 'php', 'html', 'css']
+});
 
 ReactDOM.render(<App />, document.getElementById('root'));
 

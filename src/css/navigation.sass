@@ -1,0 +1,250 @@
+//dark grey:                #212329        
+//light gray:               #282A31
+//even lighter grey:        #474D55
+                            #535862
+//letters and icons grey:   #8B8F9E
+//black                     #1b1e24
+//blue                      #3B89D6
+//red                       #EE605A
+//green                     #29A498
+//white                     #EFF3F8
+
+::-webkit-scrollbar
+  background-color: #212329
+  width: 6px
+::-webkit-scrollbar-thumb
+  background-color: #474D55
+  border-radius: 2px
+  width: 5px
+.body
+  font-family: "Roboto"
+  position: absolute
+.SN-Header
+  position: fixed
+  background-color: #282A31
+  width: 250px
+  height: 60px
+.SN-Header__logo-image
+  position: relative
+  margin: 19.5px 9px
+  padding: 0
+.SN-Header__menu
+  margin-right: 15px
+  background-color: #212329 
+  margin-top: 12px
+  list-style: none
+  padding: 0
+  display: inline-flex
+  color: #EFF3F8
+.SN-Header__menu-item
+  position: relative
+  display: table-cell //a is inline by default and wont take dimention properties
+  height: 36px
+  width: 36px
+  padding: 0
+  text-align: center
+  vertical-align: middle
+  cursor: pointer
+  .material-icons
+    font-size: 18px
+  .SN-Buble
+    top: 4px
+    right: 4px
+    cursor: pointer
+.SN-Header__menu-item--active
+  background-color: #1b1e24
+  
+.SN-Scrollable
+  overflow-y: scroll
+  
+.SN
+  font-family: "Roboto"
+  display: inline-block
+  float: left
+  position: fixed
+  height: calc(100% - 52px)
+  width: 250px
+  background: #212329
+  color: #8B8F9E
+  //box-sizing: border-box
+  z-index: 100000
+  ul
+    list-style: none
+    margin: 0
+    padding: 0
+.SN-UserInfo
+  margin: 20px 24px
+  margin-bottom: 0px
+  .SN-Buble
+    top: 52px
+    right: 177px
+    z-index: 10
+.SN-UserInfo__image-frame
+  position: relative
+  display: inline-block
+  border-radius: 50%
+  width: 42px
+  height: 42px
+  overflow: hidden
+.SN-UserInfo__image
+.SN-UserInfo__container
+  margin-left: 12px
+.SN-UserInfo__username
+  font-size: 19px
+  line-height: 28px
+  color: #EFF3F8
+  span
+    font-weight: 300
+.SN-UserInfo__status
+  line-height: 17px
+  font-size: 13px 
+.SN__menu-title
+  font-size: 13px
+  padding: 25px 31px 0 27px
+  margin: 0
+  margin-bottom: 10px
+  text-transform: uppercase
+  font-weight: 500
+  letter-spacing: 0.9px
+  color: #535862
+  .material-icons
+    font-size: 12px
+    cursor: pointer
+.SN__item
+  display: block
+  position: relative
+  margin: 0
+  padding: 11.5px 28px 11.5px 28px
+  text-decoration: none
+  font-size: 14px
+  cursor: pointer
+  transition: color 0.1s linear 0s,background-color 0.1s linear 0s,opacity 0.1s linear 0s
+  .material-icons
+    font-size: 20px
+    margin-right: 10px
+  .SN-arrow
+    float: right
+    margin: 0
+    padding: 0
+    color: #8B8F9E!important
+.SN__item:focus, .Navigation__item:hover, .Navigation__item:active
+  color: #EFF3F8
+.SN-Navigation__title
+  position: relative
+  bottom: 4px
+  line-height: 20px
+  
+.SN-SubMenuContainer
+  overflow: hidden
+  max-height: 0px
+  -webkit-transition: all 0.5s ease-out
+.SN-SubMenuContainer--show
+  display: block!important
+  max-height: 100%!important
+.SN__sub-menu
+  background-color: #282A31
+  list-style: none
+  margin: 0
+  padding: 8px 0 10px 0!important //8px 0 10px 0
+  a
+    display: block
+    margin: 0
+    padding: 5px 0
+    padding-left: 60px!important
+    color: #e1eaf1
+    text-decoration: none
+    font-size: 13px
+    font-weight: 300
+  a:active, a:hover, a:focus
+    background: #212329
+.SN__item--open
+.SN__item--active
+  
+.SN__container
+.SN-Folder__item
+  position: relative
+  padding: 5px 31px
+  font-size: 13px
+  color: #ffffff
+  display: block
+  cursor: pointer
+.SN__widget
+  margin-bottom: 9px
+  padding: 0 31px
+  animation-duration: 0.3s!important
+  .material-icons
+    font-size: 12px
+    cursor: pointer
+.SN__widget-title
+  color: #ffffff
+  font-size: 13px
+.SN__widget-info
+  overflow: hidden
+  text-overflow: ellipsis
+  white-space: nowrap
+  width: 95%
+  color: #8b91a0
+  font-size: 13px
+  margin: 0!important
+.SN-Footer__widget
+  position: fixed
+  bottom: 0px
+  left: 0px
+  background-color: #282A31
+  width: 250px
+  height: 52px
+  z-index: 100
+.SN-badge
+.SN-badge-buble-only
+.SN-badge-disable
+.SN-status-icon-green
+  cursor: pointer
+  position: relative
+  top: 2px
+  height: 7px
+  width: 7px
+  margin-right: 10px
+  border-radius: 50%
+  border: 3px solid
+  color: #29A498
+  display: inline-block
+.SN-status-icon-red
+  cursor: pointer
+  position: relative
+  top: 2px
+  height: 7px
+  width: 7px
+  margin-right: 10px
+  border-radius: 50%
+  border: 3px solid #EE605A
+  color: #29A498
+  display: inline-block
+.SN-status-icon-blue
+  cursor: pointer
+  position: relative
+  top: 2px
+  height: 7px
+  width: 7px
+  margin-right: 10px
+  border-radius: 50%
+  border: 3px solid #3B89D6
+  color: #29A498
+  display: inline-block
+.SN-status-frame
+.SN-status-number
+.SN-progressbar
+.SN-pull-right
+  float: right
+.SN-pull-left
+  float: left
+.SN-inline-block
+  display: inline-block
+.SN-Buble
+  position: absolute
+  width: 10px
+  height: 10px
+  border-radius: 50%
+.SN-Buble--green
+  background-color: #29A498
+.SN-Buble--red
+  background-color: #EE605A
