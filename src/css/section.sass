@@ -1,0 +1,118 @@
+.Section__container 
+  position: relative
+  min-height: 3em
+  width: 100%
+  display: grid
+  box-sizing: border-box
+
+
+
+.Section__toolbar 
+    position: absolute
+    background: #fff
+    top: calc(100% + 20px) // Can this number be set dynamic,  or be calculated
+    margin: 0 auto
+    left: 0 
+    right: 0 
+    justify-content: space-around
+    display: inline-flex
+    flex-direction: row
+    flex-wrap: nowrap
+    border: 1px solid grey
+    border-radius: 5px
+    padding: 5px
+    z-index: 1000
+
+.Section__toolbar--large
+    width: 700px
+.Section__toolbar--small
+    width: 500px
+
+.Section__toolbar::after
+    content: ' '
+    position: absolute
+    top: -20px // Great and simple solution!
+    width: 0
+    height: 0
+    border-left: 10px solid transparent
+    border-right: 10px solid transparent
+    border-bottom: 20px solid grey
+
+
+
+
+.Section__toolbar-input 
+    outline: none
+    background: transparent 
+    border-style: solid
+    border-color: grey
+    border-width: 0 0 0.5px 0
+    padding: 8px
+    margin: 0 10px
+    width: 100px
+    transition: width .35s ease-in-out
+
+
+.Section__toolbar-input:focus
+    outline: none
+    border-bottom: 0.5px solid green
+
+
+.Section__toolbar-color-button
+    position: relative
+    top: 3px
+    margin: 0 10px
+    border: none
+    width: 1.5em
+    height: 1.5em 
+    background: #6f3
+    cursor: pointer
+    border: 0.5px solid grey
+
+
+.Section__toolbar-color-button:focus
+    outline: none
+
+
+.Section__toolbar-color-pallet
+    position: absolute
+    top: 40px
+    background: grey
+    z-index: 10000
+
+
+.Section__toolbar-button 
+    background: none
+    border: none
+    cursor: pointer
+    display: inline-block
+    height: 24px
+    padding: 3px 5px
+    width: 28px
+    color: #444
+
+
+.Section__toolbar-select
+    border: 1px solid #AAA
+    color: #555
+    font-size: inherit
+    overflow: hidden
+    padding: 3px 3px
+    text-overflow: ellipsis
+    white-space: nowrap
+
+.Section__toolbar-select:focus
+    outline: none
+
+.GridSection
+    box-sizing: border-box
+
+
+
+
+.spacing 
+    padding: 15px
+
+
+.no-border
+    border: none !important

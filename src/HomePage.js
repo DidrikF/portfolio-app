@@ -2,14 +2,10 @@ import React from 'react'
 import axios from 'axios'
 import { BrowserRouter as Router, Route, Link } from "react-router-dom";  
 
-import {Login, Register} from './auth'
+import {Login, Register} from './helper-components/auth'
 import ProjectPage from './ProjectPage'
 import Section from './Section'
-import About from './About'
-import ProjectCard from './ProjectCard'
-import Resume from './Resume'
-import Contact from './Contact'
-import Footer from './Footer'
+
 import { GlobalContext } from './contexts'  
 import { getId } from './helpers'
 
@@ -21,6 +17,8 @@ import { getId } from './helpers'
 
 // is this component the owner of Project Card States?
 // I need a way to connect a project card with a project page...
+
+// This is to be built with the app! This is just for testing and development.
   
 class HomePage extends React.Component {
     constructor(props) {
@@ -41,7 +39,7 @@ class HomePage extends React.Component {
 
                         <div className="Banner__text">
                             <h1 className="Banner__heading">DIDRIK FLEISCHER</h1>
-                            <p className="Banner__subheading">MSc student in industrial economics and<br/>aspiring web developer</p>
+                            <p className="Banner__subheading">MSc in industrial economics and<br/>junior web developer</p>
                         </div>
 
 

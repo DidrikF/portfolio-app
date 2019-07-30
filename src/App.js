@@ -1,133 +1,55 @@
 import React from 'react'
 import axios from 'axios'
 import update from 'immutability-helper';
-import { BrowserRouter as Router, Route, Link, HashRouter, Redirect } from "react-router-dom"; 
+import { BrowserRouter as Router, Route, Link, NavLink, HashRouter, Redirect } from "react-router-dom"; 
+
+
 import ContentEditable from 'react-contenteditable' // use for inputs that does not require rich text editing. This allows inputs to have the same style 
 import _ from 'lodash'
 import * as arrayMove from  'array-move'
+import Page from './Page'
+import { UserInfo, AccountInfo } from './side-navigation'
 
-// as the elements in "view mode". This does not support undo/redo
-// Use quill for creating artichles // would be really nice to embed the tool bar into the editor bar...
-import { SketchPicker } from 'react-color'
-import ProjectPage from './ProjectPage'
-import HomePage from './HomePage'
 import { GlobalContext } from './contexts'
 
 import { getId, gridLayouts } from './helpers'
+import { updateHeightOfVideos } from './content-components/RichText';
 
-
-/*
-Ides: 
-theme context
-logged in user context
-have different themes based on time of day
-
-ToDo: 
-build out the REST API - enable writing of methods not only working with local state, but also thinks about updating the server when changes happen
-Need to figure out how to save the home and project pages
-    - save button for each project
-    - save button for the home page
-
-Everything can be expressed through quill, I just need to add functionality to it (if enough functionality is added to quill, I do not need to have react components to build web pages!)
-    - image and video size and positioning
-    - multiple images on the same row?
-    - add styles to images, like a coloured border with border radius
-    - maybe images should be uploaded to the server and referenced from there...instead of having images base 64 encoded. This would also allow 
-      editing of images (cropping and resizing), they could also be reused across the page.
-    - just like adding an image from unsplashed, i can list images available on the server...
-    - showing a configuration popup when having selected an image makes it easy to locate specific formatting options, and even show react components 
-      to view images before selecting which to insert.
-    - it may be that some functionality should be in the RichText editor, like background image, padding, margin or the "container" etc. (the quill editor is transparent)
-    - should probably code most styling into classes, that way theming and code reuse is easier
-
-
-Projects:
-    - Add projects in the side navigation
-    - Have it as permanent navigation, for normal visitors as well?
-
-Navigation
-    - go to project pages
-    - go to home page 
-
-Build the Project Article Writer: (should not be too difficult, considering all that has been overcome at this point)
-    - Need to figure out how to link things together
-
-View mode, where editing is not possible and rendering is fast
-
-gridSections have same data structure and functionality as project pages
-
-Editor:
-    - turn on and off View Mode
-    - add options to quill 
-    - add buttons/dropdowns for section editing etc. 
-    - make it look better
-    - Push content down when the editor panel is visible
-
-
-Update values of media queries
-
-Make login and register forms in the side navigation perhaps, or make them into models and take advantage of portals...
-
-Write out the api and CRUD from the react app
-
-Extend what a section can be: 
-    - Control the padding of sections (in percent and pixels maybe)
-    - Control padding etc of girdSections and Components?
-    - be able to take the form of a banner
-    - be able to take the form of a footer
-    - maybe be able to set the type of html tag encloses the section
-    - Image as a background for sections
-    - add two column layout for sections
-
-
-Add components: 
-    - Navigation
-    - Image w/ cropping and upload // this is important to get right and easy 
-    - Add files and links/buttons to download files
-    - Banner creation
-    - Cards of different kinds (need to figure out how to do image and normal links -> which syncs up with code deployment -> need a system for links...)
-
-- Be able to add components to grid sections in a nice way // add some options what become available when a section is focused that hover over the component w/ see through
-
-- control the ordering of components in grid sections
-
-Add theming: 
-    - A color pallet that defines the colouring of the site
-    - Need to think about design some more
-    
-
-
-Automated code deployment and server setup from the app (Ottwell did it...)
-SSH to server from the app to to configuration if automation fails or other admin is needed
-    - how to store keys etc. securely?
-
-
-Make users able to host node projects and their own portfolio side...
-    - this would involve subdomains and dns/dns-proxy services maybe
-
-Automatically provision and set up instances in the cloud...
-
-Fully featured coder portfolio application. 
-
-*/
-
+function moveContentUnderTopToolbar(e) {
+    let toolbarContainer = document.getElementsByClassName("App__toolbar-container")[0]
+    if (toolbarContainer) {
+        let height = toolbarContainer.offsetHeight;
+        document.getElementsByClassName('App__grid--main')[0].style['padding-top'] = height + "px";
+    } else {
+        delete document.getElementsByClassName('App__grid--main')[0].style['padding-top']
+    }
+}
 
 class App extends React.Component {
     constructor(props) {
         super(props)
         
-        // New Project Related
+        window.addEventListener("resize", updateHeightOfVideos)
+        window.addEventListener("resize", moveContentUnderTopToolbar)
+        window.addEventListener("keyup", (e) => {
+            if (e.key === "Escape") {
+                this.clearFocus();
+            }
+        })
+
+
+        // Page Related
+        // combine in a change state method?
         this.changeProjectTitle = this.changeProjectTitle.bind(this)
-        this.createProject = this.createProject.bind(this)
-        this.updateProjectState = this.updateProjectState.bind(this)
-        this.deleteProject = this.deleteProject.bind(this)
-        this.handleProjectTitleChange = this.handleProjectTitleChange.bind(this)
-        this.createProject = this.createProject.bind(this)   
+        this.changePageTitle = this.changePageTitle.bind(this)
+
+        this.createPage = this.createPage.bind(this)
+        this.deletePage = this.deletePage.bind(this)
+        this.updatePageState = this.updatePageState.bind(this)
         
-        // Editing Related
-        this.updateNavigation = this.updateNavigation.bind(this)
         this.clearFocus = this.clearFocus.bind(this)
         this.toggleEdit = this.toggleEdit.bind(this)
+        this.toggleSpacing = this.toggleSpacing.bind(this)
         this.setActiveRichTextEditor = this.setActiveRichTextEditor.bind(this)
         this.updateComponentInFocus = this.updateComponentInFocus.bind(this)
         this.updateSectionInFocus = this.updateSectionInFocus.bind(this)
@@ -136,15 +58,16 @@ class App extends React.Component {
 
         // Update Section Related
         this.handleColorChange = this.handleColorChange.bind(this)
-        this.toggleColorPicker = this.toggleColorPicker.bind(this) 
         this.addSection = this.addSection.bind(this)
         this.addComponent = this.addComponent.bind(this)
         this.makeGridSections = this.makeGridSections.bind(this) // may not need 
-        this.updateLayout = this.updateLayout.bind(this)
+        this.updateSectionLayout = this.updateSectionLayout.bind(this)
+        this.updateSectionWidths = this.updateSectionWidths.bind(this)
 
         // Update Component Related
         this.updateComponentState = this.updateComponentState.bind(this)
         this.updateSectionState = this.updateSectionState.bind(this)
+        this.updateGridSectionState = this.updateGridSectionState.bind(this)
         this.deleteObject = this.deleteObject.bind(this)
         this.moveObject = this.moveObject.bind(this)
 
@@ -152,19 +75,54 @@ class App extends React.Component {
         this.state = {
             gridLayouts: gridLayouts,
             defaultGridLayout: 'oneColumn',
-            defaultSectionPadding: '15px',
+            defaultSectionPadding: '0px',
             // Application State
-            showColorPicker: false,
-            colorPickerColor: '#FFFFFF',
-            newProjectTitle: '', 
-            projects: [{
-                id: 123,
-                title: 'Test Project',
-                state: '',
-                show: true,
-            }],
+
+            user: {
+                firstName: "Didrik",
+                lastName: "Fleischer",
+                description: "MSc in Industrial Economics and Professional Developer",
+            },
+
+            newPageTitle: '', 
+            newProjectTitle: '',
+
+
+            pages: [
+                {
+                    id: 1,
+                    type: "page",
+                    path: '/',
+                    title: "Home",
+                    sections: [],
+                    show: true,
+                },
+                {
+                    id: 2,
+                    type: "project",
+                    path: "/projects/test-project",
+                    title: 'Test Project',
+                    sections: [],
+                    show: true,
+                }
+            ],
+            activePage: "",
+
             
-            /*{
+            /*
+            {
+                        id: "1",
+                        style: {},
+                        className: "",
+                        selectedLayout: "oneColumn",
+                        gridSections: [{
+                            id: "a",
+                            style: {},
+                            className: "",
+                            coordinates: []
+                        }]
+                    }
+            {
                 id: getId(),
                 state: '',
                 show: true,
@@ -172,7 +130,6 @@ class App extends React.Component {
             }*/
 
             // Add functionality for multiple pages?
-            sections: [],
             /*{
                 id: getId(),
                 style: {
@@ -200,7 +157,7 @@ class App extends React.Component {
             globalContextObj: {
                 pathPrefix: '',
                 toggleEdit: this.toggleEdit,
-                editable: true,
+                editing: false,
                 setActiveRichTextEditor: this.setActiveRichTextEditor,
                 activeRichTextEditor: '', 
                 
@@ -216,18 +173,17 @@ class App extends React.Component {
                 componentInFocus: '',
                 componentInFocusIndex: -1, 
 
-                updateProjectInFocus: this.updateProjectInFocus, 
-                projectInFocus: '',
-                projectInFocusIndex: -1,
+                enableSpacing: false,
             }
         }
     } 
     
     // ________________Global context related_____________________
-    toggleEdit() {
+    toggleEdit(e) {
+        let value = e.target.value ? e.target.value : false // e.target.value is a string
         this.setState((state, props) => {
             let globalContextObj = state.globalContextObj
-            globalContextObj.editable = globalContextObj.editable ? false : true
+            globalContextObj.editing = value
             return {
                 globalContextObj
             }
@@ -254,7 +210,10 @@ class App extends React.Component {
                 globalContextObj
             }
         })
-    } 
+    }
+
+    // updateActivePage() ?
+
 
     updateSectionInFocus(sectionId, sectionIndex) {
         this.setState((state, props) => {
@@ -263,7 +222,6 @@ class App extends React.Component {
             globalContextObj.sectionInFocusIndex = sectionIndex
 
             return {
-                colorPickerColor: state.sections[state.globalContextObj.sectionInFocusIndex].style.background,
                 globalContextObj
             }
         })
@@ -308,7 +266,23 @@ class App extends React.Component {
             }
         })
     }
+
+    toggleSpacing() {
+        this.setState((state, props) => {
+            let globalContextObj = state.globalContextObj 
+            globalContextObj.enableSpacing = !globalContextObj.enableSpacing
+            return {
+                globalContextObj
+            }
+        })
+    }
+
     //___________________Navigation and Editor Panel Related________________________
+    changePageTitle(e) {
+        this.setState({
+            newPageTitle: e.target.value,
+        })
+    }
 
     // Create new projects in the side navigation
     changeProjectTitle(e) {
@@ -317,209 +291,71 @@ class App extends React.Component {
         })
     }
 
-    createProject_old() {
-        axios.post('/projects', {
-            title: this.state.newProjectTitle
-        }).then(response => {
-            this.setState((state, props) => {
+    createPage(type) {
+        // update navigation 
+
+        this.setState((state, props) => {
+            let title = ""
+            let path = ""
+            if (type === "project") {
+                title = state.newProjectTitle
+                path =  "/" + type + "/" + title.toLowerCase().replace(" ", "-")
+            } else if (type === "page") {
+                title = state.newPageTitle
+                path =  "/" + title.toLowerCase().replace(" ", "-")
+            }
+
+            let page = {
+                id: getId(),
+                path: path,
+                type: type,
+                title: title, // based on type...
+                sections: [],
+                show: true,
+            }
+            state.pages.push(page)
+            return {
+                pages: state.pages
+            }
+            /*
+            axios.post('/pages', page).then(response => {
+                state.pages.push(response.data)
+
                 return {
-                    projects: [...state.projects, response.data]
+                    pages: state.pages,
+                }
+            }).catch(error => {
+                console.log(error)
+                return {
+                    statusMessage: error.message,
                 }
             })
-            const projectId = response.data.id
-            // create project page and "redirect" to it
-            
+            */
 
-        }).catch(error => {
-            console.log(error)
-        })
-    }
-
-    addSection() {
-        /* Add section under the currently selected one */
-        let newSection = {
-            id: getId(),
-            style: {
-                background: '#FFF',
-                padding: '15px', 
-            },
-            selectedLayout: 'oneColumn', 
-            // cards: [], // don't know where it is best to store the cards. 
-            gridSections: this.makeGridSections(this.state.defaultGridLayout)
-        }
-
-
-        const sectionInFocusIndex = this.state.globalContextObj.sectionInFocusIndex
-        this.setState((state, props) => {
-            state.sections.splice(sectionInFocusIndex+1, 0, newSection)
-            return {
-                sections: state.sections
-            }
-        })
-    }
-
-    addComponent(event) {
-        // get grid section and update its componentStates
-        const componentType = event.target.name
-        this.setState((state, props) => {
-            let { sectionInFocusIndex, gridSectionInFocusIndex, componentInFocusIndex} = this.state.globalContextObj
-            
-            if ((sectionInFocusIndex === -1) || (gridSectionInFocusIndex === -1)) {
-                return
-            }
-
-            if (componentInFocusIndex === -1) {
-                componentInFocusIndex = 0
-            }
-
-            if (componentType === 'rich text') {
-                var newComponent = {
-                    id: getId(),
-                    type: 'rich text',
-                    state: "<div>Rich text...</div>"
-                }
-            } else if (componentType === 'image') {
-                // ...
-            }
-        
-            state.sections[sectionInFocusIndex].gridSections[gridSectionInFocusIndex].componentStates.splice(componentInFocusIndex + 1, 0, newComponent)
-            return {
-                sections: state.sections
-            }
-        })
-    }
-
-    deleteObject() {
-        const { sectionInFocus, componentInFocus } = this.state.globalContextObj
-
-        const { sectionInFocusIndex, gridSectionInFocusIndex, componentInFocusIndex } = this.state.globalContextObj
-        this.setState((state, props) => {
-            if (componentInFocus !== "") { // delete component
-                const componentState = state.sections[sectionInFocusIndex].gridSections[gridSectionInFocusIndex].componentStates[componentInFocusIndex]
-                if (window.confirm('Are you sure you want to delete component (' + componentState.id + ') of type: ' + componentState.type + '?')) {
-                    state.sections[sectionInFocusIndex].gridSections[gridSectionInFocusIndex].componentStates.splice(componentInFocusIndex, 1)
-                    return {
-                        sections: state.sections
-                    }              
-                }
-            } else if (sectionInFocus !== "") {
-                const section = state.sections[sectionInFocusIndex]
-                if (window.confirm('Are you sure you want to delete section (' + section.id + ') with index: ' + sectionInFocusIndex + '?')) {
-                    state.sections.splice(sectionInFocusIndex, 1)
-                    return {
-                        sections: state.sections
-                    }
-                }
-            }
-        })
-    }
-    
-    moveObject(places) {
-        const { sectionInFocus, componentInFocus } = this.state.globalContextObj
-        const { sectionInFocusIndex, gridSectionInFocusIndex, componentInFocusIndex } = this.state.globalContextObj
-
-        this.setState((state, props) => {
-            if (componentInFocus !== "") { // delete component
-                let componentStates = state.sections[sectionInFocusIndex].gridSections[gridSectionInFocusIndex].componentStates
-                let newIndex = (componentInFocusIndex+places)%componentStates.length
-                state.sections[sectionInFocusIndex].gridSections[gridSectionInFocusIndex].componentStates = arrayMove(
-                    componentStates, 
-                    componentInFocusIndex, 
-                    newIndex
-                )
-                // update componentInFocusIndex
-                this.state.globalContextObj.updateComponentInFocus(componentInFocus, newIndex)
-
-                return {
-                    sections: state.sections
-                }              
-            } else if (sectionInFocus !== "") {
-                let newIndex = (sectionInFocusIndex+places)%state.sections.length
-                state.sections = arrayMove(state.sections, sectionInFocusIndex, newIndex)
-                this.state.globalContextObj.updateSectionInFocus(sectionInFocus, newIndex)
-                return {
-                    sections: state.sections
-                }
-            }
             
         })
     }
 
-    // May not need to do this...
-    updateNavigation() { 
-        this.loadProjects()
-    }
- 
-    // NOTE: need to update
-    handleColorChange(color){
-        // update the selected Section (and maybe girdSection/component in the future)
-        this.updateSectionState({
-            style: {
-                background: color.hex
-            }
-        }, this.state.globalContextObj.sectionInFocusIndex)
+    updatePageState(pageUpdate, pageIndex) {
+        if (!this.state.globalContextObj.editing) return
 
-        this.setState({ 
-            colorPickerColor: color.hex
-        });
-    }
- 
-    toggleColorPicker() {
         this.setState((state, props) => {
+
+            let page = state.pages[pageIndex]
+            
+            state.pages[pageIndex]= _.merge(page, pageUpdate)
+            
             return {
-                showColorPicker: state.showColorPicker ? false : true,
-                colorPickerColor: state.sections[state.globalContextObj.sectionInFocusIndex].style.background,
-            }
-        }) 
-    }
-
-    //____________________ SECTION CODE_______________________________ 
-    /*
-    Need to pass update handler and state to components and sections.
-    components have their state updated
-    sections have their layout, background and title updated
-
-    */
-    updateSectionState(sectionUpdate, sectionIndex) { // only supports updates at one level! this is a problem 
-        this.setState((state, props) => {
-            for (let key in sectionUpdate) {
-                if ((key === 'innerWidth') || (key === 'columnWidth')) {
-                    // loop over grid sections and update the values
-                    state.sections[sectionIndex].gridSections = state.sections[sectionIndex].gridSections.map(gridSection => {
-                        if (gridSection.coordinates[1] === 1) {
-                            gridSection = update(gridSection, {style: {width: {$set: sectionUpdate['innerWidth']}}})
-
-                        } else if (gridSection.coordinates[1] === 2) { // only the second "row" has dynamic width
-                            gridSection = update(gridSection, {style: {width: {$set: sectionUpdate['columnWidth']}}})
-                        } 
-                        return gridSection
-                    })
-                    continue
-                }
-                // state.sections[sectionIndex][key] = sectionUpdate[key] // replaced be merge for deep assignment
-            }
-
-            delete sectionUpdate['innerWidth']
-            delete sectionUpdate['columnWidth']
-
-            state.sections[sectionIndex] = _.merge(state.sections[sectionIndex], sectionUpdate)
-
-
-            return {
-                sections: state.sections
+                pages: state.pages
             }
         })
     }
-    
-    updateComponentState(componentUpdate, sectionIndex, gridSectionIndex, componentStateIndex) {
-        this.setState((state, props) => {
 
-            // console.log('component update: ', componentUpdate, sectionIndex, gridSectionIndex, componentStateIndex)
-            for (let key in componentUpdate) {
-                state.sections[sectionIndex].gridSections[gridSectionIndex].componentStates[componentStateIndex][key] = componentUpdate[key]
-            }
+    deletePage(pageIndex) {
+        this.setState((state, props) => {
+            state.pages.splice(pageIndex, 1)
             return {
-                sections: state.sections
+                pages: state.pages
             }
         })
     }
@@ -531,7 +367,7 @@ class App extends React.Component {
         }
         let gridLayout = this.state.gridLayouts[layoutName]
 
-        const containerElement = document.getElementsByClassName('Sections')[0]
+        const containerElement = document.getElementsByClassName('Page')[0]
         // const padding = window.getComputedStyle(containerElement).getPropertyValue('padding')
         const padding = this.state.defaultSectionPadding
 
@@ -572,73 +408,229 @@ class App extends React.Component {
         }
         return gridSections
     }
+    
+    //____________________ SECTION CODE_______________________________ 
+    addSection() {
+        /* Add section under the currently selected one */
+        let newSection = {
+            id: getId(),
+            style: {},
+            selectedLayout: this.state.defaultGridLayout, 
+            // cards: [], // don't know where it is best to store the cards. 
+            gridSections: this.makeGridSections(this.state.defaultGridLayout)
+        }
 
+
+        const sectionInFocusIndex = this.state.globalContextObj.sectionInFocusIndex
+
+        this.setState((state, props) => {
+            state.pages[state.globalContextObj.editing].sections.splice(sectionInFocusIndex+1, 0, newSection)
+            return {
+                pages: state.pages
+            }
+        })
+    }
+    
     // add logic to recreate columns from state objects
-    updateLayout(event) {
-        const layoutName = event.target.name
+    updateSectionLayout(e) {
+        const layoutName = e.target.value
         // add logic to change the layout without loosing gridSections // maybe add this functionality in makeGridSections...
         const gridSections = this.makeGridSections(layoutName)
         
         this.setState((state, props) => {
-            state.sections[this.state.globalContextObj.sectionInFocusIndex].gridSections = gridSections
-            state.sections[this.state.globalContextObj.sectionInFocusIndex].selectedLayout = layoutName
+            state.pages[state.globalContextObj.editing].sections[this.state.globalContextObj.sectionInFocusIndex].gridSections = gridSections
+            state.pages[state.globalContextObj.editing].sections[this.state.globalContextObj.sectionInFocusIndex].selectedLayout = layoutName
             return {
-                sections: state.sections
+                pages: state.pages
             }
         })
     }
 
-    //__________________ Project Related Code _____________________________
+    // merge this with updateSectionState?
+    handleColorChange(color){
+        // update the selected Section (and maybe girdSection/component in the future)
 
-    handleProjectTitleChange(event) {
-        this.setState({
-            newProjectTitle: event.target.value
-        })
+        let sectionInFocusIndex = this.state.globalContextObj.sectionInFocusIndex
+        let gridSectionInFocusIndex = this.state.globalContextObj.gridSectionInFocusIndex
+
+        if (gridSectionInFocusIndex) {
+            this.updateGridSectionState({
+                style: {
+                    background: color.hex
+                }
+            }, sectionInFocusIndex, gridSectionInFocusIndex)
+        } else if (sectionInFocusIndex) {
+            this.updateSectionState({
+                style: {
+                    background: color.hex
+                }
+            }, sectionInFocusIndex)
+        }
     }
-    
-    createProject() {
+
+    updateSectionWidths(sectionUpdate, sectionIndex) {
         this.setState((state, props) => {
-            let newProject = {
-                id: getId(),
-                title: state.newProjectTitle,
-                state: '',
-                show: true,
+            // console.log("active page: ", this.getActivePageIndexFromPath(window.location.hash.replace("#", "")))
+            const activePage = this.getActivePageIndexFromPath(window.location.hash.replace("#", ""))
+            for (let key in sectionUpdate) {
+                if ((key === 'innerWidth') || (key === 'columnWidth')) {
+                    // loop over grid sections and update the values
+                    // console.log("Pages: ", state.pages[activePage])
+                    // console.log("SectionUpdate: ", sectionUpdate)
+                    // console.log("sectionIndex: ", sectionIndex)
+
+                    let gridSections = state.pages[activePage].sections[sectionIndex].gridSections // need to reference the active page, not the one being edited.
+                    state.pages[activePage].sections[sectionIndex].gridSections = gridSections.map(gridSection => {
+                        if (gridSection.coordinates[1] === 1) {
+                            gridSection = update(gridSection, {style: {width: {$set: sectionUpdate['innerWidth']}}})
+
+                        } else if (gridSection.coordinates[1] === 2) { // only the second "row" has dynamic width
+                            gridSection = update(gridSection, {style: {width: {$set: sectionUpdate['columnWidth']}}})
+                        } 
+                        return gridSection
+                    })
+                    continue
+                }
+                state.pages[activePage].sections[sectionIndex][key] = sectionUpdate[key] // replaced be merge for deep assignment
             }
 
-            axios.post('/projects', newProject).then(response => {
-                state.projects.push(response.data)
+            return {
+                pages: state.pages
+            }
+        })
+    }
+     
 
-                return {
-                    projects: state.projects,
-                }
-            }).catch(error => {
-                console.log(error)
-                return {
-                    statusMessage: error.message,
-                }
-            })
+    updateSectionState(sectionUpdate, sectionIndex) {
+        if (!this.state.globalContextObj.editing) return
 
+        this.setState((state, props) => {
+
+            let section = state.pages[state.globalContextObj.editing].sections[sectionIndex]
             
-        })
-    }
-    
-    updateProjectState(projectUpdate, projectIndex) {
-        this.setState((state, props) => {
-            for (let key in projectUpdate) {
-                state.projects[projectIndex][key] = projectUpdate[key]
-            }
+            state.pages[state.globalContextObj.editing].sections[sectionIndex] = _.merge(section, sectionUpdate)
+            
             return {
-                projects: state.projects
+                pages: state.pages
             }
         })
     }
 
-    deleteProject(projectIndex) { // button in the side navigation...
+    updateGridSectionState(gridSectionUpdate, sectionIndex, gridSectionIndex) {
+        if (!this.state.globalContextObj.editing) return
+
         this.setState((state, props) => {
-            state.projects.splice(projectIndex, 1)
+            let gridSection = state.pages[state.globalContextObj.editing].sections[sectionIndex].gridSections[gridSectionIndex]
+
+            state.pages[state.globalContextObj.editing].sections[sectionIndex].gridSections[gridSectionIndex] = _.merge(gridSection, gridSectionUpdate)
+
             return {
-                projects: state.projects          
+                pages: state.pages
             }
+        })
+    }
+
+
+    addComponent(componentType) {
+        // get grid section and update its componentStates
+
+        this.setState((state, props) => {
+            let { sectionInFocusIndex, gridSectionInFocusIndex, componentInFocusIndex} = this.state.globalContextObj
+            
+            if ((sectionInFocusIndex === -1) || (gridSectionInFocusIndex === -1)) {
+                return
+            }
+
+            if (componentInFocusIndex === -1) {
+                componentInFocusIndex = 0
+            }
+
+            if (componentType === 'rich text') {
+                var newComponent = {
+                    id: getId(),
+                    type: 'rich text',
+                    state: "<div>Rich text...</div>"
+                }
+            } else if (componentType === 'image') {
+                // ...
+            }
+            console.log(newComponent)
+        
+            state.pages[state.globalContextObj.editing].sections[sectionInFocusIndex].gridSections[gridSectionInFocusIndex].componentStates.splice(componentInFocusIndex + 1, 0, newComponent)
+            return {
+                pages: state.pages
+            }
+        })
+    }
+
+    updateComponentState(componentUpdate, sectionIndex, gridSectionIndex, componentStateIndex) {
+        if (!this.state.globalContextObj.editing) return
+
+        this.setState((state, props) => {
+
+            // console.log('component update: ', componentUpdate.state, sectionIndex, gridSectionIndex, componentStateIndex)
+            for (let key in componentUpdate) {
+                state.pages[state.globalContextObj.editing].sections[sectionIndex].gridSections[gridSectionIndex].componentStates[componentStateIndex][key] = componentUpdate[key]
+            }
+            return {
+                pages: state.pages
+            }
+        })
+    }
+
+    deleteObject() {
+        const { sectionInFocus, componentInFocus } = this.state.globalContextObj
+
+        const { sectionInFocusIndex, gridSectionInFocusIndex, componentInFocusIndex } = this.state.globalContextObj
+        this.setState((state, props) => {
+            if (componentInFocus !== "") { // delete component
+                const componentState = state.pages[state.globalContextObj.editing].sections[sectionInFocusIndex].gridSections[gridSectionInFocusIndex].componentStates[componentInFocusIndex]
+                if (window.confirm('Are you sure you want to delete component (' + componentState.id + ') of type: ' + componentState.type + '?')) {
+                    state.pages[state.globalContextObj.editing].sections[sectionInFocusIndex].gridSections[gridSectionInFocusIndex].componentStates.splice(componentInFocusIndex, 1)
+                    return {
+                        pages: state.pages
+                    }              
+                }
+            } else if (sectionInFocus !== "") {
+                const section = state.pages[state.globalContextObj.editing].sections[sectionInFocusIndex]
+                if (window.confirm('Are you sure you want to delete section (' + section.id + ') with index: ' + sectionInFocusIndex + '?')) {
+                    state.pages[state.globalContextObj.editing].sections.splice(sectionInFocusIndex, 1)
+                    return {
+                        pages: state.pages
+                    }
+                }
+            }
+        })
+    }
+    
+    moveObject(places) {
+        const { sectionInFocus, componentInFocus } = this.state.globalContextObj
+        const { sectionInFocusIndex, gridSectionInFocusIndex, componentInFocusIndex } = this.state.globalContextObj
+
+        this.setState((state, props) => {
+            if (componentInFocus !== "") { // delete component
+                let componentStates = state.pages[state.globalContextObj.editing].sections[sectionInFocusIndex].gridSections[gridSectionInFocusIndex].componentStates
+                let newIndex = (componentInFocusIndex+places)%componentStates.length
+                state.pages[state.globalContextObj.editing].sections[sectionInFocusIndex].gridSections[gridSectionInFocusIndex].componentStates = arrayMove(
+                    componentStates, 
+                    componentInFocusIndex, 
+                    newIndex
+                )
+                // update componentInFocusIndex
+                this.state.globalContextObj.updateComponentInFocus(componentInFocus, newIndex)
+
+                return {
+                    pages: state.pages
+                }              
+            } else if (sectionInFocus !== "") {
+                let newIndex = (sectionInFocusIndex+places)%state.pages[state.globalContextObj.editing].sections.length
+                state.pages[state.globalContextObj.editing].sections = arrayMove(state.pages[state.globalContextObj.editing].sections, sectionInFocusIndex, newIndex)
+                this.state.globalContextObj.updateSectionInFocus(sectionInFocus, newIndex)
+                return {
+                    pages: state.pages
+                }
+            }
+            
         })
     }
 
@@ -665,8 +657,21 @@ class App extends React.Component {
         }).catch(console.log)
 
     }
+
+    getActivePageIndexFromPath(path) {
+        for (let i = 0; i < this.state.pages.length; i++) {
+            if (this.state.pages[i].path === path) {
+                return i
+            }
+        }
+        return false
+    }
     componentDidMount() {
         this.loadProjects()
+    }
+
+    componentDidUpdate(pastProps) {
+        moveContentUnderTopToolbar()
     }
 
     render() {
@@ -683,143 +688,192 @@ class App extends React.Component {
                 <HashRouter>
                     <div className='App'>
 
-                        {/* Editor Panel Area */}
-                        {this.state.globalContextObj.editable && // render in the Editor panel
-                            <div className='Editor App__grid--top'>
-                                {/* Quill toolbar here  */}
-                                <div id='Toolbar__portal'></div>
-
-                                <div className="Section__toolbar">
-                                    <div className='Section__toolbarMenu'>
-                                        <i className="fas fa-palette Section__toolbarButton" onClick={this.toggleColorPicker}/>
-                                        <button className="Section__toolBarButton" onClick={this.addSection}>Add Section</button> 
-
-                                        <button className="Section__toolbarButton" onClick={this.updateLayout} name='oneColumn'>1 Column</button>
-                                        <button className="Section__toolbarButton" onClick={this.updateLayout} name='twoColumns'>2 Column</button>
-                                        <button className="Section__toolbarButton" onClick={this.updateLayout} name='threeColumns'>3 Column</button>
-
-                                        <button className="Section__toolBarButton" onClick={this.clearFocus}>Clear Focus</button>
-                                        <button className="Section__toolBarButton" onClick={this.deleteObject}>Delete</button> {/* Needs work, sould work for both sections and components, should raise a warning */}
-                                        
-                                        <button className="Section__toolBarButton" onClick={this.addComponent} name='rich text'>Add Rich Text</button>
-
-                                        <button className="Section__toolBarButton" onClick={() => {this.moveObject(-1)}}>Move Up</button>
-                                        <button className="Section__toolBarButton" onClick={() => {this.moveObject(1)}}>Move Down</button>
-                                        
-                                        
-                                    </div>
-                                    <div className='Section__toolbarWidgets'>
-                                        {this.state.showColorPicker &&
-                                            <SketchPicker
-                                                color={this.state.colorPickerColor}
-                                                onChangeComplete={this.handleColorChange}
-                                            />
-                                        }
-                                    </div>
-                                </div>
-                            </div>
-                        }
-
-
+                        
                         {/* Side Navigation Area */}
                         <div className="SN App__grid--side">
-                            <div className="SN-Header">
-                                <img className="SN-Header__logo-image" src="http://via.placeholder.com/106x21" />
-                                <ul className="SN-Header__menu SN-pull-right">
-                                    <li><a className="SN-Header__menu-item SN-Header__menu-item--active"><i className="material-icons">home</i></a></li>
-                                    <li><a className="SN-Header__menu-item"><i className="material-icons">email</i><div className="SN-Buble Buble--red"></div></a></li>
-                                </ul>
-                            </div>
-
-                            <div className="SN SN-Scrollable">
-                                <div className="SN-UserInfo">
-                                    <div className="SN-Buble SN-Buble--green"></div>
-                                    <div className="SN-UserInfo__image-frame"><img className="SN-UserInfo__image" src="http://via.placeholder.com/42x42"/></div>
-                                    <div className="SN-UserInfo__container SN-inline-block">
-                                        <div className="SN-UserInfo__username">Didrik <span>Fleischer</span></div>
-                                        <div className="SN-UserInfo__status">Life goes on...</div>
-                                    </div>
-                                </div>
-
-                                <div className="SN__container">
-                                    <p className="SN__menu-title">Navigation</p>
-                                    <ul>
-                                        <li>
-                                            <span className="SN__item">
-                                                <Link to={'/'} className="SN__title">
-                                                    Home
-                                                </Link>
-                                            </span>
-                                        </li>
-                                    </ul>
-                                </div>
-                                <div className="SN__container">
-                                    <p className="SN__menu-title">PROJECTS</p>
-                                    <div className="SN__widget">
-                                        <ul>
-                                            {
-                                                this.state.projects.map((project, projectIndex) => {
-                                                    return (
-                                                        <li key={project.id}>
-                                                            <span className="SN__item">
-                                                                <Link 
-                                                                    to={{
-                                                                        pathname: '/projects/' + project.id,
-                                                                        state: {
-                                                                            id: project.id,
-                                                                            projectIndex: projectIndex,
-                                                                            project: project,
-                                                                            updateProjectState: this.updateProjectState,
-                                                                        }
-                                                                    }} 
-                                                                    className="SN__title"
-                                                                    activeClassName="need-to-implement"
+                            
+                            {UserInfo(this.state.user) /* Logged in user, or the Admin (aka: me) */} 
+                            
+                            { !this.state.globalContextObj.editing &&
+                                <div className="SN SN-Scrollable">
+                                    <div className="SN__container">
+                                        <p className="SN__menu-title">PAGES</p>
+                                        <div className='SN__widget'>
+                                            <ul>
+                                                {
+                                                    this.state.pages.map((page, pageIndex) => {
+                                                        if (page.type !== "page") {
+                                                            return null
+                                                        }
+                                                        return (
+                                                            <li key={page.id}>
+                                                                <Link
+                                                                    to={page.path} 
+                                                                    className="SN__item"
+                                                                    activeClassName="SN__item--active"
+                                                                    onlyActiveOnIndex
                                                                 >
-                                                                    {project.title}
+                                                                    <i className="material-icons">pages</i><span>{page.title + " "}</span>
+                                                                    <button className="SN__button SN__edit-button" onClick={this.toggleEdit} value={pageIndex}>
+                                                                        <i className="material-icons">edit</i>
+                                                                    </button>
+                                                                    <button className="SN__button SN__delete-button" onClick={() => {this.deletePage(pageIndex)}}>
+                                                                        <i className="material-icons">delete</i>
+                                                                    </button>
                                                                 </Link>
-                                                                <button onClick={() => {this.deleteProject(projectIndex)}}>Del</button>
-                                                            </span>
-                                                        </li>
-                                                    )
-                                                })
-                                            }
-                                        </ul>
+                                                            </li>
+                                                        )
+                                                    })
+                                                }
+                                                
+                                            </ul>
+                                            <div>
+                                                <input className="SN__input" placeholder="Page Title" value={this.state.newPageTitle} onChange={this.changePageTitle}/>
+                                                <button className="SN__button SN__add-button" onClick={() => this.createPage("page")}>
+                                                    <i className="material-icons">add_box</i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="SN__container">
+                                        <p className="SN__menu-title">PROJECTS</p>
+                                        <div className="SN__widget">
+                                            <ul>
+                                                {
+                                                    this.state.pages.map((page, pageIndex) => {
+                                                        if (page.type !== 'project') {
+                                                            return null
+                                                        }
+                                                        return (
+                                                            <li key={page.id}>
+                                                                    <Link 
+                                                                        to={page.path} 
+                                                                        className="SN__item"
+                                                                        activeClassName="SN__item--active" // not working, do not know why
+                                                                        onlyActiveOnIndex
+                                                                    >
+                                                                        <i className="material-icons">pages</i><span>{page.title}</span>
+                                                                        <button className="SN__button SN__edit-button" onClick={this.toggleEdit} value={pageIndex}>
+                                                                            <i className="material-icons">edit</i>
+                                                                        </button>
+                                                                        <button className="SN__button SN__delete-button" onClick={() => {this.deletePage(pageIndex)}}>
+                                                                            <i className="material-icons">delete</i>
+                                                                        </button>
+                                                                    </Link>
+                                                            </li>
+                                                        )
+                                                    })
+                                                }
+                                            </ul>
+                                            <div>
+                                                <input className="SN__input" placeholder="Project Title"  value={this.state.newProjectTitle} onChange={this.changeProjectTitle}/>
+                                                <button className="SN__button SN__add-button" onClick={() => this.createPage("project")}>
+                                                    <i className="material-icons">add_box</i>
+                                                </button>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
-                                <div className="SN__container">
-                                    <p className="SN__menu-title">Create New Project</p>
-                                    <div className="SN__widget">
-                                        <label>Title</label>
-                                        <input name="title" value={this.state.newProjectTitle} onChange={this.handleProjectTitleChange}/>
-                                        <button className="Section__toolBarButton" onClick={this.createProject}>Create</button>
+                            }
+                            
+
+                            { this.state.globalContextObj.editing && 
+                                <React.Fragment>
+                                    <div className="SN__container">
+                                        <div className='SN__widget'>
+                                            <i className="material-icons SN__back-arrow" onClick={this.toggleEdit}>arrow_back</i>
+                                        </div>
                                     </div>
-                                </div>
+                                    <div className="SN__container">
+                                        <p className="SN__menu-title">GLOBAL</p>
+                                        <div className='SN__widget'> {/* Section__toolbarMenu */}
+                                            <ul>
+                                                <li><a className="SN__item" onClick={this.clearFocus}><i className="material-icons">clear</i><span>Clear Focus</span></a></li>
+                                                <li><a className="SN__item" onClick={this.toggleSpacing}><i className="material-icons">border_all</i><span>Toggle Spacing</span></a></li>
+                                                
+                                            </ul>
+                                        </div>
+                                    </div>
+                                    <div className="SN__container">
+                                        <p className="SN__menu-title">SECTION</p>
+                                        <div className='SN__widget'> {/* Section__toolbarMenu */}
+                                            <ul>
+                                                <li><a className="SN__item" onClick={this.addSection}><i className="material-icons">add_box</i><span>Add Section</span></a></li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                    <div className="SN__container">
+                                        <p className="SN__menu-title">COMPONENTS</p>
+                                        <div className='SN__widget'> {/* Section__toolbarMenu */}
+                                            <ul>
+                                                <li><a className="SN__item" onClick={() => this.addComponent("rich text")}><i className="material-icons">text_fields</i><span>Add Rich Text</span></a></li>
+                                                <li><a className="SN__item" onClick={() => this.addComponent("image")}><i className="material-icons">insert_photo</i> <span>Add Image</span></a></li>
+                                            </ul>
+                                        </div>
+                                    </div>  
+                                    <div className="SN__container">
+                                        <p className="SN__menu-title">FILES</p>
+                                        <div className='SN__widget'> {/* Section__toolbarMenu */}
+                                            <ul>
+                                                <li>          
+                                                    <Link 
+                                                        to={{
+                                                            pathname: '/images',  
+                                                        }} 
+                                                        className="SN__item"
+                                                        activeClassName="SN__item--active" // not working, do not know why
+                                                    >
+                                                        <i className="material-icons">cloud_upload</i><span>Upload Images</span>
+                                                    </Link>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    </div>  
+                                </React.Fragment>
+                            }
 
-                            </div>
-
-                            <div className="SN-Footer__widget">
-
-                            </div>
+                            {AccountInfo()}
                         </div>
-
-
-
                         {/* This is the main content area */}
                         <div className='App__grid--main'>
-                            <Route exact path="/" render={(props) => <HomePage {
-                                ...props} 
-                                sections={this.state.sections} 
-                                updateComponentState={this.updateComponentState} 
-                                updateSectionState={this.updateSectionState}
-                            />} />
+                            
+                            {/* Editor Panel Area */}
+                                <div className='App__toolbar-container' style={{
+                                    display: (this.state.globalContextObj.editing) ? "block" : "none"
+                                }}>
+                                    
+                                    {/* Quill toolbar here - it is tied together by the portal referencing this 
+                                    element (using get element by id) and different components getting the 
+                                    Portal and using it directly in their render methods. It's quite disorderly.*/}
+                                    <div id='Toolbar__portal'></div>
+                                </div>
 
-                            <Route path="/projects/:id" render={(props) => (
-                                props.location.state ? (
-                                    <ProjectPage {...props}/>
-                                ) : (
-                                    <Redirect to="/"/>
-                                )
-                            )} />
+                            {
+                                this.state.pages.map((page, pageIndex) => {
+                                    return (
+                                        <Route key={page.id} exact path={page.path} render={(props) => <Page {
+                                            ...props}
+                                            id={page.id}
+                                            pageIndex={pageIndex}
+                                            page={page}
+                                            
+                                            enableSpacing={this.state.globalContextObj.enableSpacing}
+
+                                            updatePageState={this.updatePageState}
+                                            updateSectionLayout={this.updateSectionLayout}
+                                            updateSectionWidths={this.updateSectionWidths}
+                                            updateSectionState={this.updateSectionState}
+                                            updateGridSectionState={this.updateGridSectionState}
+                                            updateComponentState={this.updateComponentState}
+
+                                            moveObject={this.moveObject}
+                                            deleteObject={this.deleteObject}
+                                        />} />
+                                    )
+                                })
+                            }
+                            
                             {/* get from the Link
                                 id
                                 projectIndex
@@ -827,9 +881,7 @@ class App extends React.Component {
                                 updateProjectState
                             */}
                         </div>
-                         
                     </div>
-                             
                 </HashRouter>
             </GlobalContext.Provider >
             
@@ -879,7 +931,7 @@ deleteObject
     </div>
 </div>
 
-<button onClick={this.toggleEdit}>{this.state.globalContextObj.editable ? 'Disable Editing' : 'Enable Editing'}</button>
+<button onClick={this.toggleEdit}>{this.state.globalContextObj.editing ? 'Disable Editing' : 'Enable Editing'}</button>
 
 
 <label>Make new Project</label>
@@ -956,4 +1008,27 @@ findComponentIndex(state, id) {
     }
     return [gridSectionsIndex, componentIndex]
 }
-*/
+
+ /*
+if (page.type === "page") {
+} else if (page.type === 'project') {
+    return (
+        <Route key={page.id} exact path={page.path} render={(props) => <Page {
+            ...props} 
+            id={page.id}
+            sections={page.sections}
+            updateSectionLayout={this.updateSectionLayout}
+            updateComponentState={this.updateComponentState}
+            updateSectionState={this.updateSectionState}
+            moveObject={this.moveObject}
+            deleteObject={this.deleteObject}
+        />} />
+        /*
+        <Route key={page.id} path="/projects/:id" render={(props) => {( // I need to render the link-path in similar way above
+            props.location.state ? (
+                <Page {...props}/>
+            ) : (
+                <Redirect to="/"/>
+            )
+        )} />
+        */
