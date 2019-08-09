@@ -2,6 +2,7 @@
 import React from 'react';
 import { GlobalContext } from './contexts';
 import RichText from './content-components/RichText'
+import PageToolbarPortal from './helper-components/PageToolbarPortal'
 import * as _ from 'lodash'
 import 'react-quill/dist/quill.snow.css';
 import { getId, gridLayouts } from './helpers' 
@@ -11,7 +12,7 @@ class Section extends React.Component {
     constructor(props) {
         super(props)
         this.sectionRef = React.createRef()
-        this.columnRef = React.createRef()
+        // this.columnRef = React.createRef()
 
         this.state = {
             gridLayouts: gridLayouts,
@@ -21,26 +22,26 @@ class Section extends React.Component {
             colorPickerColor: this.props.section.style.background ? this.props.section.style.background : "#fff",
 
 
-            border: "",
-            padding: "",
-            margin: "",
+            border: this.props.section.border || "",
+            padding: this.props.section.padding || "",
+            margin: this.props.section.margin || "",
 
             gridSection: {
-                border: "",
-                padding: "", 
-                margin: "",
+                border: this.props.section.gridSections[0].border || "",
+                padding: this.props.section.gridSections[0].padding || "", 
+                margin: this.props.section.gridSections[0].margin || "",
             }
         }
         
         this.onFocus = this.onFocus.bind(this)
         this.gridSectionOnFocus = this.gridSectionOnFocus.bind(this)
-        this.toggleColorPicker = this.toggleColorPicker.bind(this)
-        this.handleColorChange = this.handleColorChange.bind(this)
 
         this.handleGridSectionInputChange = this.handleGridSectionInputChange.bind(this)
         this.applyGridSectionStyles = this.applyGridSectionStyles.bind(this)
         this.handleSectionInputChange = this.handleSectionInputChange.bind(this)
         this.applySectionStyles = this.applySectionStyles.bind(this)
+
+        this.updateDimensions = this.updateDimensions.bind(this)
         // this.onBlur = this.onBlur.bind(this)
     }
 
@@ -52,10 +53,18 @@ class Section extends React.Component {
         const sectionPaddingLeft = window.getComputedStyle(this.sectionRef.current, null).getPropertyValue('padding-left')
         const sectionMarginRight = window.getComputedStyle(this.sectionRef.current, null).getPropertyValue('margin-right')
         const sectionMarginLeft = window.getComputedStyle(this.sectionRef.current, null).getPropertyValue('margin-right')
+        const sectionBorderRight = window.getComputedStyle(this.sectionRef.current, null).getPropertyValue('border-right')
+        const sectionBorderLeft = window.getComputedStyle(this.sectionRef.current, null).getPropertyValue('border-left')
 
         const width = containerElement.offsetWidth
         
-        const innerWidth = width - parseInt(sectionPaddingRight, 10) - parseInt(sectionPaddingLeft, 10) - parseInt(sectionMarginRight, 10) - parseInt(sectionMarginLeft, 10)
+        const innerWidth = width - 
+            parseInt(sectionPaddingRight, 10) - 
+            parseInt(sectionPaddingLeft, 10) - 
+            parseInt(sectionMarginRight, 10) - 
+            parseInt(sectionMarginLeft, 10) -
+            parseInt(sectionBorderRight, 10) -
+            parseInt(sectionBorderLeft, 10)
         const numColumns = this.state.gridLayouts[this.props.section.selectedLayout].numColumns
         
         const columnWidth = innerWidth / numColumns
@@ -66,7 +75,8 @@ class Section extends React.Component {
         }, this.props.sectionIndex)
     }
 
-    onFocus () { 
+    onFocus (e) { 
+        // e.stopPropagation()
         // console.log('section on focus props: ', this.props.id, this.props.sectionIndex)
         this.context.updateSectionInFocus(this.props.id, this.props.sectionIndex)
     }
@@ -82,51 +92,40 @@ class Section extends React.Component {
         }
     }
     */
-    handleGridSectionInputChange(e) {
-        const name = e.target.name
-        const value = e.target.value
-        this.setState((state, props) => {
-            
-            state.gridSection[name] = value
-            return {
-                gridSection: state.gridSection,
-            }
-        })
-    }
 
-    applyGridSectionStyles (e) {
-        if (e.key !== "Enter") return
+    handleGridSectionInputChange(e) {
+        const value = e.target.value
+        const name = e.target.name
+
         const gridSectionUpdate = {
-            style: {
-                border: this.state.gridSection.border,
-                padding: this.state.gridSection.padding,
-                margin: this.state.gridSection.margin,
-            }
+            [name]: value,
         }
 
         this.props.updateGridSectionState(gridSectionUpdate, this.context.sectionInFocusIndex, this.context.gridSectionInFocusIndex)
     }
+ 
+
+    applyGridSectionStyles(e) {
+        this.props.applyGridSectionStyles(this.context.sectionInFocusIndex, this.context.gridSectionInFocusIndex)
+    }
+
+
 
     handleSectionInputChange(e) {
         const name = e.target.name
         const value = e.target.value
-        this.setState({
-            [name]: value
-        })
+        const sectionUpdate = {
+            [name]: value,
+        }
+
+        this.props.updateSectionState(sectionUpdate, this.context.sectionInFocusIndex)
     }
 
     applySectionStyles(e) {
-        if (e.keyName !== "Enter") return
-        const sectionUpdate = {
-            style: {
-                border: this.state.border,
-                padding: this.state.padding,
-                margin: this.state.margin,
-                // background: this.state.background
-            }
-        }
-        this.props.updateSectionState(sectionUpdate, this.context.sectionInFocusIndex)
+        this.props.applySectionStyles(this.context.sectionInFocusIndex)
     }
+
+
 
     componentDidMount() {
         this.updateDimensions();
@@ -134,11 +133,13 @@ class Section extends React.Component {
     }
 
     componentWillUnmount() {
-        window.removeEventListener("resize", this.updateDimensions.bind(this));
+        window.removeEventListener("resize", this.updateDimensions.bind(this)); // Dont think this works
     }
 
     componentDidUpdate(prevProps) {
-        if ((prevProps.enableSpacing !== this.props.enableSpacing) || (prevProps.selectedLayout !== this.props.selectedLayout)) {
+        if ((prevProps.enableSpacing !== this.props.enableSpacing) || 
+            (prevProps.selectedLayout !== this.props.selectedLayout)
+        ) {
             this.updateDimensions()
         }
     }
@@ -147,6 +148,7 @@ class Section extends React.Component {
         return false
     }
 
+    /*
     handleColorChange(color) {
         this.setState({
             colorPickerColor: color.hex,
@@ -173,128 +175,120 @@ class Section extends React.Component {
             }
         }) 
     }
+    */
 
     render() {
         // things are either an input or a span
         return (
             <div 
-                className={"Section__container " + (this.context.enableSpacing ? "spacing" : "")} 
-                ref={this.sectionRef} 
-                onClick={this.onFocus} 
-                style={{ // onBlur={this.onBlur}
-                    ...this.props.section.style,
-                    'gridTemplateColumns': this.state.gridLayouts[this.props.section.selectedLayout]['gridTemplateColumns'],
+                style={{
                     'border': this.context.enableSpacing ? ((this.context.sectionInFocus === this.props.id) ? '1px solid red' : '1px dashed grey') : 'none',
                 }}
+            
             >
-                { (!this.context.gridSectionInFocus && (this.context.sectionInFocus === this.props.id)) && 
-                    <div className="Section__toolbar Section__toolbar--large">
-                        <select className="Section__toolbar-select" value={this.props.section.selectedLayout} onChange={this.props.updateSectionLayout}>
-                            {
-                                Object.keys(this.state.gridLayouts).map(gridLayoutName => {
-                                    return (
-                                        <option key={gridLayoutName} value={gridLayoutName}>{gridLayoutName}</option>
-                                    )
-                                })
-                            }
-                        </select>
-                        <button className="Section__toolbar-button"><i className="material-icons">arrow_drop_up</i></button>
-                        <button className="Section__toolbar-button"><i className="material-icons">arrow_drop_down</i></button>
+                <div 
+                    className={"Section__container " + (this.context.enableSpacing ? "spacing" : "")} 
+                    ref={this.sectionRef} 
+                    onClick={this.onFocus} 
+                    style={{ // onBlur={this.onBlur}
+                        'gridTemplateColumns': this.state.gridLayouts[this.props.section.selectedLayout]['gridTemplateColumns'], //  need another solution
+                        ...this.props.section.style,
+                    }}
+                    >
+                    { (!this.context.gridSectionInFocus && (this.context.sectionInFocus === this.props.id)) && 
+                         <PageToolbarPortal>
+                            <div className="SN__container">
+                                <p className="SN__menu-title">SECTION CONFIG</p>
+                                <div className='SN__widget'> {/* Section__toolbarMenu */}
+                                    <select className="Section__toolbar-select" value={this.props.section.selectedLayout} onChange={this.props.updateSectionLayout}>
+                                        {
+                                            Object.keys(this.state.gridLayouts).map(gridLayoutName => {
+                                                return (
+                                                    <option key={gridLayoutName} value={gridLayoutName}>{gridLayoutName}</option>
+                                                    )
+                                                })
+                                            }
+                                    </select>
+                                    <button className="Section__toolbar-button" onClick={() => { this.props.moveObject(-1) }}><i className="material-icons">arrow_drop_up</i></button>
+                                    <button className="Section__toolbar-button" onClick={() => { this.props.moveObject(1) }}><i className="material-icons">arrow_drop_down</i></button>
+                                    
+                                    <textarea 
+                                        className={"SN__input-textarea"} 
+                                        placeholder="Styles in JSON format"
+                                        name="styleInput"
+                                        value={this.props.section.styleInput}
+                                        onChange={this.handleSectionInputChange} // OBS
+                                    >
 
-                        <button className="Section__toolbar-button"><i className="material-icons">insert_photo</i></button>
-                        <button className="Section__toolbar-color-button" onClick={this.toggleColorPicker} style={{background: this.state.colorPickerColor}}></button>
-                        {this.state.showColorPicker &&
-                            <SketchPicker
-                                className="Section__toolbar-color-pallet"
-                                color={this.state.colorPickerState}
-                                onChangeComplete={this.handleColorChange}
-                            />
-                        }
-
-                        <input className="Section__toolbar-input" placeholder="Border"/>
-                        <input className="Section__toolbar-input" placeholder="Padding"/>
-                        <input className="Section__toolbar-input" placeholder="Margin"/>
-
-                        <button className="Section__toolbar-button"><i className="material-icons">delete</i></button>
-                    </div>
-                }
-                
-
-                
-                
-
-
-
-                {this.props.section.gridSections.map((gridSection, i) => {
-                    return (
-                        <div 
-                            className={"GridSection "  + (this.context.enableSpacing ? "spacing" : "")}
-                            style={{...gridSection.style,
-                                'border': this.context.enableSpacing ? ((this.context.gridSectionInFocus === gridSection.id) ? '1px solid blue' : '1px dashed grey') : 'none',
-                            }} 
-                            key={gridSection.id}
-                            onClick={() => { this.gridSectionOnFocus(gridSection.id, i) }}
-                        > {/* gridSection.style['width'] */}
-
-                        {/* Grid Section Toolbar (very similar to section toolbar */}
-                        { (this.context.gridSectionInFocus === gridSection.id) && 
-                            <div className="Section__toolbar Section__toolbar--small">
-                                <button className="Section__toolbar-button"><i className="material-icons">insert_photo</i></button>
-                                <button className="Section__toolbar-color-button" onClick={this.toggleColorPicker} style={{background: this.state.colorPickerColor}}></button>
-                                {this.state.showColorPicker &&
-                                    <SketchPicker
-                                        className="Section__toolbar-color-pallet"
-                                        color={this.state.colorPickerState}
-                                        onChangeComplete={this.handleColorChange}
-                                    />
-                                }
-
-                                <input 
-                                    className="Section__toolbar-input" 
-                                    placeholder="Border" 
-                                    value={this.state.gridSection.border} 
-                                    name="border" 
-                                    onChange={this.handleGridSectionInputChange} 
-                                    onKeyDown={this.applyGridSectionStyles}
-                                />
-                                <input 
-                                    className="Section__toolbar-input" 
-                                    placeholder="Padding" 
-                                    value={this.state.gridSection.padding} 
-                                    name="padding" 
-                                    onChange={this.handleGridSectionInputChange} 
-                                    onKeyDown={this.applyGridSectionStyles}
-                                />
-                                <input 
-                                    className="Section__toolbar-input" 
-                                    placeholder="Margin" 
-                                    value={this.state.gridSection.margin} 
-                                    name="margin" 
-                                    onChange={this.handleGridSectionInputChange} 
-                                    onKeyDown={this.applyGridSectionStyles}
-                                />
-                                <button className="Section__toolbar-button" onClick={this.props.deleteObject}><i className="material-icons">delete</i></button>
+                                    </textarea>
+                                    <button className="SN__button-normal SN__button--create" onClick={this.applySectionStyles}>Apply Styles</button>
+                                    
+                                    <button className="Section__toolbar-button" onClick={this.updateDimensions}><i className="material-icons">border_all</i></button>
+                                     <button className="Section__toolbar-button" onClick={this.props.deleteObject}><i className="material-icons">delete</i></button>
+                                </div>
                             </div>
-                        }
-                        
-                        {gridSection.componentStates.map((componentState, j) => {
-                            // Need to accomedate for different component types here
-                            return (<RichText 
-                                key={componentState.id}
-                                sectionId={this.props.id}
-                                id={componentState.id}
+                        </PageToolbarPortal>
+                    }
+                    
 
-                                sectionIndex={this.props.sectionIndex}
-                                gridSectionIndex={i}
-                                componentStateIndex={j}
+                    {this.props.section.gridSections.map((gridSection, i) => {
+                        return (
+                            <div
+                                style={{
+                                    'border': this.context.enableSpacing ? ((this.context.gridSectionInFocus === gridSection.id) ? '1px solid blue' : '1px dashed grey') : 'none',
+                                }} 
+                            >
+                            
+                                <div 
+                                className={"GridSection "  + (this.context.enableSpacing ? "spacing" : "")}
+                                style={gridSection.style} // hold grid styles, I need to solve this...
+                                key={gridSection.id}
+                                onClick={(e) => { /*e.stopPropagation();*/ this.gridSectionOnFocus(gridSection.id, i); }}
+                                > {/* gridSection.style['width'] */}
 
-                                componentState={componentState} 
-                                updateComponentState={this.props.updateComponentState} // need to wrap this and make it called onChange
-                            />)
-                        })}
-                        </div>
-                    )
-                })}
+                                {/* Grid Section Toolbar (very similar to section toolbar */}
+                                { (!this.context.componentInFocus && (this.context.gridSectionInFocus === gridSection.id)) && 
+                                    // Section Toolbar side
+                                    <PageToolbarPortal>
+                                        <div className="SN__container">
+                                            <p className="SN__menu-title">GRID SECTION CONFIG</p>
+                                            <div className='SN__widget'> {/* Section__toolbarMenu */}
+                                                <textarea 
+                                                    className={"SN__input-textarea"} 
+                                                    placeholder="Styles in JSON format"
+                                                    name="styleInput"
+                                                    value={gridSection.styleInput}
+                                                    onChange={this.handleGridSectionInputChange} // OBS
+                                                >
+
+                                                </textarea>
+                                                <button className="SN__button-normal SN__button--create" onClick={this.applyGridSectionStyles}>Apply Styles</button>
+                                            </div>
+                                        </div>
+                                    </PageToolbarPortal>
+                                }
+                                
+                                {gridSection.componentStates.map((componentState, j) => {
+                                    // Need to accomedate for different component types here
+                                    return (<RichText 
+                                        key={componentState.id}
+                                        sectionId={this.props.id}
+                                        id={componentState.id}
+                                        
+                                        sectionIndex={this.props.sectionIndex}
+                                        gridSectionIndex={i}
+                                        componentStateIndex={j}
+                                        
+                                        componentState={componentState} 
+                                        updateComponentState={this.props.updateComponentState} // need to wrap this and make it called onChange
+                                        applyComponentStyles={this.props.applyComponentStyles}
+                                        />)
+                                    })}
+                                </div>
+                            </div>
+                        )
+                    })}
+                </div>
             </div>
         )
     }
@@ -369,4 +363,180 @@ items={[
 
 ]}
 />)}
+
+
+
+
+    handleSectionInputChange(e) {
+        const name = e.target.name
+        const value = e.target.value
+        this.setState({
+            [name]: value
+        })
+    }
+
+    applySectionStyles(e) {
+        if (e.key !== "Enter") return
+        const sectionUpdate = {
+            style: {
+                border: this.state.border,
+                padding: this.state.padding,
+                margin: this.state.margin,
+                // background: this.state.background
+            }
+        }
+        this.props.updateSectionState(sectionUpdate, this.context.sectionInFocusIndex)
+    }
+
+
+
+
+<div className="Section__toolbar Section__toolbar--large">
+    <select className="Section__toolbar-select" value={this.props.section.selectedLayout} onChange={this.props.updateSectionLayout}>
+        {
+            Object.keys(this.state.gridLayouts).map(gridLayoutName => {
+                return (
+                    <option key={gridLayoutName} value={gridLayoutName}>{gridLayoutName}</option>
+                    )
+                })
+            }
+    </select>
+    <button className="Section__toolbar-button" onClick={() => { this.props.moveObject(-1) }}><i className="material-icons">arrow_drop_up</i></button>
+    <button className="Section__toolbar-button" onClick={() => { this.props.moveObject(1) }}><i className="material-icons">arrow_drop_down</i></button>
+
+    <button className="Section__toolbar-button"><i className="material-icons">insert_photo</i></button>
+    <button className="Section__toolbar-color-button" onClick={this.toggleColorPicker} style={{background: this.state.colorPickerColor}}></button>
+    {this.state.showColorPicker &&
+        <SketchPicker
+        className="Section__toolbar-color-pallet"
+        color={this.state.colorPickerState}
+        onChangeComplete={this.handleColorChange}
+        />
+    }
+
+    <input 
+        className="Section__toolbar-input" 
+        placeholder="Border"
+        value={this.state.border} 
+        name="border" 
+        onChange={this.handleSectionInputChange} 
+        onKeyDown={this.applySectionStyles}
+        />
+    <input 
+        className="Section__toolbar-input" 
+        placeholder="Padding"
+        value={this.state.padding} 
+        name="padding" 
+        onChange={this.handleSectionInputChange} 
+        onKeyDown={this.applySectionStyles}
+        />
+    <input 
+        className="Section__toolbar-input" 
+        placeholder="Margin"
+        value={this.state.margin} 
+        name="margin" 
+        onChange={this.handleSectionInputChange} 
+        onKeyDown={this.applySectionStyles}
+        />
+    <button className="Section__toolbar-button" onClick={this.updateDimensions}><i className="material-icons">border_all</i></button>
+    <button className="Section__toolbar-button" onClick={this.props.deleteObject}><i className="material-icons">delete</i></button>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+handleGridSectionInputChange(e) {
+        const name = e.target.name
+        const value = e.target.value
+        this.setState((state, props) => {
+            
+            state.gridSection[name] = value
+            return {
+                gridSection: state.gridSection,
+            }
+        })
+    }
+
+
+    applyGridSectionStyles (e) {
+        if (e.key !== "Enter") return
+        const gridSectionUpdate = {
+            style: {
+                border: this.state.gridSection.border,
+                padding: this.state.gridSection.padding,
+                margin: this.state.gridSection.margin,
+            }
+        }
+
+        this.props.updateGridSectionState(gridSectionUpdate, this.context.sectionInFocusIndex, this.context.gridSectionInFocusIndex)
+    }
+
+
+<ul>
+    <li><a className="SN__item" onClick={this.toggleColorPicker}>
+        <i className="material-icons">add_box</i>
+        <span>Background Color</span>
+        <button className="SN__color-button" style={{background: this.state.colorPickerColor}}></button>
+    </a></li>
+</ul>
+<div className="Section__toolbar Section__toolbar--small">
+    <button className="Section__toolbar-button"><i className="material-icons">insert_photo</i></button>
+    <button className="Section__toolbar-color-button" onClick={this.toggleColorPicker} style={{background: this.state.colorPickerColor}}></button>
+    {this.state.showColorPicker &&
+        <SketchPicker
+            className="Section__toolbar-color-pallet"
+            color={this.state.colorPickerState}
+            onChangeComplete={this.handleColorChange}
+            />
+        }
+
+    <input 
+        className="Section__toolbar-input" 
+        placeholder="Border" 
+        value={this.state.gridSection.border} 
+        name="border" 
+        onChange={this.handleGridSectionInputChange} 
+        onKeyDown={this.applyGridSectionStyles}
+        />
+    <input 
+        className="Section__toolbar-input" 
+        placeholder="Padding" 
+        value={this.state.gridSection.padding} 
+        name="padding" 
+        onChange={this.handleGridSectionInputChange} 
+        onKeyDown={this.applyGridSectionStyles}
+        />
+    <input 
+        className="Section__toolbar-input" 
+        placeholder="Margin" 
+        value={this.state.gridSection.margin} 
+        name="margin" 
+        onChange={this.handleGridSectionInputChange} 
+        onKeyDown={this.applyGridSectionStyles}
+        />
+    <button className="Section__toolbar-button" onClick={this.props.deleteObject}><i className="material-icons">delete</i></button>
+</div>
+
+{this.state.showColorPicker &&
+    <SketchPicker
+        className="Page-color-pallet"
+        color={this.state.colorPickerState}
+        onChangeComplete={this.handleColorChange}
+    />
+}
+
 */

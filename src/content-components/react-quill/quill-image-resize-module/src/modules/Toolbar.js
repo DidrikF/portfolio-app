@@ -17,7 +17,8 @@ export class Toolbar extends BaseModule {
     onCreate = () => {
 		// Setup Toolbar
         this.toolbar = document.createElement('div');
-        Object.assign(this.toolbar.style, this.options.toolbarStyles);
+        this.toolbar.classList.add("RichText__ImageResize__toolbar")
+        // Object.assign(this.toolbar.style, this.options.toolbarStyles);
         this.overlay.appendChild(this.toolbar);
 
         // Setup Buttons
@@ -76,8 +77,8 @@ export class Toolbar extends BaseModule {
                 type: "input",
                 label: "Border",
                 attributes: {
-                    placeholder: 'Border Style',
-                    class: "RichText__ImageResize__input"
+                    placeholder: 'Border',
+                    className: "RichText__ImageResize__input"
                 },
                 apply: (value) => {
                     BorderStyle.add(this.img, value)
@@ -94,8 +95,8 @@ export class Toolbar extends BaseModule {
                 type: "input",
                 label: "Border Radius",
                 attributes: {
-                    placeholder: 'Border Radius Style',
-                    class: "RichText__ImageResize__input"
+                    placeholder: 'Border Radius',
+                    className: "RichText__ImageResize__input"
                 },
                 apply: (value) => {
                     BorderRadiusStyle.add(this.img, value)
@@ -112,8 +113,8 @@ export class Toolbar extends BaseModule {
                 type: "input",
                 label: "Margin", 
                 attributes: {
-                    placeholder: 'Margin Style',
-                    class: "RichText__ImageResize__input"
+                    placeholder: 'Margin',
+                    className: "RichText__ImageResize__input"
                 },
                 apply: (value) => {
                     MarginStyle.add(this.img, value)
@@ -130,8 +131,8 @@ export class Toolbar extends BaseModule {
                 type: "input",
                 label: "Padding",
                 attributes: {
-                    placeholder: 'padding Style',
-                    class: "RichText__ImageResize__input"
+                    placeholder: 'padding',
+                    className: "RichText__ImageResize__input"
                 },
                 apply: (value) => {
                     PaddingStyle.add(this.img, value)
@@ -212,10 +213,11 @@ export class Toolbar extends BaseModule {
         const inputContainer = document.createElement("div")
         const input = document.createElement("input")    
         input.value = alignment.isApplied()
+        /*
         const label = document.createElement("label")
         label.class = "RichText__ImageResize__label"
         label.innerText = alignment.label
-
+        */
         for(let attribute in alignment.attributes) {
             input[attribute] = alignment.attributes[attribute]
         }
@@ -232,7 +234,7 @@ export class Toolbar extends BaseModule {
             }
             this.requestUpdate();
         })
-        inputContainer.appendChild(label)
+        // inputContainer.appendChild(label)
         inputContainer.appendChild(input)
 
         return inputContainer

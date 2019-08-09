@@ -16,6 +16,7 @@ const CLASSES = [
 
 class Image extends Parchment.Embed {
   static create(value) {
+    console.log("create image: ", value)
     let node = super.create(value);
     if (typeof value === 'string') {
       node.setAttribute('src', this.sanitize(value));
@@ -67,3 +68,4 @@ Image.tagName = 'IMG';
 
 
 export default Image;
+

@@ -39,6 +39,6 @@ export const quillItems = [
         { type:'code-block', label:'code-block' },
         { type:'link', label:'link' },
         { type:'image', label:'Image' },
-        { type:'sideimage', label:'Side Image' }, // Custom Button which I want to add custom functionality to
+        // { type:'sideimage', label:'Side Image' }, // Custom Button which I want to add custom functionality to
     ]}
 ]
