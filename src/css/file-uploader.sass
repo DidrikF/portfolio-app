@@ -1,0 +1,314 @@
+
+.FU__server-images
+    display: flex
+    flex-direction: row
+    flex-wrap: wrap
+    width: 90%
+    height: 500px
+    margin: 20px auto
+    overflow-y: scroll
+    border: 1px solid #474D55
+    padding: 20px
+    box-sizing: border-box
+
+.FU__user-images
+    display: flex
+    flex-direction: row
+    flex-wrap: wrap
+
+
+
+.FU__thumb 
+    display: inline-flex
+    border-radius: 2px
+    border: 1px solid #eaeaea
+    margin-bottom: 8px
+    margin-right: 8px
+    width: 200px
+    padding: 4px
+    box-sizing: border-box
+    
+    
+.FU__thumb-inner
+    display: flex
+    min-width: 0
+    overflow: hidden
+
+.FU__img-container
+    border-radius: 2px
+    border: 1px solid #eaeaea
+    margin-bottom: 8px
+    margin-right: 8px
+    display: inline-block
+    &:hover
+        border: 1px solid green
+        cursor: pointer
+
+.FU__img
+    position: relative
+    display: inline-flex
+    height: 150px
+    width: 200px
+    background-size: auto 100%
+    background-repeat: no-repeat
+    background-size: cover
+
+
+
+
+.FU__image-button  
+    position: absolute
+    border-radius: 100%
+    border: none
+    padding: 3px
+    width: 25px
+    height: 25px
+    .material-icons
+        font-size: 20px
+        position: relative
+        right: 1px
+        bottom: 1px
+    &:focus
+        outline: none
+    &:hover
+        cursor: pointer
+
+
+.FU__image-button--crop
+    background: white
+    top: 5px
+    left: 5px  
+    .material-icons
+        color: green
+    &:hover
+        background: #8B8F9E
+
+.FU__image-button--delete
+    background: #212329
+    top: 5px
+    right: 5px  
+    .material-icons
+        color: red
+    &:hover
+        background: #8B8F9E
+
+.FU__image-button--download
+    background: white
+    top: 5px
+    left: 5px  
+    .material-icons
+        color: green
+        top: 1px
+        left: 2px
+    &:hover
+        background: #8B8F9E
+
+
+
+.FU__image-dimensions
+    background: #212329
+    color: #8B8F9E
+    padding: 2px
+    position: absolute
+    bottom: 5px
+    right: 5px
+    font-size: 12px
+
+.FU__image-name
+    text-align: center
+    margin: 3px 0
+    font-size: 12px
+
+.FU__drop-container
+    display: flex
+    flex-direction: row
+    flex-wrap: wrap
+    width: 90%
+    margin: 20px auto
+
+.FU__drop-area
+    display: flex
+    flex-direction: column
+    flex-basis: 30%
+    flex: 1
+    height: 200px
+    p
+        box-sizing: border-box
+        width: 100%
+        height: 200px
+        padding: 20px
+        margin: auto
+        border: 2px dashed  #212329
+        text-align: center
+        font-size: 20px
+        &:hover
+            cursor: pointer
+            border-color: #8B8F9E
+
+.FU__drop-view
+    display: flex
+    flex-direction: row
+    align-items: flex-start
+    flex-wrap: wrap
+    flex-basis: 70%
+    flex: 1
+    box-sizing: border-box
+    height: 200px
+    padding: 20px
+    border: 2px solid #212329
+    overflow-y: scroll
+
+.FU__img-container-client
+    display: inline-block
+    border-radius: 2px
+    border: 1px solid #eaeaea
+    margin-bottom: 8px
+    margin-right: 8px
+    width: 100px
+    &:hover
+        border: 1px solid green
+        cursor: pointer
+
+.FU__img-client
+    position: relative
+    display: inline-flex
+    height: 75px
+    width: 100px
+    background-size: auto 100%
+    background-repeat: no-repeat
+    background-size: cover
+
+
+
+.FU__image-name-input
+    width: 100px
+    box-sizing: border-box
+
+
+
+.FU__main-button-container
+    text-align: center
+
+.FU__main-button
+    background: none
+    border: none
+    display: inline-block
+    &:focus
+        outline: none
+
+    .material-icons
+        color: #212329
+        font-size: 60px
+        &:hover
+            color: #8B8F9E
+            cursor: pointer
+
+
+.FU__cropper-aspect-ratio-input
+    border: none
+    border-bottom: 1px solid #212329
+    padding: 4px
+    font-size: 16px
+    text-align: center
+    margin: 20px auto
+    display: block
+
+.FU__cropper
+    border: 1px solid #212329
+    box-sizing: border-box
+    margin: 20px auto
+
+.FU__cropper-preview-container
+    width: 90%
+    margin: 0 auto
+    margin-bottom: 50px
+
+
+.FU__cropper-preview
+    border: 1px solid #212329
+    width: 100%
+
+.FU__flash-message 
+    position: fixed
+    padding: 10px 20px
+    bottom: 20px
+    right: 20px
+    width: 150px
+
+
+
+
+.FU__server-files
+    width: 90%
+    height: 300px
+    margin: 20px auto
+    overflow-y: scroll
+    border: 1px solid #474D55
+    padding: 20px
+    box-sizing: border-box
+
+.FU__file-drop-view
+    display: flex
+    flex-direction: column
+    flex-basis: 70%
+    flex: 1
+    box-sizing: border-box
+    height: 200px
+    padding: 20px
+    border: 2px solid #212329
+    overflow-y: scroll
+
+.FU__file-container
+    padding: 4px
+    .fas
+        font-size: 15px
+        
+
+.FU__file
+    border-bottom: 1px solid #474D55
+    .fas
+        font-size: 25px
+
+.FU__file-name
+    margin-left: 10px
+    max-width: 70%
+    display: inline-block
+
+.FU__file-name-input
+    width: 200px
+    margin-left: 10px
+
+.FU__file-button 
+    float: right
+    width: 30px
+    height: 20px
+    border-radius: 2px
+    border: none
+    margin: 0 5px
+    &:focus
+        outline: none
+    &:hover
+        cursor: pointer
+    .material-icons
+        position: relative
+        right: 3px
+        bottom: 3px
+        
+
+.FU__file-button--view
+    background: blue
+
+.FU__file-button--delete
+    background: red
+
+.FU__file-button--download
+    background: green
+    .material-icons
+        position: relative
+        left: 2px
+        bottom: 2px
+        color: black
+
+.FU__pdf-preview
+    display: block
+    margin: 0 auto

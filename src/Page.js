@@ -1,7 +1,9 @@
 import React from 'react'
 import axios from 'axios'
+
 import { SketchPicker } from 'react-color'
 
+import PageToolbarPortal from './helper-components/PageToolbarPortal'
 import Section from './Section'
 import { GlobalContext } from './contexts'  
 
@@ -9,45 +11,16 @@ import { GlobalContext } from './contexts'
 class Page extends React.Component {
     constructor(props) {
         super(props)
+
         this.state = {
-            border: "",
-            padding: "", 
-            margin: "", 
-        
-            showColorPicker: false,
-            colorPickerColor: "",
-            colorPickerState: {},
-
+            height: 0,
         }
 
-        this.toggleColorPicker = this.toggleColorPicker.bind(this)
-        this.handleColorChange = this.handleColorChange.bind(this)
         this.handleChange = this.handleChange.bind(this)
-        this.applyStyles = this.applyStyles.bind(this)
+        this.handlePageInputChange = this.handlePageInputChange.bind(this)
+        this.applyPageStyles = this.applyPageStyles.bind(this)
     }
 
-    toggleColorPicker() {
-        this.setState((state, props) => {
-            return {
-                showColorPicker: !state.showColorPicker
-            }
-        })
-    }
-
-    handleColorChange(color) {
-        this.setState({
-            colorPickerColor: color.hex,
-            colorPickerState: color,
-        })
-
-        const update = {
-            style: {
-                background: color.hex
-            }
-        }
-
-        this.props.updatePageState(update, this.props.pageIndex)
-    }
 
     handleChange(e) {
         const name = e.target.name
@@ -56,16 +29,33 @@ class Page extends React.Component {
         })
     }
 
-    applyStyles() {
+
+    handlePageInputChange(e) {
+        const name = e.target.name
+        const value = e.target.value
+
         const pageUpdate = {
-            style: {
-                border: this.state.border,
-                padding: this.state.padding,
-                margin: this.state.margin,
-            }
+            [name]: value,
         }
 
         this.props.updatePageState(pageUpdate, this.props.pageIndex)
+    }
+
+    applyPageStyles() {
+        this.props.applyPageStyles(this.props.pageIndex)
+    }
+
+    componentDidMount() {
+
+        const setPageHeight = () => {
+            this.setState({
+                pageHeight: document.documentElement.clientHeight
+            })
+        }
+
+        setPageHeight()
+        window.addEventListener("resize", setPageHeight) // may not be sufficent (full screen etc.)
+
     }
     
     render() {
@@ -73,46 +63,30 @@ class Page extends React.Component {
             <div 
                 className={"Page " + this.props.page.className} 
                 id={this.props.id}
-                style={this.props.page.style}
+                style={{
+                    ...this.props.page.style,
+                    minHeight: this.state.pageHeight
+                }}
             >
-            { this.context.editing &&
-                <div className="Page__toolbar">
-                    <button className="Section__toolbar-button"><i className="material-icons">insert_photo</i></button>
-                    <button className="Section__toolbar-color-button" onClick={this.toggleColorPicker} style={{background: this.state.colorPickerColor}}></button>
-                    {this.state.showColorPicker &&
-                        <SketchPicker
-                            className="Section__toolbar-color-pallet"
-                            color={this.state.colorPickerState}
-                            onChangeComplete={this.handleColorChange}
-                        />
-                    }
+            
+            { this.context.editing && (!this.context.sectionInFocus) && 
+                <PageToolbarPortal>
+                    <div className="SN__container">
+                        <p className="SN__menu-title">PAGE CONFIG</p>
+                        <div className='SN__widget'> {/* Section__toolbarMenu */}
+                            <textarea 
+                                className={"SN__input-textarea"} 
+                                placeholder="Styles in JSON format"
+                                name="styleInput"
+                                value={this.props.page.styleInput}
+                                onChange={this.handlePageInputChange} // OBS
+                            >
 
-                    <input 
-                        className="Section__toolbar-input" 
-                        placeholder="Border" 
-                        value={this.state.border} 
-                        name="border" 
-                        onChange={this.handleChange} 
-                        onKeyDown={this.applyStyles}
-                    />
-                    <input 
-                        className="Section__toolbar-input" 
-                        placeholder="Padding" 
-                        value={this.state.padding} 
-                        name="padding" 
-                        onChange={this.handleChange} 
-                        onKeyDown={this.applyStyles}
-                    />
-                    <input 
-                        className="Section__toolbar-input" 
-                        placeholder="Margin" 
-                        value={this.state.margin} 
-                        name="margin" 
-                        onChange={this.handleChange} 
-                        onKeyDown={this.applyStyles}
-                    />
-                </div>
-
+                            </textarea>
+                            <button className="SN__button-normal SN__button--create" onClick={this.applyPageStyles}>Apply Styles</button>
+                        </div>
+                    </div>
+                </PageToolbarPortal>
             }
 
             {
@@ -133,11 +107,14 @@ class Page extends React.Component {
                             containerRef={this.props.containerRef}
 
 
-                            updateComponentState={this.props.updateComponentState} // to be used inside Section
                             updateSectionState={this.props.updateSectionState}
+                            applySectionStyles={this.props.applySectionStyles}
                             updateSectionLayout={this.props.updateSectionLayout}
                             updateGridSectionState={this.props.updateGridSectionState}
                             updateSectionWidths={this.props.updateSectionWidths}
+                            applyGridSectionStyles={this.props.applyGridSectionStyles}
+                            updateComponentState={this.props.updateComponentState} // to be used inside Section
+                            applyComponentStyles={this.props.applyComponentStyles}
 
                             moveObject={this.props.moveObject}
                             deleteObject={this.props.deleteObject}
@@ -203,4 +180,55 @@ contact
         <Contact />
         
         <Footer />
+
+
+
+
+         <ul>
+            <li><a className="SN__item" onClick={this.toggleColorPicker}>
+                <i className="material-icons">add_box</i>
+                <span>Background Color</span>
+                <button className="SN__color-button" style={{background: this.state.colorPickerColor}}></button>
+            </a></li>
+        </ul>
+        <div className="SN__input-container"> 
+            <input 
+                className="SN__input" 
+                placeholder="Border"  
+                value={this.state.border} 
+                name="border" 
+                onChange={this.handleChange}
+                onKeyDown={this.applyStyles}
+            />
+        </div>
+        <div className="SN__input-container">
+            <input 
+                className="SN__input" 
+                placeholder="Padding" 
+                value={this.state.padding} 
+                name="padding" 
+                onChange={this.handleChange} 
+                onKeyDown={this.applyStyles}
+            />
+        </div>
+        <div className="SN__input-container">
+            <input 
+                className="SN__input" 
+                placeholder="Margin" 
+                value={this.state.margin} 
+                name="margin" 
+                onChange={this.handleChange} 
+                onKeyDown={this.applyStyles}
+            />
+
+        </div>
+
+
+        {this.state.showColorPicker &&
+            <SketchPicker
+                className="Page-color-pallet"
+                color={this.state.colorPickerState}
+                onChangeComplete={this.handleColorChange}
+            />
+        }
 */

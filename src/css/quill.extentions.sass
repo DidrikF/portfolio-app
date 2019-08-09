@@ -1,3 +1,7 @@
+.Page .ql-editor
+    padding: 0
+
+
 div.ql-container.ql-snow
     border: none
     
@@ -6,8 +10,6 @@ div.ql-container.ql-snow
     font-family: FontAwesome
     content: "\f03e"
   
-
-
 
 .ql-font-roboto 
     font-family: 'Roboto', sans-serif
@@ -60,16 +62,52 @@ div.ql-container.ql-snow
     padding: 5px
 
 
+.RichText__ImageResize__toolbar
+    position: absolute
+    background: #fff
+    top: calc(20px) // Can this number be set dynamic,  or be calculated
+    margin: 0 auto
+    left: 0 
+    right: 0 
+    justify-content: space-around
+    display: inline-flex
+    flex-direction: row
+    flex-wrap: nowrap
+    border: 1px solid grey
+    border-radius: 5px
+    padding: 5px
+    z-index: 1000
+    width: 550px
+
+.RichText__ImageResize__toolbar::after
+    content: ' '
+    position: absolute
+    top: -20px // Great and simple solution!
+    width: 0
+    height: 0
+    border-left: 10px solid transparent
+    border-right: 10px solid transparent
+    border-bottom: 20px solid grey
 
 
-.RichText__ImageResize__label 
+// .RichText__ImageResize__label 
 
 
 
 
 .RichText__ImageResize__input 
-
-
+    outline: none
+    background: transparent 
+    border-style: solid
+    border-color: grey
+    border-width: 0 0 0.5px 0
+    padding: 8px
+    margin: 0 10px
+    width: 100px
+    transition: width .35s ease-in-out
+    &:focus
+        outline: none
+        border-bottom: 0.5px solid green
 
 .ql-toolbar.ql-snow 
     border: none !important
@@ -79,4 +117,22 @@ div.ql-container.ql-snow
 .ql-snow.ql-toolbar button 
     /*color: #8B8F9E !important */
 
- 
+.ql-tooltip
+    z-index: 100000
+
+
+.RichText__image-selector-container
+    width: calc(90% - 300px)
+    height: 500px
+    background: white
+    position: fixed
+    top: 150px
+    left: calc(300px + 5%)
+    z-index: 10000
+
+.RichText__image-selector-image
+    width: 100px
+    height: 100px
+    border: 1px solid black
+    &:hover
+        cursor: pointer

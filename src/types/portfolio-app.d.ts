@@ -1,8 +1,22 @@
 
+type Page = {
+    id: string,
+    style?: {[key: string]: string},
+    className?: string,
+    styleInput?: string,
+    type: string,
+    title: string,
+    sections: Section[]
+    show: boolean,
+
+}
+
+
 type Section = {
     id: string,
     style?: {[key: string]: string},
     className?: string,
+    styleInput?: string,
     selectedLayout: "oneColumn" | "twoColumns" | "threeColumns", 
     gridSections: GridSection[],
 }
@@ -11,23 +25,23 @@ type GridSection = {
     id: string,
     style?: {[key: string]: string},
     className?: string,
+    styleInput?: string,
     coordinates: [number, number],
     componentStates: ComponentState[],
 } 
 
 type ComponentState = {
     id: string,
+    style?: {[key: string]: string},
+    styleInput?: string,
+    className?: string,
     type: "rich text" | "project card" | "image", // options of strings
     state: any,
 }
 
-type Project = {
-    id: string,
-    sections: Section[]
-}
 
 interface AppState {
-    projects: Project[],
+    pages: Page[],
 
 }
 

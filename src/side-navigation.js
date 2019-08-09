@@ -15,8 +15,13 @@ export function UserInfo(user) {
 
 export function AccountInfo() {
     return (
-        <div>
-            Account Info
+        <div id="SN__account-info" className="SN__container">
+            <p className="SN__menu-title">ACCOUNT</p>
+            <div className='SN__widget'> {/* Section__toolbarMenu */}
+                <ul>
+                    <li><a className="SN__item" onClick={()=>{}}><i className="material-icons">add_box</i><span>Log In</span></a></li>
+                </ul>
+            </div>
         </div>
     )
 }

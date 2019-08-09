@@ -3,12 +3,15 @@ import axios from 'axios'
 import update from 'immutability-helper';
 import { BrowserRouter as Router, Route, Link, NavLink, HashRouter, Redirect } from "react-router-dom"; 
 
-
 import ContentEditable from 'react-contenteditable' // use for inputs that does not require rich text editing. This allows inputs to have the same style 
 import _ from 'lodash'
 import * as arrayMove from  'array-move'
 import Page from './Page'
 import { UserInfo, AccountInfo } from './side-navigation'
+
+import ImageUploader from './ImageUploader'
+import FileUploader from './FileUploader'
+import ColorManager from './ColorManager'
 
 import { GlobalContext } from './contexts'
 
@@ -25,12 +28,33 @@ function moveContentUnderTopToolbar(e) {
     }
 }
 
+function setScrollabelHeight() {
+    const userInfoElement = document.getElementsByClassName("SN-UserInfo")[0]
+    const accountInfoElement = document.getElementById("SN__account-info")
+    const documentHeight = document.documentElement.clientHeight
+    const scrollableHeight = documentHeight - userInfoElement.offsetHeight - accountInfoElement.offsetHeight
+    this.setState({
+        scrollableHeight: scrollableHeight
+    })
+}
+
+function newMerge(obj, update) {
+    const newObj = _.assign(obj, update)
+    if (update.style && Object.keys(update.style).length === 0) {
+        obj.style = {}
+    }
+    console.log("update: ", update)
+    console.log("newObj: ", newObj)
+    return obj
+}
+
 class App extends React.Component {
     constructor(props) {
         super(props)
         
         window.addEventListener("resize", updateHeightOfVideos)
         window.addEventListener("resize", moveContentUnderTopToolbar)
+        window.addEventListener("resize", setScrollabelHeight.bind(this))
         window.addEventListener("keyup", (e) => {
             if (e.key === "Escape") {
                 this.clearFocus();
@@ -46,6 +70,7 @@ class App extends React.Component {
         this.createPage = this.createPage.bind(this)
         this.deletePage = this.deletePage.bind(this)
         this.updatePageState = this.updatePageState.bind(this)
+        this.applyPageStyles = this.applyPageStyles.bind(this)
         
         this.clearFocus = this.clearFocus.bind(this)
         this.toggleEdit = this.toggleEdit.bind(this)
@@ -54,7 +79,7 @@ class App extends React.Component {
         this.updateComponentInFocus = this.updateComponentInFocus.bind(this)
         this.updateSectionInFocus = this.updateSectionInFocus.bind(this)
         this.updateGridSectionInFocus = this.updateGridSectionInFocus.bind(this) 
-        this.updateProjectInFocus = this.updateProjectInFocus.bind(this)
+        // this.updateProjectInFocus = this.updateProjectInFocus.bind(this)
 
         // Update Section Related
         this.handleColorChange = this.handleColorChange.bind(this)
@@ -65,14 +90,20 @@ class App extends React.Component {
         this.updateSectionWidths = this.updateSectionWidths.bind(this)
 
         // Update Component Related
-        this.updateComponentState = this.updateComponentState.bind(this)
         this.updateSectionState = this.updateSectionState.bind(this)
+        this.applySectionStyles = this.applySectionStyles.bind(this)
         this.updateGridSectionState = this.updateGridSectionState.bind(this)
+        this.applyGridSectionStyles = this.applyGridSectionStyles.bind(this)
+        this.updateComponentState = this.updateComponentState.bind(this)
+        this.applyComponentStyles = this.applyComponentStyles.bind(this)
+
         this.deleteObject = this.deleteObject.bind(this)
         this.moveObject = this.moveObject.bind(this)
 
 
         this.state = {
+            scrollableHeight: 0,
+
             gridLayouts: gridLayouts,
             defaultGridLayout: 'oneColumn',
             defaultSectionPadding: '0px',
@@ -91,6 +122,8 @@ class App extends React.Component {
             pages: [
                 {
                     id: 1,
+                    style: {},
+                    className: "",
                     type: "page",
                     path: '/',
                     title: "Home",
@@ -99,6 +132,8 @@ class App extends React.Component {
                 },
                 {
                     id: 2,
+                    style: {},
+                    className: "",
                     type: "project",
                     path: "/projects/test-project",
                     title: 'Test Project',
@@ -157,7 +192,7 @@ class App extends React.Component {
             globalContextObj: {
                 pathPrefix: '',
                 toggleEdit: this.toggleEdit,
-                editing: false,
+                editing: false, // when active, this holds the page index of the active page (not sure if this is robust)
                 setActiveRichTextEditor: this.setActiveRichTextEditor,
                 activeRichTextEditor: '', 
                 
@@ -189,7 +224,7 @@ class App extends React.Component {
             }
         })
     }
-
+    /*
     updateProjectInFocus(projectId, projectIndex) {
         this.setState((state, props) => {
             let globalContextObj = state.globalContextObj
@@ -201,6 +236,7 @@ class App extends React.Component {
             }
         })
     }
+    */
 
     setActiveRichTextEditor(id) {
         this.setState((state, props) => {
@@ -307,6 +343,8 @@ class App extends React.Component {
 
             let page = {
                 id: getId(),
+                style: {},
+                className: "",
                 path: path,
                 type: type,
                 title: title, // based on type...
@@ -343,12 +381,34 @@ class App extends React.Component {
 
             let page = state.pages[pageIndex]
             
-            state.pages[pageIndex]= _.merge(page, pageUpdate)
+            state.pages[pageIndex]= newMerge(page, pageUpdate)
             
             return {
                 pages: state.pages
             }
         })
+    }
+
+    applyPageStyles(pageIndex) {
+        const page = this.state.pages[pageIndex]
+
+        try {
+            const styleString = page.styleInput
+            if (styleString === "") {
+                this.updatePageState({
+                    style: {},
+                }, pageIndex)
+                return
+            }
+            const styleObject = JSON.parse(styleString)
+            const pageUpdate = {
+                style: styleObject
+            }
+            this.updatePageState(pageUpdate, pageIndex)
+            
+        } catch (error) {
+            console.log("Invalid styles, not able to parse as JSON. Error: ", error)
+        }
     }
 
     deletePage(pageIndex) {
@@ -386,8 +446,9 @@ class App extends React.Component {
             componentStates: [{
                 id: getId(),
                 type: 'rich text',
-                state: "<p>Write some rich text here...</p>",
+                state: "<p>Write some rich text here...<img src=\"/images/background.jpg\" style=\"width: 51%;\"></p><p><br></p><p><br></p><iframe class=\"ql-video ql-align-center\" frameborder=\"0\" allowfullscreen=\"true\" src=\"https://www.youtube.com/embed/vIfGgDnmBXg?showinfo=0\" style=\"width: 60%; height: 362.25px;\"></iframe><p><br></p>",
             }],
+            styleInput: "{'border': '3px solid black',} ",
         }]
 
         for(let i=1; i <= gridLayout.numColumns; i++) {
@@ -404,6 +465,7 @@ class App extends React.Component {
                     type: 'rich text',
                     state: '<p>Write some rich text here...</p>',
                 }], // React components and markup to be rendered, can be created from componentStates
+                styleInput: "{'border': '3px solid black',} ",
             })
         }
         return gridSections
@@ -415,6 +477,8 @@ class App extends React.Component {
         let newSection = {
             id: getId(),
             style: {},
+            className: "",
+            styleInput: "",
             selectedLayout: this.state.defaultGridLayout, 
             // cards: [], // don't know where it is best to store the cards. 
             gridSections: this.makeGridSections(this.state.defaultGridLayout)
@@ -508,12 +572,34 @@ class App extends React.Component {
 
             let section = state.pages[state.globalContextObj.editing].sections[sectionIndex]
             
-            state.pages[state.globalContextObj.editing].sections[sectionIndex] = _.merge(section, sectionUpdate)
-            
+            state.pages[state.globalContextObj.editing].sections[sectionIndex] = newMerge(section, sectionUpdate)
             return {
                 pages: state.pages
             }
         })
+    }
+
+    applySectionStyles(sectionIndex) {
+        const section = this.state.pages[this.state.globalContextObj.editing].sections[sectionIndex]
+
+        try {
+            const styleString = section.styleInput
+            if (styleString === "") {
+                this.updateSectionState({
+                    style: {},
+                }, sectionIndex)
+                return
+            }
+            const styleObject = JSON.parse(styleString)
+            const sectionUpdate = {
+                style: styleObject
+            }
+            this.updateSectionState(sectionUpdate, sectionIndex)
+            
+        } catch (error) {
+            console.log("Invalid styles, not able to parse as JSON. Error: ", error)
+        }
+
     }
 
     updateGridSectionState(gridSectionUpdate, sectionIndex, gridSectionIndex) {
@@ -522,13 +608,38 @@ class App extends React.Component {
         this.setState((state, props) => {
             let gridSection = state.pages[state.globalContextObj.editing].sections[sectionIndex].gridSections[gridSectionIndex]
 
-            state.pages[state.globalContextObj.editing].sections[sectionIndex].gridSections[gridSectionIndex] = _.merge(gridSection, gridSectionUpdate)
+            state.pages[state.globalContextObj.editing].sections[sectionIndex].gridSections[gridSectionIndex] = newMerge(gridSection, gridSectionUpdate)
 
             return {
                 pages: state.pages
             }
         })
     }
+
+    
+    applyGridSectionStyles(sectionIndex, gridSectionIndex) {
+        
+        const gridSection = this.state.pages[this.state.globalContextObj.editing].sections[sectionIndex].gridSections[gridSectionIndex]
+        console.log("applyGridSectionStyles: ", gridSection, sectionIndex, gridSectionIndex)
+        try {
+            const styleString = gridSection.styleInput
+            if (styleString === "") {
+                this.updateGridSectionState({
+                    style: {},
+                }, sectionIndex, gridSectionIndex)
+                return
+            }
+            const styleObject = JSON.parse(styleString)
+            const gridSectionUpdate = {
+                style: styleObject
+            }
+            this.updateGridSectionState(gridSectionUpdate, sectionIndex, gridSectionIndex)
+            
+        } catch (error) {
+            console.log("Invalid styles, not able to parse as JSON. Error: ", error)
+        }
+     }
+ 
 
 
     addComponent(componentType) {
@@ -548,6 +659,9 @@ class App extends React.Component {
             if (componentType === 'rich text') {
                 var newComponent = {
                     id: getId(),
+                    style: {},
+                    className: "",
+                    styleInput: "",
                     type: 'rich text',
                     state: "<div>Rich text...</div>"
                 }
@@ -567,6 +681,16 @@ class App extends React.Component {
         if (!this.state.globalContextObj.editing) return
 
         this.setState((state, props) => {
+            let component = state.pages[state.globalContextObj.editing].sections[sectionIndex].gridSections[gridSectionIndex].componentStates[componentStateIndex]
+
+            state.pages[state.globalContextObj.editing].sections[sectionIndex].gridSections[gridSectionIndex].componentStates[componentStateIndex] = newMerge(component, componentUpdate)
+
+            return {
+                pages: state.pages
+            }
+        })
+        /*
+        this.setState((state, props) => {
 
             // console.log('component update: ', componentUpdate.state, sectionIndex, gridSectionIndex, componentStateIndex)
             for (let key in componentUpdate) {
@@ -576,6 +700,29 @@ class App extends React.Component {
                 pages: state.pages
             }
         })
+        */
+    }
+
+    applyComponentStyles(sectionIndex, gridSectionIndex, componentStateIndex) {
+        const component = this.state.pages[this.state.globalContextObj.editing].sections[sectionIndex].gridSections[gridSectionIndex].componentStates[componentStateIndex]
+
+        try {
+            const styleString = component.styleInput
+            if (styleString === "") {
+                this.updateComponentState({
+                    style: {},
+                }, sectionIndex, gridSectionIndex, componentStateIndex)
+                return
+            }
+            const styleObject = JSON.parse(styleString)
+            const componentUpdate = {
+                style: styleObject
+            }
+            this.updateComponentState(componentUpdate, sectionIndex, gridSectionIndex, componentStateIndex)
+            
+        } catch (error) {
+            console.log("Invalid styles, not able to parse as JSON. Error: ", error)
+        }
     }
 
     deleteObject() {
@@ -668,6 +815,7 @@ class App extends React.Component {
     }
     componentDidMount() {
         this.loadProjects()
+        setScrollabelHeight.bind(this)()
     }
 
     componentDidUpdate(pastProps) {
@@ -694,66 +842,30 @@ class App extends React.Component {
                             
                             {UserInfo(this.state.user) /* Logged in user, or the Admin (aka: me) */} 
                             
-                            { !this.state.globalContextObj.editing &&
-                                <div className="SN SN-Scrollable">
-                                    <div className="SN__container">
-                                        <p className="SN__menu-title">PAGES</p>
-                                        <div className='SN__widget'>
-                                            <ul>
-                                                {
-                                                    this.state.pages.map((page, pageIndex) => {
-                                                        if (page.type !== "page") {
-                                                            return null
-                                                        }
-                                                        return (
-                                                            <li key={page.id}>
-                                                                <Link
-                                                                    to={page.path} 
-                                                                    className="SN__item"
-                                                                    activeClassName="SN__item--active"
-                                                                    onlyActiveOnIndex
-                                                                >
-                                                                    <i className="material-icons">pages</i><span>{page.title + " "}</span>
-                                                                    <button className="SN__button SN__edit-button" onClick={this.toggleEdit} value={pageIndex}>
-                                                                        <i className="material-icons">edit</i>
-                                                                    </button>
-                                                                    <button className="SN__button SN__delete-button" onClick={() => {this.deletePage(pageIndex)}}>
-                                                                        <i className="material-icons">delete</i>
-                                                                    </button>
-                                                                </Link>
-                                                            </li>
-                                                        )
-                                                    })
-                                                }
-                                                
-                                            </ul>
-                                            <div>
-                                                <input className="SN__input" placeholder="Page Title" value={this.state.newPageTitle} onChange={this.changePageTitle}/>
-                                                <button className="SN__button SN__add-button" onClick={() => this.createPage("page")}>
-                                                    <i className="material-icons">add_box</i>
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
+                                <div className="SN-Scrollable" style={{
+                                    height: this.state.scrollableHeight
+                                }}>
 
-                                    <div className="SN__container">
-                                        <p className="SN__menu-title">PROJECTS</p>
-                                        <div className="SN__widget">
-                                            <ul>
-                                                {
-                                                    this.state.pages.map((page, pageIndex) => {
-                                                        if (page.type !== 'project') {
-                                                            return null
-                                                        }
-                                                        return (
-                                                            <li key={page.id}>
-                                                                    <Link 
+                                { !this.state.globalContextObj.editing &&
+                                    <React.Fragment>
+                                        <div className="SN__container">
+                                            <p className="SN__menu-title">PAGES</p>
+                                            <div className='SN__widget'>
+                                                <ul>
+                                                    {
+                                                        this.state.pages.map((page, pageIndex) => {
+                                                            if (page.type !== "page") {
+                                                                return null
+                                                            }
+                                                            return (
+                                                                <li key={page.id}>
+                                                                    <Link
                                                                         to={page.path} 
                                                                         className="SN__item"
-                                                                        activeClassName="SN__item--active" // not working, do not know why
+                                                                        activeClassName="SN__item--active"
                                                                         onlyActiveOnIndex
                                                                     >
-                                                                        <i className="material-icons">pages</i><span>{page.title}</span>
+                                                                        <i className="material-icons">pages</i><span>{page.title + " "}</span>
                                                                         <button className="SN__button SN__edit-button" onClick={this.toggleEdit} value={pageIndex}>
                                                                             <i className="material-icons">edit</i>
                                                                         </button>
@@ -761,80 +873,139 @@ class App extends React.Component {
                                                                             <i className="material-icons">delete</i>
                                                                         </button>
                                                                     </Link>
-                                                            </li>
-                                                        )
-                                                    })
-                                                }
-                                            </ul>
-                                            <div>
-                                                <input className="SN__input" placeholder="Project Title"  value={this.state.newProjectTitle} onChange={this.changeProjectTitle}/>
-                                                <button className="SN__button SN__add-button" onClick={() => this.createPage("project")}>
-                                                    <i className="material-icons">add_box</i>
-                                                </button>
+                                                                </li>
+                                                            )
+                                                        })
+                                                    }
+                                                    
+                                                </ul>
+                                                <div>
+                                                    <input className="SN__input" placeholder="Page Title" value={this.state.newPageTitle} onChange={this.changePageTitle}/>
+                                                    <button className="SN__button SN__add-button" onClick={() => this.createPage("page")}>
+                                                        <i className="material-icons">add_box</i>
+                                                    </button>
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>
-                                </div>
-                            }
+
+                                        <div className="SN__container">
+                                            <p className="SN__menu-title">PROJECTS</p>
+                                            <div className="SN__widget">
+                                                <ul>
+                                                    {
+                                                        this.state.pages.map((page, pageIndex) => {
+                                                            if (page.type !== 'project') {
+                                                                return null
+                                                            }
+                                                            return (
+                                                                <li key={page.id}>
+                                                                        <Link 
+                                                                            to={page.path} 
+                                                                            className="SN__item"
+                                                                            activeClassName="SN__item--active" // not working, do not know why
+                                                                            onlyActiveOnIndex
+                                                                        >
+                                                                            <i className="material-icons">pages</i><span>{page.title}</span>
+                                                                            <button className="SN__button SN__edit-button" onClick={this.toggleEdit} value={pageIndex}>
+                                                                                <i className="material-icons">edit</i>
+                                                                            </button>
+                                                                            <button className="SN__button SN__delete-button" onClick={() => {this.deletePage(pageIndex)}}>
+                                                                                <i className="material-icons">delete</i>
+                                                                            </button>
+                                                                        </Link>
+                                                                </li>
+                                                            )
+                                                        })
+                                                    }
+                                                </ul>
+                                                <div>
+                                                    <input className="SN__input" placeholder="Project Title"  value={this.state.newProjectTitle} onChange={this.changeProjectTitle}/>
+                                                    <button className="SN__button SN__add-button" onClick={() => this.createPage("project")}>
+                                                        <i className="material-icons">add_box</i>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </React.Fragment>
+                                }
                             
+     
 
-                            { this.state.globalContextObj.editing && 
-                                <React.Fragment>
-                                    <div className="SN__container">
-                                        <div className='SN__widget'>
-                                            <i className="material-icons SN__back-arrow" onClick={this.toggleEdit}>arrow_back</i>
+                                { this.state.globalContextObj.editing && 
+                                    <React.Fragment>
+                                        <div className="SN__container">
+                                            <div className='SN__widget'>
+                                                <i className="material-icons SN__back-arrow" onClick={this.toggleEdit}>arrow_back</i>
+                                            </div>
                                         </div>
-                                    </div>
-                                    <div className="SN__container">
-                                        <p className="SN__menu-title">GLOBAL</p>
-                                        <div className='SN__widget'> {/* Section__toolbarMenu */}
-                                            <ul>
-                                                <li><a className="SN__item" onClick={this.clearFocus}><i className="material-icons">clear</i><span>Clear Focus</span></a></li>
-                                                <li><a className="SN__item" onClick={this.toggleSpacing}><i className="material-icons">border_all</i><span>Toggle Spacing</span></a></li>
-                                                
-                                            </ul>
+                                        <div className="SN__container">
+                                            <p className="SN__menu-title">GLOBAL</p>
+                                            <div className='SN__widget'> {/* Section__toolbarMenu */}
+                                                <ul>
+                                                    <li><a className="SN__item" onClick={this.clearFocus}><i className="material-icons">clear</i><span>Clear Focus</span></a></li>
+                                                    <li><a className="SN__item" onClick={this.toggleSpacing}><i className="material-icons">border_all</i><span>Toggle Spacing</span></a></li>
+                                                    <li><a className="SN__item" onClick={this.addSection}><i className="material-icons">add_box</i><span>Add Section</span></a></li>                                                    
+                                                </ul>
+                                            </div>
                                         </div>
-                                    </div>
-                                    <div className="SN__container">
-                                        <p className="SN__menu-title">SECTION</p>
-                                        <div className='SN__widget'> {/* Section__toolbarMenu */}
-                                            <ul>
-                                                <li><a className="SN__item" onClick={this.addSection}><i className="material-icons">add_box</i><span>Add Section</span></a></li>
-                                            </ul>
-                                        </div>
-                                    </div>
-                                    <div className="SN__container">
-                                        <p className="SN__menu-title">COMPONENTS</p>
-                                        <div className='SN__widget'> {/* Section__toolbarMenu */}
-                                            <ul>
-                                                <li><a className="SN__item" onClick={() => this.addComponent("rich text")}><i className="material-icons">text_fields</i><span>Add Rich Text</span></a></li>
-                                                <li><a className="SN__item" onClick={() => this.addComponent("image")}><i className="material-icons">insert_photo</i> <span>Add Image</span></a></li>
-                                            </ul>
-                                        </div>
-                                    </div>  
-                                    <div className="SN__container">
-                                        <p className="SN__menu-title">FILES</p>
-                                        <div className='SN__widget'> {/* Section__toolbarMenu */}
-                                            <ul>
-                                                <li>          
-                                                    <Link 
-                                                        to={{
-                                                            pathname: '/images',  
-                                                        }} 
-                                                        className="SN__item"
-                                                        activeClassName="SN__item--active" // not working, do not know why
-                                                    >
-                                                        <i className="material-icons">cloud_upload</i><span>Upload Images</span>
-                                                    </Link>
-                                                </li>
-                                            </ul>
-                                        </div>
-                                    </div>  
-                                </React.Fragment>
-                            }
+                                    </React.Fragment>
+                                }
 
+                                <div id="Page__toolbar-portal"></div>
+                                    
+                                { this.state.globalContextObj.editing && 
+                                    <React.Fragment>
+                                        <ColorManager />
+
+                                        <div className="SN__container">
+                                            <p className="SN__menu-title">COMPONENTS</p>
+                                            <div className='SN__widget'> {/* Section__toolbarMenu */}
+                                                <ul>
+                                                    <li><a className="SN__item" onClick={() => this.addComponent("rich text")}><i className="material-icons">text_fields</i><span>Add Rich Text</span></a></li>
+                                                    <li><a className="SN__item" onClick={() => this.addComponent("image")}><i className="material-icons">insert_photo</i> <span>Add Image</span></a></li>
+                                                </ul>
+                                            </div>
+                                        </div>  
+                                        <div className="SN__container">
+                                            <p className="SN__menu-title">FILES</p>
+                                            <div className='SN__widget'> {/* Section__toolbarMenu */}
+                                                <ul>
+                                                    <li>          
+                                                        <Link 
+                                                            to={{
+                                                                pathname: '/image-uploader',  
+                                                            }} 
+                                                            className="SN__item"
+                                                            activeClassName="SN__item--active" // not working, do not know why
+                                                            >
+                                                            <i className="material-icons">cloud_upload</i><span>Image Uploader</span>
+                                                        </Link>
+                                                    </li>
+                                                    <li>          
+                                                        <Link 
+                                                            to={{
+                                                                pathname: '/file-uploader',  
+                                                            }} 
+                                                            className="SN__item"
+                                                            activeClassName="SN__item--active" // not working, do not know why
+                                                            >
+                                                            <i className="material-icons">cloud_upload</i><span>File Uploader</span>
+                                                        </Link>
+                                                    </li>
+                                                </ul>
+                                            </div>
+                                        </div>  
+                                    </React.Fragment>
+                                }
+
+                            </div>
+                            
                             {AccountInfo()}
+                            
                         </div>
+
+
+
                         {/* This is the main content area */}
                         <div className='App__grid--main'>
                             
@@ -861,11 +1032,15 @@ class App extends React.Component {
                                             enableSpacing={this.state.globalContextObj.enableSpacing}
 
                                             updatePageState={this.updatePageState}
+                                            applyPageStyles={this.applyPageStyles}
                                             updateSectionLayout={this.updateSectionLayout}
                                             updateSectionWidths={this.updateSectionWidths}
                                             updateSectionState={this.updateSectionState}
+                                            applySectionStyles={this.applySectionStyles}
                                             updateGridSectionState={this.updateGridSectionState}
+                                            applyGridSectionStyles={this.applyGridSectionStyles}
                                             updateComponentState={this.updateComponentState}
+                                            applyComponentStyles={this.applyComponentStyles}
 
                                             moveObject={this.moveObject}
                                             deleteObject={this.deleteObject}
@@ -873,7 +1048,10 @@ class App extends React.Component {
                                     )
                                 })
                             }
-                            
+
+                            <Route exact path="/image-uploader" render={(props) => <ImageUploader />} />
+                            <Route exact path="/file-uploader" render={(props) => <FileUploader />} />
+                                
                             {/* get from the Link
                                 id
                                 projectIndex

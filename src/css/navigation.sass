@@ -37,8 +37,8 @@
   overflow-y: scroll
   
 .SN-UserInfo
-  margin: 20px 24px
-  margin-bottom: 0px
+  padding: 20px 24px
+  border-bottom: 1px solid #474D55
 
 .SN-UserInfo__image
   position: relative
@@ -62,9 +62,13 @@
     font-size: 13px 
 
 
+.SN__back-arrow:focus, .SN__back-arrow:hover, .SN__back-arrow:active
+  color: #EFF3F8
+
+
 .SN__menu-title
   font-size: 13px
-  padding: 25px 31px 0 27px
+  padding: 15px 31px 0 27px
   margin: 0
   margin-bottom: 10px
   text-transform: uppercase
@@ -176,9 +180,13 @@ a.SN__item--active
 
 .SN__back-arrow
   font-size: 35px
+  margin-top: 10px
 
 .SN__back-arrow:hover
   cursor: pointer 
+
+.SN__input-container
+  padding: 5px 10px
 
 .SN__input
   display: inline-block
@@ -214,3 +222,84 @@ a.SN__item--active
 
 .SN__button:hover
   opacity: 1
+
+
+
+.SN__color-button
+  position: relative
+  top: 3px
+  margin: 0 10px
+  border: none
+  width: 1.5em
+  height: 1.5em 
+  background: #6f3
+  cursor: pointer
+  border: 0.5px solid grey
+
+.Page-color-pallet
+  position: absolute
+  top: 400px
+  left: 320px
+  background: grey
+  z-index: 10000
+
+
+#SN__account-info
+  padding-bottom: 20px
+  border-top: 1px solid #474D55
+
+
+.SN__input-textarea
+  min-width: 210px
+  max-width: 210px
+  min-height: 150px
+  background: #EFF3F8
+  &:focus
+    outline: none
+
+.SN__button-normal // DUPLICATED
+  background: green
+  border: none
+  padding: 2px 8px
+  border-radius: 5px
+  &:hover
+    cursor: pointer
+    background: lightgreen
+
+
+.SN__button--create
+
+.CP__container
+  padding: 10px
+  box-sizing: border-box
+
+.CP__pallet
+  display: flex
+  flex-direction: row
+  flex-wrap: wrap
+  border: 1px solid #8B8F9E
+  margin: 2px 0
+  border-radius: 5px
+  padding: 5px
+
+.CP__color
+  position: relative
+  width: 35px
+  height: 35px
+  margin-right: 3px
+  margin-bottom: 3px
+  border-radius: 5px
+  border: 1px solid #8B8F9E
+  &:hover
+    cursor: pointer
+
+
+.FU__color-button--delete
+  color: white
+  font-size: 20px
+  position: absolute
+  top: 2px
+  right: 2px
+  &:hover
+    color: red
+    cursor: pointer

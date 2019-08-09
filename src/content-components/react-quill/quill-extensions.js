@@ -62,12 +62,7 @@ class ExtendedImage extends Image {
 	}
 	format(name, value) {
 		if (IMAGE_ATTRIBUTES.indexOf(name) > -1) {
-			if (name === 'style') {
-				console.log("From Extended image: ", name, value, this.domNode)
-				return 
-				// this.domNode.setAttribute(name, value);
-			}
-			
+
 			if (value) {
 				this.domNode.setAttribute(name, value);
 			} else {
@@ -80,16 +75,26 @@ class ExtendedImage extends Image {
 }
 
 class ExtendedVideo extends Video {
+	static create(value) {
+		let node = super.create(value);
+		node.setAttribute('frameborder', '0');
+		node.setAttribute('allowfullscreen', true);
+		node.setAttribute('src', this.sanitize(value));
+		return node;
+	  }
+
 	static formats(domNode) {
 		return VIDEO_ATTRIBUTES.reduce(function (formats, attribute) {
 			if (domNode.hasAttribute(attribute)) {
+
 				if (attribute === 'style') {
 					let style = domNode.getAttribute(attribute);
 					style = style.replace(/ +height: +\d+.\d+px;/gi, "")
-					console.log("video style: ", style)
+					// console.log("video style: ", style)
 					formats[attribute] = style
 					return formats
 				}
+
 				formats[attribute] = domNode.getAttribute(attribute);
 			}
 			return formats;
