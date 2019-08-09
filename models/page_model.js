@@ -2,7 +2,7 @@ var mongoose = require('mongoose')
 var Schema = mongoose.Schema
 
 
-var ProjectSchema = mongoose.Schema({
+var PageSchema = mongoose.Schema({
 	state: {
 		type: Object,
 	},
@@ -16,4 +16,4 @@ var ProjectSchema = mongoose.Schema({
         type: Boolean
     }
 })
-var project = module.exports = mongoose.model('Project', ProjectSchema)
+var page = module.exports = mongoose.model('Page', PageSchema)

@@ -15,9 +15,12 @@ const app = new Koa();
 const publicRouter = new Router();
 const protectedRouter = new Router()
 
-const User = require('./user_model')
-const Project = require('./project_model') 
-const Cards = require('./card_model')
+const User = require('./models/user_model')
+const Page = require('./models/page_model')
+const ColorPallets = require("./models/color_pallets_model") 
+const Template = require("./models/template_model")
+
+
 // let db_uri = 'mongodb://' + process.env.DB_USERNAME + ':' + process.env.DB_PASSWORD + '/localhost:27017/' + process.env.DB_NAME
 let db_uri = 'mongodb://localhost:27017/' + process.env.DB_NAME
 mongoose.connect(db_uri, { useNewUrlParser: true })
@@ -41,6 +44,8 @@ function register_validator(ctx) {
     return true
 }
 
+
+/* Remove this, user have to be added manyally and all resources belong to the "site" not the one editing */ 
 publicRouter.post('/register', async ctx => {
     if (!register_validator(ctx)) {
         ctx.status = 400
@@ -107,6 +112,199 @@ publicRouter.post('/login', async (ctx) => {
         token: token, 
     }
 })
+
+
+publicRouter.get("/colors", async ctx => {
+    try {
+        const colors = await ColorPallets.findOne().exec() // dont know if findOne needs parameters
+        ctx.status = 200
+        ctx.body = colors
+    } catch(error) {
+        console.log(error)
+        ctx.status = 400
+        ctx.body = {
+            error: "Failed to get colors",
+        }
+    }
+})
+
+/* Quick and dirty route to both create new and update a users color pallets */ 
+publicRouter.post("/colors", async ctx => {
+
+    const unknownResponse = await ColorPallets.remove().exec().catch(error => { // PARAMS? 
+        console.log("Failed to delete color pallet, probably because it does not exists. In this case, just carry on.")
+    })
+
+    try {
+        let colorPallets = new ColorPallets({
+            owner: ctx.auth.user,
+            colorPallets: ctx.body.colorPallets
+        })
+
+        colorPallets = await colorPallets.save()
+
+        ctx.status = 200
+        ctx.body = colorPallets
+    } catch(error) {
+        console.log(error)
+        ctx.status = 400
+        ctx.body = {
+            error: "Failed to set colors",
+        }
+    }
+})
+
+publicRouter.get("/pages", async ctx => {
+    // Need to figure out this...
+    // Maybe I assume that this app will only support one admin/owner/user and 
+    // s that users must be manually added to get be able to modify the resources of the site
+
+    try {
+        const pages = await Page.find().exec()
+
+        ctx.status = 200
+        ctx.body = pages
+    } catch (error) {
+        ctx.status = 400
+        ctx.body = {
+            error: "Failed to get pages from the database",
+        }
+    }
+})
+
+publicRouter.get("/pages/:name", async ctx => {
+    try {
+        const pages = await Page.findOne({ name: ctx.params.name }).exec()
+
+        ctx.status = 200
+        ctx.body = pages
+    } catch(error) {
+        ctx.status = 400
+        ctx.body = {
+            error: "Failed to get page from the database",
+        }
+    }
+})
+
+/* Protected Router */
+publicRouter.post("/pages", async ctx => {
+    try {
+        let newPage = Page(ctx.body)
+        newPage = await newPage.save()
+        ctx.status = 201
+        ctx.body = newPage
+
+    } catch(error) {
+        ctx.status = 400
+        ctx.body = {
+            error: "Failed to create new page",
+        }
+    }
+})
+
+publicRouter.put("/pages/:name", async ctx => {
+    try {
+        const updatedPage = await Page.findOneAndUpdate({ name: ctx.params.name}, ctx.body)
+
+        ctx.status = 200
+        ctx.body = updatedPage
+
+    } catch(error) {
+        ctx.status = 400
+        ctx.body = {
+            error: `Failed to update page: "${ctx.params.name}"`,
+        }
+    }
+})
+
+publicRouter.delete("/pages/:name", async ctx => {
+    try {
+        const updatedPage = await Page.findOneAndRemove({ name: ctx.params.name})
+
+        ctx.status = 200
+    } catch(error) {
+        ctx.status = 400
+        ctx.body = {
+            error: `Failed to delete page: "${ctx.params.name}"`,
+        }
+    }
+})
+
+
+publicRouter.get("/templates", async ctx => {
+    try {
+        const templates = await Template.find().exec()
+
+        ctx.status = 200
+        ctx.body = templates
+    } catch(error) {
+        ctx.status = 400
+        ctx.body = {
+            error: `Failed to get templates`,
+        }
+    }
+})
+
+publicRouter.get("/templates/:id", async ctx => {
+    try {
+        const template = await Template.findOne({ _id: ctx.params.id}).exec()
+
+        ctx.status = 200
+        ctx.body = template
+    } catch(error) {
+        ctx.status = 400
+        ctx.body = {
+            error: `Failed to get templates`,
+        }
+    }
+})
+
+
+publicRouter.post("/templates", async ctx => {
+    try {
+        let newTemplate = new Template(ctx.body)
+        newTemplate = await newTemplate.save()
+
+        ctx.status = 200
+        ctx.body = newTemplate
+    } catch(error) {
+        ctx.status = 400
+        ctx.body = {
+            error: `Failed to create new template`,
+        }
+    }
+})
+
+publicRouter.put("/templates/:id", async ctx => { // CONTINUTE 
+    try {
+        let newTemplate = new Template(ctx.body)
+        newTemplate = await newTemplate.save()
+
+        ctx.status = 200
+        ctx.body = newTemplate
+    } catch(error) {
+        ctx.status = 400
+        ctx.body = {
+            error: `Failed to create new template`,
+        }
+    }
+})
+
+publicRouter.delete("/templates/:id", async ctx => {
+    try {
+        let newTemplate = new Template(ctx.body)
+        newTemplate = await newTemplate.save()
+
+        ctx.status = 200
+        ctx.body = newTemplate
+    } catch(error) {
+        ctx.status = 400
+        ctx.body = {
+            error: `Failed to create new template`,
+        }
+    }
+})
+
 
 // ctx.query['some-key']
 // 
