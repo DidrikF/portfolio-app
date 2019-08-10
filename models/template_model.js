@@ -8,7 +8,7 @@ var TemplateSchema = mongoose.Schema({
 		required: [true, "Type is required"],
   },
   template: {
-    type: Object,
+    type: Object, // page, section, gridSection, component
   }
 })  
 

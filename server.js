@@ -127,6 +127,11 @@ publicRouter.post('/login', async (ctx) => {
     }
 })
 
+publicRouter.post("/logout", async ctx => {
+    ctx.set("Authorization", null)
+    ctx.status = 200
+})
+
 
 publicRouter.get("/colors", async ctx => {
     try {
@@ -233,7 +238,7 @@ publicRouter.put("/pages/:name", async ctx => {
 
 publicRouter.delete("/pages/:name", async ctx => {
     try {
-        const updatedPage = await Page.findOneAndRemove({ name: ctx.params.name})
+        await Page.findOneAndRemove({ name: ctx.params.name})
 
         ctx.status = 200
     } catch(error) {
@@ -289,46 +294,33 @@ publicRouter.post("/templates", async ctx => {
     }
 })
 
-publicRouter.put("/templates/:id", async ctx => { // CONTINUTE 
+publicRouter.put("/templates/:id", async ctx => {
     try {
-        let newTemplate = new Template(ctx.body)
-        newTemplate = await newTemplate.save()
+        const updatedTemplate = await Template.findOneAndUpdate({ _id: ctx.props.id }, ctx.body)
 
         ctx.status = 200
-        ctx.body = newTemplate
+        ctx.body = updatedTemplate
     } catch(error) {
         ctx.status = 400
         ctx.body = {
-            error: `Failed to create new template`,
+            error: `Failed to update template`,
         }
     }
 })
 
 publicRouter.delete("/templates/:id", async ctx => {
     try {
-        let newTemplate = new Template(ctx.body)
-        newTemplate = await newTemplate.save()
+        await Template.findOneAndDelete({ _id: ctx.params.id })
 
         ctx.status = 200
-        ctx.body = newTemplate
     } catch(error) {
         ctx.status = 400
         ctx.body = {
-            error: `Failed to create new template`,
+            error: `Failed to delete template`,
         }
     }
 })
 
-
-// ctx.query['some-key']
-// 
-/*
-
-publicRouter.post('/logout', function (ctx) {
-    ctx.clearCookie('Authorization').status(200).send({ message: "Successfully logged out" })
-})
-
-*/
 
 publicRouter.get('/images', async (ctx) => {
     try {
@@ -691,4 +683,15 @@ publicRouter.put("/files/:name", async ctx => {
         ctx.status = 201
     }
 })
+*/
+
+
+// ctx.query['some-key']
+// 
+/*
+
+publicRouter.post('/logout', function (ctx) {
+    ctx.clearCookie('Authorization').status(200).send({ message: "Successfully logged out" })
+})
+
 */

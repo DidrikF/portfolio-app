@@ -3,7 +3,6 @@ import React from 'react';
 import axios from 'axios';
 
 
-
 export class Login extends React.Component {
     constructor(props) {
         super(props)
@@ -26,14 +25,17 @@ export class Login extends React.Component {
     }
 
     handle_submit(event) {
+        let self = this
         event.preventDefault()
         axios.post('/login', {
             email: this.state.email,
             password: this.state.password,
-        }).then(response => 
+        }).then(response => {
             console.log(response)
+            self.props.closeForm()
             // store user and token in context
-        ).catch(error => 
+
+        }).catch(error => 
             console.log(error)
         )
     }
@@ -59,6 +61,9 @@ export class Login extends React.Component {
     }
 }
 
+// Login.contextType = GlobalContext
+
+/* Will not be used in the first deployment of the app, users have to be manually added */
 export class Register extends React.Component {
 
     constructor(props) {

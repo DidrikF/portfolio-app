@@ -1,6 +1,8 @@
 import React from 'react'
 import axios from 'axios'
 import update from 'immutability-helper';
+import { Login } from './helper-components/auth'
+
 import { BrowserRouter as Router, Route, Link, NavLink, HashRouter, Redirect } from "react-router-dom"; 
 
 import ContentEditable from 'react-contenteditable' // use for inputs that does not require rich text editing. This allows inputs to have the same style 
@@ -211,7 +213,16 @@ class App extends React.Component {
                 enableSpacing: false,
             }
         }
-    } 
+    }
+    
+    handleInput(e) { // Need to decide how Login form shares data with the rest of the app + conditional rendering
+        
+        this.setState({
+            user: null,
+            showLogin: false,
+
+        })
+    }
     
     // ________________Global context related_____________________
     toggleEdit(e) {
@@ -1000,10 +1011,28 @@ class App extends React.Component {
 
                             </div>
                             
-                            {AccountInfo()}
+                            <div id="SN__account-info" className="SN__container">
+                                <p className="SN__menu-title">ACCOUNT</p>
+                                <div className='SN__widget'> {/* Section__toolbarMenu */}
+                                    <ul>
+                                        <li><a className="SN__item" onClick={()=>{ this.(true)}}><i className="material-icons">add_box</i><span>Log In</span></a></li>
+                                    </ul>
+
+                                    { showLogin &&
+                                        <div className="SN__login-form">
+                                            <Login // Need to be able to update the global context, this is why it is "easier" to render it here.
+                                                showLoginForm
+                                                setUser
+                                                setAuthenticated
+
+
+                                            />
+                                        </div>
+                                    }
+                                </div>
+                            </div>
                             
                         </div>
-
 
 
                         {/* This is the main content area */}
