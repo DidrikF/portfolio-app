@@ -103,6 +103,8 @@ class App extends React.Component {
         this.deleteObject = this.deleteObject.bind(this)
         this.moveObject = this.moveObject.bind(this)
 
+        this.saveActivePage = this.saveActivePage.bind(this)
+
         this.setPageStateFromTemplate = this.setPageStateFromTemplate.bind(this)
         this.createTemplate = this.createTemplate.bind(this)
         this.deleteTemplate = this.deleteTemplate.bind(this)
@@ -329,9 +331,12 @@ class App extends React.Component {
         let pathTitle = pageTitle.toLowerCase().replace(" ", "-")
         
         if (type === "page") {
-            if (pageTitle.toLowerCase() === "home") pathTitle  = "" // Special naming for the home page
+            if (pageTitle.toLowerCase() === "home") {
+                path  = "/" // Special naming for the home page
+            } else {
+                path =  `/${pathTitle}` // replace , and . etc
+            }
 
-            path =  `/${pathTitle}` // replace , and . etc
         } else {
             path =  `/${type}/${pathTitle}` // replace , and . etc
         }
@@ -949,7 +954,7 @@ class App extends React.Component {
         const activePage = this.state.globalContextObj.editing
         const page = this.state.pages[activePage]
 
-        axios.put(`/${page.type}/${page.name}`, page).then(response => {
+        axios.put(`/${page.type}s/${page.pathTitle}`, page).then(response => {
             this.flashMessage({text: "Successfully saved the page!", type: "success"}, 3)
         }).catch(error => {
             this.flashMessage({text: "Failed to save the page, please try again.", type: "error"}, 3)
@@ -1020,6 +1025,7 @@ class App extends React.Component {
                                     scrollableHeight={this.state.scrollableHeight}
                                     pages={this.state.pages}
                                     toggleEdit={this.toggleEdit}
+                                    saveActivePage={this.saveActivePage}
                                     deletePage={this.deletePage}
 
                                     createPage={this.createPage}
@@ -1123,7 +1129,7 @@ class App extends React.Component {
                                             addSection={this.addSection}
 
                                             enableSpacing={this.state.globalContextObj.enableSpacing}
-
+                                            
                                             updatePageState={this.updatePageState}
                                             applyPageStyles={this.applyPageStyles}
                                             updateSectionLayout={this.updateSectionLayout}

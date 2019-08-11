@@ -154,7 +154,7 @@ class AuthNav extends React.Component {
                             <p className="SN__menu-title">GLOBAL</p>
                             <div className='SN__widget'> {/* Section__toolbarMenu */}
                                 <ul>
-                                    <li><a className="SN__item SN__item--green" onClick={this.props.savePage}><i className="material-icons">save</i><span>Save Active Page</span></a></li>
+                                    <li><a className="SN__item SN__item--green" onClick={this.props.saveActivePage}><i className="material-icons">save</i><span>Save Active Page</span></a></li>
                                     <li><a className="SN__item" onClick={this.props.clearFocus}><i className="material-icons">clear</i><span>Clear Focus</span></a></li>
                                     <li><a className="SN__item" onClick={this.props.toggleSpacing}><i className="material-icons">border_all</i><span>Toggle Spacing</span></a></li>
                                     <li><a className="SN__item" onClick={(e) => this.props.addSection()}><i className="material-icons">add_box</i><span>Add Section</span></a></li>                                                  

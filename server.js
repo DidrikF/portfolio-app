@@ -251,6 +251,7 @@ protectedRouter.post("/pages", async ctx => {
 
 protectedRouter.put("/pages/:pathTitle", async ctx => {
     try {
+        // not working as expected
         const updatedPage = await Page.findOneAndUpdate({ pathTitle: ctx.params.pathTitle}, ctx.body)
 
         ctx.status = 200
