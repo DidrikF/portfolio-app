@@ -3,6 +3,10 @@ var Schema = mongoose.Schema
 
 
 var TemplateSchema = mongoose.Schema({
+  title: {
+    type: String,
+    required: [true, "Type is required"],
+  },
   type: {
     type: String,
 		required: [true, "Type is required"],

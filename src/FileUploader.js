@@ -35,8 +35,6 @@ class FileUploader extends React.Component {
         this.setServerImageContainerWidth = setServerImageContainerWidth.bind(this)
 
         this.state = {
-            message: "",
-
             serverFiles: [],
             clientFiles: [],
             pageWidth: "",
@@ -59,18 +57,6 @@ class FileUploader extends React.Component {
     }
 
 
-    flashMessage(message, duration) {
-        this.setState({
-            message: message
-        })
-
-        setTimeout(() => {
-            this.setState({
-                message: "",
-            })
-        }, duration * 1000)
-    }
-
     viewFile(file) {
         // if file is viewable, show it in the appropriate way.
 
@@ -86,7 +72,7 @@ class FileUploader extends React.Component {
                 fileBeingViewed: file
             })
         } else {
-            this.flashMessage({text: "Cannot view that file type. ", type: "error"}, 3)
+            this.props.flashMessage({text: "Cannot view that file type. ", type: "error"}, 3)
         }
 
     }
@@ -101,7 +87,7 @@ class FileUploader extends React.Component {
                 }
             })
         }).catch(error => {
-            this.flashMessage({text: "Filed to delete file.", type: "error"}, 3)
+            this.props.flashMessage({text: "Filed to delete file.", type: "error"}, 3)
         })
     }
 
@@ -112,7 +98,7 @@ class FileUploader extends React.Component {
             var validFilename = /^[a-z0-9_.@()-]+\.[a-z]+$/i.test(file.name);
             console.log("validFileName: ", validFilename)
             if (!validFilename) {
-                this.flashMessage({text: "One or more filenames are invalid.", type: "error"}, 3)
+                this.props.flashMessage({text: "One or more filenames are invalid.", type: "error"}, 3)
                 return
             }
         }
@@ -142,7 +128,7 @@ class FileUploader extends React.Component {
                 })
                 this.getServerFiles()
             }).catch(error => {
-                this.flashMessage({text: "Upload failed, try again.", type: "error"} , 3)
+                this.props.flashMessage({text: "Upload failed, try again.", type: "error"} , 3)
             })
         }).catch(error => {
             console.log(error)
@@ -338,17 +324,6 @@ class FileUploader extends React.Component {
                     <a href={this.state.fileBeingViewed.path}>Download PDF</a></iframe>
                 }
 
-
-                { this.state.message &&
-                    <p 
-                        className="FU__flash-message"
-                        style={{
-                            background: (this.state.message.type === "error") ? "orange" : "green",
-                        }}
-                    >
-                        { this.state.message.text }
-                    </p>
-                }
             </div>
         );
     }

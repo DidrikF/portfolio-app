@@ -2,12 +2,11 @@ import React, { useEffect, useState, useRef } from 'react';
 import Dropzone from 'react-dropzone';
 import { evaluate } from 'mathjs'
 
-import Server from "./Server"
 
 import Cropper from 'react-cropper'
 import 'cropperjs/dist/cropper.css';
 import axios from 'axios';
-import { thisExpression } from '@babel/types';
+
 
 
 
@@ -43,7 +42,6 @@ class ImageUploader extends React.Component {
         this.setServerImageContainerWidth = setServerImageContainerWidth.bind(this)
 
         this.state = {
-            message: "",
 
             aspectRatio: "16 / 9",
             numericAspectRatio: 16 / 9,
@@ -74,17 +72,6 @@ class ImageUploader extends React.Component {
 
     }
 
-    flashMessage(message, duration) {
-        this.setState({
-            message: message
-        })
-
-        setTimeout(() => {
-            this.setState({
-                message: "",
-            })
-        }, duration * 1000)
-    }
     // upload files with react-dropzone and display mini preivew
     // previews have a delete button
     // click a preview to open in the cropper
@@ -117,7 +104,7 @@ class ImageUploader extends React.Component {
                 }
             })
         }).catch(error => {
-            this.flashMessage({text: "Filed to delete image.", type: "error"}, 3)
+            this.props.flashMessage({text: "Filed to delete image.", type: "error"}, 3)
         })
     }
 
@@ -128,7 +115,7 @@ class ImageUploader extends React.Component {
             var validFilename = /^[a-z0-9_.@()-]+\.[png|jpg|jpeg]+$/i.test(image.name);
             console.log("validFileName: ", validFilename)
             if (!validFilename) {
-                this.flashMessage({text: "One or more filenames are invalid.", type: "error"}, 3)
+                this.props.flashMessage({text: "One or more filenames are invalid.", type: "error"}, 3)
                 return
             }
         }
@@ -160,7 +147,7 @@ class ImageUploader extends React.Component {
                 })
                 this.getServerImages()
             }).catch(error => {
-                this.flashMessage({text: "Upload failed, try again.", type: "error"} , 3)
+                this.props.flashMessage({text: "Upload failed, try again.", type: "error"} , 3)
             })
         }).catch(error => {
             console.log(error)
@@ -319,7 +306,6 @@ class ImageUploader extends React.Component {
             console.log(error)
         })
     }
-
 
     componentDidMount() {
 

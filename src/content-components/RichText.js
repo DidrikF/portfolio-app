@@ -113,6 +113,7 @@ export default class RichText extends React.Component {
                                     >
                                     </textarea>
                                     <button className="SN__button-normal SN__button--create" onClick={this.applyComponentStyles}>Apply Styles</button>
+                                    <button className="Section__toolbar-button" onClick={this.props.deleteObject}><i className="material-icons">delete</i></button>
                                 </div>
                             </div>
                         </PageToolbarPortal>

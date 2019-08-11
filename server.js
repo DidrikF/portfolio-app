@@ -22,6 +22,7 @@ const sizeOf = promisify(require('image-size'));
 
 
 const app = new Koa();
+
 const publicRouter = new Router();
 const protectedRouter = new Router()
 
@@ -54,7 +55,7 @@ app.use(koaBody({
 /* Registration, Login, Logout */
 function register_validator(ctx) {
     if (validator.isEmail(ctx.request.body.email) === false) return false
-    if (ctx.request.body.password !== ctx.request.body.password_verify) return false
+
     return true
 }
 
@@ -68,15 +69,14 @@ publicRouter.post('/register', async ctx => {
         }
         return
     }
-    let password = await bcrypt.hash(ctx.request.body.password, 10)
-
-    let user = new User({
-        email: ctx.request.body.email,
-        password: password,
-    })
     try {
+        let password = await bcrypt.hash(ctx.request.body.password, 10)
+    
+        ctx.request.body.password = password
+
+        let user = new User(ctx.request.body)
         user = await user.save()
-        console.log('### ' + user.username + ' registered successfully!')
+        console.log('### ' + user.email + ' registered successfully!')
 
         const token = jwt.sign({
             exp: Math.floor(Date.now() / 1000) + (60 * 60),
@@ -99,32 +99,42 @@ publicRouter.post('/register', async ctx => {
 })
 
 publicRouter.post('/login', async (ctx) => {
-    let user = await User.findOne({ email: ctx.body.email }).select('+password').exec().catch(error => {
-        console.log(error)
-        ctx.status = 200
-        ctx.body = { error: 'An error ocurred, please try again.'}
-    })
-    let pass_compare_result = await bcrypt.compare(ctx.body.password, user.password)
+    try {
+        let user = await User.findOne({ email: ctx.request.body.email }).select('+password').exec()
 
-    if (!pass_compare_result) {
+        if (!user) throw Error("Failed to find user.")
+
+        let pass_compare_result = await bcrypt.compare(ctx.request.body.password, user.password)
+        
+        if (!pass_compare_result) {
+            ctx.status = 400
+            ctx.body = {
+                error: 'Wrong password'
+            }
+            return 
+        }
+        delete user.password
+
+        const token = jwt.sign({
+            exp: Math.floor(Date.now() / 1000) + (60 * 60),
+            data: user,
+        }, process.env.JWT_SECRET)
+    
+        ctx.status = 200
+        ctx.set('Authorization', token)
+        ctx.body = {
+            user: user,
+            token: token, 
+        }
+    } catch(error) {
+        console.log("Login exception caught: ", error)
         ctx.status = 400
         ctx.body = {
-            error: 'Wrong password'
+            error: "Login Failed"
         }
-        return 
     }
 
-    const token = jwt.sign({
-        exp: Math.floor(Date.now() / 1000) + (60 * 60),
-        data: user,
-    }, process.env.JWT_SECRET)
 
-    ctx.status = 200
-    ctx.set('Authorization', token)
-    ctx.body = {
-        user: user,
-        token: token, 
-    }
 })
 
 publicRouter.post("/logout", async ctx => {
@@ -132,43 +142,15 @@ publicRouter.post("/logout", async ctx => {
     ctx.status = 200
 })
 
-
-publicRouter.get("/colors", async ctx => {
+publicRouter.get("/user", async ctx => {
     try {
-        const colors = await ColorPallets.findOne().exec() // dont know if findOne needs parameters
+        const user = await User.findOne({ email: "didrik.fleischer@gmail.com"}).exec()
         ctx.status = 200
-        ctx.body = colors
+        ctx.body = user
     } catch(error) {
-        console.log(error)
         ctx.status = 400
         ctx.body = {
-            error: "Failed to get colors",
-        }
-    }
-})
-
-/* Quick and dirty route to both create new and update a users color pallets */ 
-publicRouter.post("/colors", async ctx => {
-
-    const unknownResponse = await ColorPallets.remove().exec().catch(error => { // PARAMS? 
-        console.log("Failed to delete color pallet, probably because it does not exists. In this case, just carry on.")
-    })
-
-    try {
-        let colorPallets = new ColorPallets({
-            owner: ctx.auth.user,
-            colorPallets: ctx.body.colorPallets
-        })
-
-        colorPallets = await colorPallets.save()
-
-        ctx.status = 200
-        ctx.body = colorPallets
-    } catch(error) {
-        console.log(error)
-        ctx.status = 400
-        ctx.body = {
-            error: "Failed to set colors",
+            error: "Failed to get user"
         }
     }
 })
@@ -191,9 +173,9 @@ publicRouter.get("/pages", async ctx => {
     }
 })
 
-publicRouter.get("/pages/:name", async ctx => {
+publicRouter.get("/pages/:pathTitle", async ctx => {
     try {
-        const pages = await Page.findOne({ name: ctx.params.name }).exec()
+        const pages = await Page.findOne({ pathTitle: ctx.params.pathTitle }).exec()
 
         ctx.status = 200
         ctx.body = pages
@@ -205,15 +187,61 @@ publicRouter.get("/pages/:name", async ctx => {
     }
 })
 
-/* Protected Router */
-publicRouter.post("/pages", async ctx => {
+// auth middleware
+
+async function authorize(ctx, next) {
     try {
-        let newPage = Page(ctx.body)
+        const token = ctx.request.header['authorization']
+
+        var decoded = jwt.verify(token, process.env.JWT_SECRET);
+        ctx.auth = {}
+        ctx.auth['token'] = decoded
+        console.log("Decoded token: ", decoded)
+
+    } catch (err) {
+        console.log("Not authorized! Error: ", err)
+        ctx.status = 400
+        ctx.body = {
+            error: "Not Authorized!"
+        }
+        return
+    }
+
+
+    await next()
+}
+
+
+// protected pages 
+
+protectedRouter.get("/authcheck", ctx => {
+    const token = jwt.sign({
+        exp: Math.floor(Date.now() / 1000) + (60 * 60),
+        data: ctx.auth["token"]["data"],
+    }, process.env.JWT_SECRET)
+
+    console.log("New Token in authcheck: ", token)
+
+    ctx.status = 200
+    ctx.set('Authorization', token)
+    ctx.body = {
+        user: ctx.auth["token"]["data"],
+        token: token, 
+    }
+})
+
+/* Protected Router */
+protectedRouter.post("/pages", async ctx => {
+    try {
+        console.log(ctx.request.body)
+        let newPage = Page(ctx.request.body)
         newPage = await newPage.save()
         ctx.status = 201
         ctx.body = newPage
 
     } catch(error) {
+        console.log(error)
+
         ctx.status = 400
         ctx.body = {
             error: "Failed to create new page",
@@ -221,9 +249,9 @@ publicRouter.post("/pages", async ctx => {
     }
 })
 
-publicRouter.put("/pages/:name", async ctx => {
+protectedRouter.put("/pages/:pathTitle", async ctx => {
     try {
-        const updatedPage = await Page.findOneAndUpdate({ name: ctx.params.name}, ctx.body)
+        const updatedPage = await Page.findOneAndUpdate({ pathTitle: ctx.params.pathTitle}, ctx.body)
 
         ctx.status = 200
         ctx.body = updatedPage
@@ -231,23 +259,64 @@ publicRouter.put("/pages/:name", async ctx => {
     } catch(error) {
         ctx.status = 400
         ctx.body = {
-            error: `Failed to update page: "${ctx.params.name}"`,
+            error: `Failed to update page: "${ctx.params.pathTitle}"`,
         }
     }
 })
 
-publicRouter.delete("/pages/:name", async ctx => {
+protectedRouter.delete("/pages/:pathTitle", async ctx => {
     try {
-        await Page.findOneAndRemove({ name: ctx.params.name})
+        await Page.findOneAndRemove({ pathTitle: ctx.params.pathTitle})
 
         ctx.status = 200
     } catch(error) {
         ctx.status = 400
         ctx.body = {
-            error: `Failed to delete page: "${ctx.params.name}"`,
+            error: `Failed to delete page: "${ctx.params.pathTitle}"`,
         }
     }
 })
+
+protectedRouter.get("/colors", async ctx => {
+    try {
+        const colors = await ColorPallets.findOne().exec() // dont know if findOne needs parameters
+        ctx.status = 200
+        ctx.body = colors
+    } catch(error) {
+        console.log(error)
+        ctx.status = 400
+        ctx.body = {
+            error: "Failed to get colors",
+        }
+    }
+})
+
+/* Quick and dirty route to both create new and update a users color pallets */ 
+protectedRouter.post("/colors", async ctx => {
+
+    const unknownResponse = await ColorPallets.remove().exec().catch(error => { // PARAMS? 
+        console.log("Failed to delete color pallet, probably because it does not exists. In this case, just carry on.")
+    })
+
+    try {
+        let colorPallets = new ColorPallets({
+            owner: ctx.auth.user,
+            colorPallets: ctx.request.body
+        })
+
+        colorPallets = await colorPallets.save()
+
+        ctx.status = 200
+        ctx.body = colorPallets
+    } catch(error) {
+        console.log(error)
+        ctx.status = 400
+        ctx.body = {
+            error: "Failed to set colors",
+        }
+    }
+})
+
 
 
 publicRouter.get("/templates", async ctx => {
@@ -264,7 +333,7 @@ publicRouter.get("/templates", async ctx => {
     }
 })
 
-publicRouter.get("/templates/:id", async ctx => {
+protectedRouter.get("/templates/:id", async ctx => {
     try {
         const template = await Template.findOne({ _id: ctx.params.id}).exec()
 
@@ -279,9 +348,9 @@ publicRouter.get("/templates/:id", async ctx => {
 })
 
 
-publicRouter.post("/templates", async ctx => {
+protectedRouter.post("/templates", async ctx => {
     try {
-        let newTemplate = new Template(ctx.body)
+        let newTemplate = new Template(ctx.request.body)
         newTemplate = await newTemplate.save()
 
         ctx.status = 200
@@ -294,7 +363,8 @@ publicRouter.post("/templates", async ctx => {
     }
 })
 
-publicRouter.put("/templates/:id", async ctx => {
+/*
+protectedRouter.put("/templates/:id", async ctx => {
     try {
         const updatedTemplate = await Template.findOneAndUpdate({ _id: ctx.props.id }, ctx.body)
 
@@ -307,8 +377,9 @@ publicRouter.put("/templates/:id", async ctx => {
         }
     }
 })
+*/
 
-publicRouter.delete("/templates/:id", async ctx => {
+protectedRouter.delete("/templates/:id", async ctx => {
     try {
         await Template.findOneAndDelete({ _id: ctx.params.id })
 
@@ -322,7 +393,7 @@ publicRouter.delete("/templates/:id", async ctx => {
 })
 
 
-publicRouter.get('/images', async (ctx) => {
+protectedRouter.get('/images', async (ctx) => {
     try {
         let imagePaths = fs.readdirSync("./public/images").map(imageFile => {
             return {
@@ -354,7 +425,7 @@ publicRouter.get('/images', async (ctx) => {
 
 })
 
-publicRouter.post("/images", async(ctx) => {
+protectedRouter.post("/images", async(ctx) => {
     const errors = []
 
     for(let fileName in ctx.request.files) {
@@ -379,7 +450,7 @@ publicRouter.post("/images", async(ctx) => {
 
 })
 
-publicRouter.post("/images/:name", async ctx => {
+protectedRouter.post("/images/:name", async ctx => {
 // if exists then delete and replace
     // if not exists, just create
     const errors = []
@@ -427,7 +498,7 @@ publicRouter.post("/images/:name", async ctx => {
     }
 })
 
-publicRouter.delete("/images/:name", async (ctx) => {
+protectedRouter.delete("/images/:name", async (ctx) => {
     const fileName = ctx.params.name
     const publicPath = "./public/images/"+fileName
     const buildPath = "./build/images/"+fileName
@@ -448,7 +519,7 @@ publicRouter.delete("/images/:name", async (ctx) => {
 })
 
 
-publicRouter.get("/files", async ctx => {
+protectedRouter.get("/files", async ctx => {
     try {
         let fileObjects = fs.readdirSync("./public/files").map(fileName => {
             const splitName = fileName.split(".")
@@ -473,7 +544,7 @@ publicRouter.get("/files", async ctx => {
     }
 })
 
-publicRouter.post("/files", async ctx => {
+protectedRouter.post("/files", async ctx => {
     const errors = []
 
     for(let fileName in ctx.request.files) {
@@ -496,7 +567,7 @@ publicRouter.post("/files", async ctx => {
     }
 })
 
-publicRouter.delete("/files/:name", async ctx => {
+protectedRouter.delete("/files/:name", async ctx => {
     const fileName = ctx.params.name
     const publicPath = "./public/files/"+fileName
     const buildPath = "./build/files/"+fileName
@@ -518,26 +589,88 @@ publicRouter.delete("/files/:name", async ctx => {
 
 
 
-
 app.use(publicRouter.routes())
 app.use(publicRouter.allowedMethods());
 
-// auth middleware
-/*
-function authorize(ctx, next) {
-    try {
-        const token = ctx.cookies['Authorization']
-        var decoded = jwt.verify(token, process.env.JWT_SECRET);
-        ctx['decodedJWT'] = decoded
-        next()
-    } catch (err) {
-        next(new Error('Missing or invalid Authorization token'))
-    }
-}
-
 app.use(authorize); 
+
+app.use(protectedRouter.routes())
+app.use(protectedRouter.allowedMethods());
+
+
+app.on('error', err => {
+    console.error('server error', err)
+});
+
+
+app.listen(4000);
+
+
+
+
+
+
+
+/*
+publicRouter.put("/files/:name", async ctx => {
+    // if exists then delete and replace
+    // if not exists, just create
+    const errors = []
+    
+    const fileName = ctx.params.name
+    const publicPath = "./public/files/"+fileName
+    const buildPath = "./build/files/"+fileName
+    try {
+        if (fs.existsSync(publicPath)) {
+            fs.unlinkSync(publicPath)
+        } 
+        
+        if (fs.existsSync(buildPath)) {
+            fs.unlinkSync(buildPath)
+        }
+    } catch (error) {
+        ctx.status = 400
+        ctx.body = {
+            errors:  [{
+                text: "Filed to remove the old file when updating.",
+                error: error
+            }]
+        }
+        return
+    }
+    
+    for(let fileName in ctx.request.files) { // should only be one file...
+        const file = ctx.request.files[fileName]
+        const err = await rename(file.path, "./public/files/"+fileName)
+
+        // const copyError = await copyFile("./build/images/"+fileName, "./public/images/"+fileName)
+        if (err) {
+            errors.push(err)
+        }   
+    }
+
+    if (errors.length > 0) {
+        ctx.staus = 400
+        ctx.body = {
+            error: errors
+        }
+    } else {
+        ctx.status = 201
+    }
+})
 */
-// protected pages 
+
+
+// ctx.query['some-key']
+// 
+/*
+
+publicRouter.post('/logout', function (ctx) {
+    ctx.clearCookie('Authorization').status(200).send({ message: "Successfully logged out" })
+})
+
+
+
 protectedRouter.get('/projects', async ctx => {
     let projects = await Project.find().catch(error => {
         ctx.status = 400
@@ -609,89 +742,6 @@ protectedRouter.put('/projects/:id', async (ctx, next) => {
     ctx.body = project
 }) 
 
-protectedRouter.get('/cards', async (ctx, next) => {
-    let cards = await Cards.find().catch(error => {
-        ctx.status = 400
-        ctx.body = {
-            error: 'Failed to load cards from database'
-        }
-        return 
-    })
-    ctx.status = 200
-    ctx.body = cards
-})
 
-app.use(protectedRouter.routes())
-
-app.on('error', err => {
-    // log.error('server error', err)
-});
-
-
-app.listen(4000);
-
-
-
-
-
-
-
-/*
-publicRouter.put("/files/:name", async ctx => {
-    // if exists then delete and replace
-    // if not exists, just create
-    const errors = []
-    
-    const fileName = ctx.params.name
-    const publicPath = "./public/files/"+fileName
-    const buildPath = "./build/files/"+fileName
-    try {
-        if (fs.existsSync(publicPath)) {
-            fs.unlinkSync(publicPath)
-        } 
-        
-        if (fs.existsSync(buildPath)) {
-            fs.unlinkSync(buildPath)
-        }
-    } catch (error) {
-        ctx.status = 400
-        ctx.body = {
-            errors:  [{
-                text: "Filed to remove the old file when updating.",
-                error: error
-            }]
-        }
-        return
-    }
-    
-    for(let fileName in ctx.request.files) { // should only be one file...
-        const file = ctx.request.files[fileName]
-        const err = await rename(file.path, "./public/files/"+fileName)
-
-        // const copyError = await copyFile("./build/images/"+fileName, "./public/images/"+fileName)
-        if (err) {
-            errors.push(err)
-        }   
-    }
-
-    if (errors.length > 0) {
-        ctx.staus = 400
-        ctx.body = {
-            error: errors
-        }
-    } else {
-        ctx.status = 201
-    }
-})
-*/
-
-
-// ctx.query['some-key']
-// 
-/*
-
-publicRouter.post('/logout', function (ctx) {
-    ctx.clearCookie('Authorization').status(200).send({ message: "Successfully logged out" })
-})
 
 */

@@ -6,7 +6,6 @@ import PageToolbarPortal from './helper-components/PageToolbarPortal'
 import * as _ from 'lodash'
 import 'react-quill/dist/quill.snow.css';
 import { getId, gridLayouts } from './helpers' 
-import { SketchPicker } from 'react-color'
 
 class Section extends React.Component {
     constructor(props) {
@@ -15,24 +14,12 @@ class Section extends React.Component {
         // this.columnRef = React.createRef()
 
         this.state = {
+            componentTemplateTitle: "",
+
             gridLayouts: gridLayouts,
-
-            showColorPicker: false,
-            colorPickerState: {},
-            colorPickerColor: this.props.section.style.background ? this.props.section.style.background : "#fff",
-
-
-            border: this.props.section.border || "",
-            padding: this.props.section.padding || "",
-            margin: this.props.section.margin || "",
-
-            gridSection: {
-                border: this.props.section.gridSections[0].border || "",
-                padding: this.props.section.gridSections[0].padding || "", 
-                margin: this.props.section.gridSections[0].margin || "",
-            }
         }
         
+        this.handleInputChange = this.handleInputChange.bind(this)
         this.onFocus = this.onFocus.bind(this)
         this.gridSectionOnFocus = this.gridSectionOnFocus.bind(this)
 
@@ -45,6 +32,13 @@ class Section extends React.Component {
         // this.onBlur = this.onBlur.bind(this)
     }
 
+    handleInputChange(e) {
+        const value = e.target.value
+        const name = e.target.name
+        this.setState({
+            [name]: value,
+        })
+    } 
 
     // May be able to get around this...
     updateDimensions() {
@@ -148,34 +142,6 @@ class Section extends React.Component {
         return false
     }
 
-    /*
-    handleColorChange(color) {
-        this.setState({
-            colorPickerColor: color.hex,
-            colorPickerState: color
-        })
-
-        const update = {
-            style: {
-                background: color.hex
-            }
-        }
-
-        if (this.context.gridSectionInFocus) {
-            this.props.updateGridSectionState(update, this.context.sectionInFocusIndex, this.context.gridSectionInFocusIndex)
-        } else if (this.context.sectionInFocus) {
-            this.props.updateSectionState(update, this.context.sectionInFocusIndex)
-        }
-    }
-
-    toggleColorPicker() {
-        this.setState((state, props) => {
-            return {
-                showColorPicker: state.showColorPicker ? false : true,
-            }
-        }) 
-    }
-    */
 
     render() {
         // things are either an input or a span
@@ -224,7 +190,47 @@ class Section extends React.Component {
                                     <button className="SN__button-normal SN__button--create" onClick={this.applySectionStyles}>Apply Styles</button>
                                     
                                     <button className="Section__toolbar-button" onClick={this.updateDimensions}><i className="material-icons">border_all</i></button>
-                                     <button className="Section__toolbar-button" onClick={this.props.deleteObject}><i className="material-icons">delete</i></button>
+                                    <button className="Section__toolbar-button" onClick={this.props.deleteObject}><i className="material-icons">delete</i></button>
+                                </div>
+                            </div>
+                            <div className="SN__container">
+                                <p className="SN__menu-title">COMPONENT TEMPLATES</p>
+                                <div className='SN__widget'> {/* Section__toolbarMenu */}
+                                    <ul>
+                                        {
+                                            this.props.templates.map((template, templateIndex) => {
+                                                if (template.type === "component") {
+                                                    return (
+                                                        <li>
+                                                            <a 
+                                                                className="SN__item" 
+                                                                onClick={() => this.props.addComponent("template", template)} 
+                                                                title={`Add ${template.title} as a component to the section.`}
+                                                            >
+                                                                <i className="material-icons">note_add</i><span>{template.title}</span>
+                                                                <button className="SN__button SN__delete-button" onClick={(e) => {e.stopPropagation(); this.props.deleteTemplate(templateIndex); }}>
+                                                                    <i className="material-icons">delete</i>
+                                                                </button>                                          
+                                                            </a>
+                                                        </li>        
+                                                    )
+                                                }
+                                            })
+                                        }
+                                    </ul>
+                                    <div>
+                                        <input 
+                                            className="SN__input" 
+                                            placeholder="Page Templage Title"  
+                                            name="componentTemplateTitle"
+                                            value={this.state.componentTemplateTitle} 
+                                            onChange={this.handleInputChange}
+                                        />
+                                        <button className="SN__button SN__add-button" onClick={() => this.props.createTemplate("component", this.state.componentTemplateTitle)}>
+                                            <i className="material-icons">add_box</i>
+                                        </button>
+                                    </div>
+                                
                                 </div>
                             </div>
                         </PageToolbarPortal>
@@ -274,6 +280,8 @@ class Section extends React.Component {
                                         key={componentState.id}
                                         sectionId={this.props.id}
                                         id={componentState.id}
+
+                                        deleteObject={this.props.deleteObjects}
                                         
                                         sectionIndex={this.props.sectionIndex}
                                         gridSectionIndex={i}

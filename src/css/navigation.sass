@@ -94,11 +94,20 @@ a.SN__item
     margin-right: 10px
     position: relative
     top: 5px
+  >.fas
+    font-size: 20px
+    margin-right: 10px
+    position: relative
+    top: 2px
   span
     margin-right: 5px
+  &:hover
+    color: #EFF3F8
 
-.SN__item:focus, .SN__item:hover, .SN__item:active
-  color: #EFF3F8
+a.SN__item--green
+  color: #1A936F
+  &:hover
+    color: #06D6A0
 
 .SN-Navigation__title
   position: relative
@@ -262,6 +271,7 @@ a.SN__item--active
   border: none
   padding: 2px 8px
   border-radius: 5px
+  margin: 0 5px
   &:hover
     cursor: pointer
     background: lightgreen

@@ -6,16 +6,23 @@ var PageSchema = mongoose.Schema({
   style: {
     type: Object,
   },
+  type: {
+    type: String,
+  },
+  path: {
+    type: String,
+  },
+  pathTitle: {
+    type: String,
+    unique: true,
+  },
+  title: {
+    type: String,
+  },
   className: {
     type: String,
   },
   styleInput: {
-    type: String,
-  },
-  type: {
-    type: String,
-  },
-  title: {
     type: String,
   },
   sections: {

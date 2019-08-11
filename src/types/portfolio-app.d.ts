@@ -1,11 +1,13 @@
 
 type Page = {
     id: string,
+    type: string,
+    path: string,
+    pathTitle: string,
+    title: string,
     style?: {[key: string]: string},
     className?: string,
     styleInput?: string,
-    type: string,
-    title: string,
     sections: Section[]
     show: boolean,
 

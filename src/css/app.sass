@@ -1,18 +1,21 @@
 html, body 
-  font-family: "Roboto"
+  font-family: 'Roboto', sans-serif
   font-size: 14px
   min-width: 300px
-  font-family: 'Arvo', 'Roboto', sans-serif
   margin: 0px
   line-height: 1.2
   min-height: 100%
+
+*
+  font-family: 'Roboto', sans-serif
+
 
 .root
 
 .App 
   display: grid 
   grid-template-columns: 300px 1fr
-
+  
 
 
 .App__toolbar-container 
@@ -129,48 +132,27 @@ html, body
 
 
 
-
-
-
-.Project > * 
-  box-sizing: border-box
-
-  
-.Project > #editor-container 
-  border: 1px solid #ccc
-  font-family: 'Open Sans', Helvetica, sans-serif
-  font-size: 1.2em
-  height: 200px
-  margin: 0 auto
-  width: 450px
-
-
-.Project > #tooltip-controls, #sidebar-controls 
-  text-align: center
-
-
-.Project > button 
-  background: transparent
-  border: none
-  cursor: pointer
-  display: inline-block
-  font-size: 18px
-  padding: 0
-  height: 32px
-  width: 32px
-  text-align: center
-
-.Project > button:active, button:focus 
-  outline: none
-
 .Page__toolbar
-
 
 
 .Heading__3
   font-size: 20px
   color: #474D55
   margin-left: 40px
+
+
+
+.App__messages-container
+  position: fixed
+  bottom: 20px // will this cause it to grow upwards? 
+  right: 20px
+  width: 300px
+  // max-height: 500px
+  // overflow-y: scroll
+
+.App__flash-message
+  padding: 10px 20px
+  margin: 10px 0
 
 
 

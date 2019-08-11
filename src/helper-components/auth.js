@@ -1,6 +1,9 @@
 
 import React from 'react';
 import axios from 'axios';
+import { GlobalContext } from '../contexts'  
+
+import localforage from 'localforage'
 
 
 export class Login extends React.Component {
@@ -12,7 +15,9 @@ export class Login extends React.Component {
         }
         this.handle_input_change = this.handle_input_change.bind(this)
         this.handle_submit = this.handle_submit.bind(this)
+
     }
+
 
     handle_input_change(event) {
         const target = event.target;
@@ -25,43 +30,51 @@ export class Login extends React.Component {
     }
 
     handle_submit(event) {
-        let self = this
         event.preventDefault()
         axios.post('/login', {
             email: this.state.email,
             password: this.state.password,
         }).then(response => {
-            console.log(response)
-            self.props.closeForm()
-            // store user and token in context
+            this.props.setAuthenticated(true)
+            this.props.setShowLogin(false)
 
-        }).catch(error => 
-            console.log(error)
-        )
+            localforage.setItem('token', response.data.token).catch((err) => {
+                console.log(err)
+            });
+            axios.defaults.headers.common['Authorization'] = response.data.token
+
+
+        }).catch(error => {
+            this.context.flashMessage({text: "Failed to login", type: "error"}, 3)
+
+        })
     }
 
     render() {
         return (
-            <form onSubmit={this.handle_submit}>
-                <h3>Login</h3>
-                <div className='Auth-formgroup'>
-                    <label className='Auth-label'>
+            <form className="Login__container" onSubmit={this.handle_submit}>
+                <button className="Auth__close-button" onClick={(e) => { this.props.setShowLogin(false) }}><i className="material-icons">clear</i></button>
+                <h3>Login Form</h3>
+                <div className='Auth__formgroup'>
+                    <label className='Auth__label'>
                         Email
-                        <input className='Auth-input' type='email' placeholder='example@mail.com' value={this.state.password} onChange={this.handle_input_change} />
+                        <input className='Auth__input' type='email' placeholder='Your email...' name="email" value={this.state.email} onChange={this.handle_input_change} />
                     </label>
                 </div>
-                <div className='Auth-formgroup'>
-                    <label className='Auth-label'>
+                <div className='Auth__formgroup'>
+                    <label className='Auth__label'>
                         Password
-                        <input className='Auth-input' type='password' value={this.state.password} onChange={this.handle_input_change} />
+                        <input className='Auth__input' type='password' placeholder="Your password..." name="password"  value={this.state.password} onChange={this.handle_input_change} />
                     </label>
                 </div>
+                <button className="Auth__button Auth__button--green" type="submit">Sing In</button>
             </form>
         )
     }
 }
 
-// Login.contextType = GlobalContext
+
+Login.contextType = GlobalContext
 
 /* Will not be used in the first deployment of the app, users have to be manually added */
 export class Register extends React.Component {
@@ -70,8 +83,12 @@ export class Register extends React.Component {
         super(props)
         this.state = {
             email: '',
+            firstName: "",
+            lastName: "",
+            description: "",
+            image: "", 
             password: '',
-            password_verify: '',    
+            passwordVerify: '',    
         }
         this.handle_input_change = this.handle_input_change.bind(this)
         this.handle_submit = this.handle_submit.bind(this)
@@ -89,42 +106,88 @@ export class Register extends React.Component {
 
     handle_submit(event) {
         event.preventDefault()
-        axios.post('/register', {
-            email: this.state.email,
-            password: this.state.password,
-            password_verify: this.state.password_verify,
-        }).then(response => 
-            console.log(response)
-        ).catch(error => 
-            console.log(error)
-        )
+        if (this.state.password === this.state.passwordVerify) {
+            axios.post('/register', {
+                email: this.state.email,
+                firstName: this.state.firstName,
+                lastName: this.state.lastName,
+                description: this.state.description,
+                image: this.state.image,
+                password: this.state.password,
+            }).then(response => {
+                this.context.flashMessage({text: "Successfully registered!", type: "success"}, 3)
+                this.props.setShowRegister(false)
+            }).catch(error => 
+                this.context.flashMessage({text: "Failed to register.", type: "error"}, 3)
+            )
+        } else {
+            this.context.flashMessage({text: "Passwords are not equal!", type: "error"}, 3)
+        }
     }
 
     render() {
         return (
-            <form onSubmit={this.handle_submit}>
-                <h3>Register</h3>
-                <div className='Auth-formgroup'>
-                    <label>
-                        Email:
-                        <input type="text" name="email" value={this.state.email} onChange={this.handle_input_change} />
-                    </label>
-                </div>
-                <div className='Auth-formgroup'>                
-                    <label>
-                        Password:
-                        <input type="password" name="password" value={this.state.password} onChange={this.handle_input_change} />
-                    </label>
-                </div>
-                <div className='Auth-formgroup'>
-                    <label>
-                        Repeat Password:
-                        <input type="password" name="password_verify" value={this.state.password_verify} onChange={this.handle_input_change} />
+
+
+            <form className="Register__container" onSubmit={this.handle_submit}>
+                <button className="Auth__close-button" onClick={(e) => { this.props.setShowRegister(false) }}><i className="material-icons">clear</i></button>
+                <h3>Registration Form</h3>
+                <div className='Auth__formgroup'>
+                    <label className='Auth__label'>
+                        Email
+                        <input className='Auth__input' type='email' placeholder='Your email...' name="email" value={this.state.email} onChange={this.handle_input_change} />
                     </label>
                 </div>
 
-                <input type="submit" value="Submit" />
+                <div className='Auth__formgroup'>
+                    <label className='Auth__label'>
+                        First Name
+                        <input className='Auth__input' type='text' placeholder="John" name="firstName"  value={this.state.firstName} onChange={this.handle_input_change} />
+                    </label>
+                </div>
+                <div className='Auth__formgroup'>
+                    <label className='Auth__label'>
+                        Last Name
+                        <input className='Auth__input' type='text' placeholder="Doe" name="lastName" value={this.state.lastName} onChange={this.handle_input_change} />
+                    </label>
+                </div>
+
+                <div className='Auth__formgroup'>
+                    <label className='Auth__label'>
+                        Description
+                        <input className='Auth__input' type='text' placeholder="About you..." name="description" value={this.state.description} onChange={this.handle_input_change} />
+                    </label>
+                </div>
+
+                <div className='Auth__formgroup'>
+                    <label className='Auth__label'>
+                        Profile Picture
+                        <input className='Auth__input' type='text' placeholder="About you..." name="image" value={this.state.image} onChange={this.handle_input_change} />
+                    </label>
+                </div>
+
+
+                <div className='Auth__formgroup'>
+                    <label className='Auth__label'>
+                        Password
+                        <input className='Auth__input' type='password' placeholder="Your password..." name="password"  value={this.state.password} onChange={this.handle_input_change} />
+                    </label>
+                </div>
+
+                <div className='Auth__formgroup'>
+                    <label className='Auth__label'>
+                        Repeat Password
+                        <input className='Auth__input' type='password' placeholder="Your password..." name="passwordVerify"  value={this.state.passwordVerify} onChange={this.handle_input_change} />
+                    </label>
+                </div>
+                
+                
+                <button className="Auth__button Auth__button--green" type="submit">Register</button>
             </form>
         )
     }
 }
+
+
+
+Register.contextType = GlobalContext

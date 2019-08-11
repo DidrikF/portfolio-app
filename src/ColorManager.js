@@ -25,6 +25,7 @@ class ColorManager extends React.Component {
         this.deleteColor = this.deleteColor.bind(this)
         this.addColorPallet = this.addColorPallet.bind(this)
         this.deleteColorPallet = this.deleteColorPallet.bind(this)
+        this.saveColorPallets = this.saveColorPallets.bind(this)
         this.handleColorClick = this.handleColorClick.bind(this)
     }
 
@@ -57,13 +58,9 @@ class ColorManager extends React.Component {
 
     handleColorChange(color) {
         this.setState((state, props) => {
-            console.log("handleColorChange: ", state.activePallet, state.activeColor)
             if ((state.activePallet >= 0) && (state.activeColor >= 0)) {
                 state.colorPallets[state.activePallet][state.activeColor]["hex"] = color.hex
             }
-
-            console.log("hex: ", state.colorPallets[state.activePallet][state.activeColor]["hex"])
-
             return {
                 colorPallets: state.colorPallets,
 
@@ -87,7 +84,7 @@ class ColorManager extends React.Component {
                 hex: "#000",
             }
             const newLen = state.colorPallets[colorPalletIndex].push(color)
-            return {
+            return { 
                 colorPallets: state.colorPallets,
                 activePallet: colorPalletIndex,
                 editing: true,
@@ -128,9 +125,9 @@ class ColorManager extends React.Component {
     clickCopyHandler(colorPalletIndex, colorIndex) {
         const color = this.state.colorPallets[colorPalletIndex][colorIndex].hex
         navigator.clipboard.writeText(color).then(() => {
-            console.log(`"${color}" was written to the clipboard`)
+            this.props.flashMessage({text: `"${color}" was written to the clipboard`, type: "success" }, 3)
         }).catch(() => {
-            console.log(`Failed to write "${color}" to the clipboard`)
+            this.props.flashMessage({text: `Failed to write "${color}" to the clipboard`, type: "success" }, 3)
         })
     }
 
@@ -142,14 +139,33 @@ class ColorManager extends React.Component {
         }
     }
 
-    componentDidMount() {
+    loadColorPallets() {
         axios.get("/colors").then(response => {
-
+            if (response.data && Array.isArray(response.data)) {
+                this.setState({
+                    colorPallets: response.data
+                })
+            }
         }).catch(error => {
-            console.log("Color Manager error: ", error)
+            this.props.flashMessage({text: "Failed to load color pallets, please reload the app.", type: "error"})
         })
     }
 
+    saveColorPallets() {
+        axios.post(`/colors`, this.state.colorPallets).then(response => {
+            if (response.data && Array.isArray(response.data)) {
+                this.setState({
+                    colorPallets: response.data
+                })
+            }
+        }).catch(error => {
+            this.props.flashMessage({text: "Failed to save color pallets, please try again.", type: "error"}, 3)
+        })
+    }
+
+    componentDidMount() {
+        this.loadColorPallets()
+    }
 
 
     render() {
@@ -197,6 +213,7 @@ class ColorManager extends React.Component {
                         </button>              
 
                         <button className="SN__button-normal SN__button--create" onClick={this.addColorPallet}>New Pallet</button>
+                        <button className="SN__button-normal SN__button--create" onClick={this.saveColorPallets}>Save Pallets</button>
 
                         {this.state.showColorPicker &&
                             <SketchPicker

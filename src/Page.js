@@ -1,7 +1,6 @@
 import React from 'react'
 import axios from 'axios'
 
-import { SketchPicker } from 'react-color'
 
 import PageToolbarPortal from './helper-components/PageToolbarPortal'
 import Section from './Section'
@@ -14,15 +13,18 @@ class Page extends React.Component {
 
         this.state = {
             height: 0,
+
+            pageTemplateTitle: "",
+            sectionTemplateTitle: "", 
         }
 
-        this.handleChange = this.handleChange.bind(this)
+        this.handleInputChange = this.handleInputChange.bind(this)
         this.handlePageInputChange = this.handlePageInputChange.bind(this)
         this.applyPageStyles = this.applyPageStyles.bind(this)
     }
 
 
-    handleChange(e) {
+    handleInputChange(e) {
         const name = e.target.name
         this.setState({
             [name]: e.target.value
@@ -84,6 +86,88 @@ class Page extends React.Component {
 
                             </textarea>
                             <button className="SN__button-normal SN__button--create" onClick={this.applyPageStyles}>Apply Styles</button>
+
+                        </div>
+                    </div>
+                    <div className="SN__container">
+                        <p className="SN__menu-title">PAGE TEMPLATES</p>
+                        <div className='SN__widget'> {/* Section__toolbarMenu */}
+                            <ul>
+                                {
+                                    this.props.templates.map((template, templateIndex) => {
+                                        if (template.type === "page") {
+                                            return (
+                                                <li>
+                                                    <a 
+                                                        className="SN__item" 
+                                                        onClick={() => this.props.setPageStateFromTemplate(template)} 
+                                                        title={`Apply ${template.title} as a template to the current page`}
+                                                    >
+                                                        <i className="material-icons">note_add</i><span>{template.title}</span>
+                                                        <button className="SN__button SN__delete-button" onClick={(e) => { e.stopPropagation(); this.props.deleteTemplate(templateIndex); }}>
+                                                            <i className="material-icons">delete</i>
+                                                        </button>      
+                                                    </a>
+                                                                                        
+                                                </li>        
+                                            )
+                                        }
+                                    })
+                                }
+                            </ul>
+                            <div>
+                                <input 
+                                    className="SN__input" 
+                                    placeholder="Template Title" 
+                                    name="pageTemplateTitle"  
+                                    value={this.state.pageTemplateTitle} 
+                                    onChange={this.handleInputChange}
+                                />
+                                <button className="SN__button SN__add-button" onClick={(e) => { this.props.createTemplate("page", this.state.pageTemplateTitle); }}>
+                                    <i className="material-icons">add_box</i>
+                                </button>
+                            </div>
+                        
+                        </div>
+                    </div>
+                    <div className="SN__container">
+                        <p className="SN__menu-title">SECTION TEMPLATES</p>
+                        <div className='SN__widget'> {/* Section__toolbarMenu */}
+                            <ul>
+                                {
+                                    this.props.templates.map((template, templateIndex) => {
+                                        if (template.type === "section") {
+                                            return (
+                                                <li>
+                                                    <a 
+                                                        className="SN__item" 
+                                                        onClick={() => this.props.addSection(template)} 
+                                                        title={`Add ${template.title} as a section to the page.`}
+                                                    >
+                                                        <i className="material-icons">note_add</i><span>{template.title}</span>
+                                                        <button className="SN__button SN__delete-button" onClick={(e) => { e.stopPropagation(); this.props.deleteTemplate(templateIndex); }}>
+                                                            <i className="material-icons">delete</i>
+                                                        </button>                                          
+                                                    </a>
+                                                </li>        
+                                            )
+                                        }
+                                    })
+                                }
+                            </ul>
+                            <div>
+                                <input 
+                                    className="SN__input" 
+                                    placeholder="Template Title" 
+                                    name="sectionTemplateTitle"  
+                                    value={this.state.sectionTemplateTitle} 
+                                    onChange={this.handleInputChange}
+                                />
+                                <button className="SN__button SN__add-button" onClick={() => this.props.createTemplate("section", this.state.pageTemplateTitle)}>
+                                    <i className="material-icons">add_box</i>
+                                </button>
+                            </div>
+                        
                         </div>
                     </div>
                 </PageToolbarPortal>
@@ -101,6 +185,11 @@ class Page extends React.Component {
                             enableSpacing={this.props.enableSpacing}
                             selectedLayout={section.selectedLayout} // could represent a banner too i guess...
                             
+                            addComponent={this.props.addComponent}
+                            
+                            templates={this.props.templates}
+                            createTemplate={this.props.createTemplate}
+                            deleteTemplate={this.props.deleteTemplate}
                             //style={section.style}
                             //gridSections={section.gridSections}
 
@@ -197,7 +286,7 @@ contact
                 placeholder="Border"  
                 value={this.state.border} 
                 name="border" 
-                onChange={this.handleChange}
+                onChange={this.handleInputChange}
                 onKeyDown={this.applyStyles}
             />
         </div>
@@ -207,7 +296,7 @@ contact
                 placeholder="Padding" 
                 value={this.state.padding} 
                 name="padding" 
-                onChange={this.handleChange} 
+                onChange={this.handleInputChange} 
                 onKeyDown={this.applyStyles}
             />
         </div>
@@ -217,7 +306,7 @@ contact
                 placeholder="Margin" 
                 value={this.state.margin} 
                 name="margin" 
-                onChange={this.handleChange} 
+                onChange={this.handleInputChange} 
                 onKeyDown={this.applyStyles}
             />
 
