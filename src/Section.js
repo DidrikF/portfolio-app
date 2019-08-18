@@ -5,7 +5,8 @@ import RichText from './content-components/RichText'
 import PageToolbarPortal from './helper-components/PageToolbarPortal'
 import * as _ from 'lodash'
 import 'react-quill/dist/quill.snow.css';
-import { getId, gridLayouts } from './helpers' 
+import { gridLayouts } from './grid'
+import { thisExpression } from '@babel/types';
 
 class Section extends React.Component {
     constructor(props) {
@@ -28,7 +29,7 @@ class Section extends React.Component {
         this.handleSectionInputChange = this.handleSectionInputChange.bind(this)
         this.applySectionStyles = this.applySectionStyles.bind(this)
 
-        this.updateDimensions = this.updateDimensions.bind(this)
+        // this.updateDimensions = this.updateDimensions.bind(this)
         // this.onBlur = this.onBlur.bind(this)
     }
 
@@ -41,6 +42,7 @@ class Section extends React.Component {
     } 
 
     // May be able to get around this...
+    /*
     updateDimensions() {
         const containerElement = document.getElementsByClassName('Page')[0]
         const sectionPaddingRight = window.getComputedStyle(this.sectionRef.current, null).getPropertyValue('padding-right')
@@ -68,6 +70,7 @@ class Section extends React.Component {
             columnWidth: columnWidth
         }, this.props.sectionIndex)
     }
+    */
 
     onFocus (e) { 
         // e.stopPropagation()
@@ -122,19 +125,19 @@ class Section extends React.Component {
 
 
     componentDidMount() {
-        this.updateDimensions();
-        window.addEventListener("resize", this.updateDimensions.bind(this));
+        // this.updateDimensions();
+        // window.addEventListener("resize", this.updateDimensions.bind(this));
     }
 
     componentWillUnmount() {
-        window.removeEventListener("resize", this.updateDimensions.bind(this)); // Dont think this works
+        // window.removeEventListener("resize", this.updateDimensions.bind(this)); // Dont think this works
     }
 
     componentDidUpdate(prevProps) {
         if ((prevProps.enableSpacing !== this.props.enableSpacing) || 
             (prevProps.selectedLayout !== this.props.selectedLayout)
         ) {
-            this.updateDimensions()
+            // this.updateDimensions()
         }
     }
 
@@ -148,16 +151,15 @@ class Section extends React.Component {
         return (
             <div 
                 style={{
-                    'border': this.context.enableSpacing ? ((this.context.sectionInFocus === this.props.id) ? '1px solid red' : '1px dashed grey') : 'none',
+                    'border': this.context.enableSpacing ? ((this.context.sectionInFocus === this.props.id) ? '1px solid red' : '1px dashed grey') : 'none', // add this to Section__container and have border-box sort out width calculations?
                 }}
             
             >
                 <div 
-                    className={"Section__container " + (this.context.enableSpacing ? "spacing" : "")} 
+                    className={`Section__container ${this.props.section.className}  ${this.context.enableSpacing ? "spacing" : ""}`} 
                     ref={this.sectionRef} 
                     onClick={this.onFocus} 
-                    style={{ // onBlur={this.onBlur}
-                        'gridTemplateColumns': this.state.gridLayouts[this.props.section.selectedLayout]['gridTemplateColumns'], //  need another solution
+                    style={{
                         ...this.props.section.style,
                     }}
                     >
@@ -168,9 +170,14 @@ class Section extends React.Component {
                                 <div className='SN__widget'> {/* Section__toolbarMenu */}
                                     <select className="Section__toolbar-select" value={this.props.section.selectedLayout} onChange={this.props.updateSectionLayout}>
                                         {
-                                            Object.keys(this.state.gridLayouts).map(gridLayoutName => {
+                                            Object.keys(this.state.gridLayouts).map(sectionLayoutKey => {
                                                 return (
-                                                    <option key={gridLayoutName} value={gridLayoutName}>{gridLayoutName}</option>
+                                                    <option 
+                                                        key={this.state.gridLayouts[sectionLayoutKey].layoutName} 
+                                                        value={this.state.gridLayouts[sectionLayoutKey].layoutName}
+                                                    >
+                                                            {this.state.gridLayouts[sectionLayoutKey].layoutName}
+                                                    </option>
                                                     )
                                                 })
                                             }
@@ -189,7 +196,7 @@ class Section extends React.Component {
                                     </textarea>
                                     <button className="SN__button-normal SN__button--create" onClick={this.applySectionStyles}>Apply Styles</button>
                                     
-                                    <button className="Section__toolbar-button" onClick={this.updateDimensions}><i className="material-icons">border_all</i></button>
+                                        {/*<button className="Section__toolbar-button" onClick={this.updateDimensions}><i className="material-icons">border_all</i></button>*/}
                                     <button className="Section__toolbar-button" onClick={this.props.deleteObject}><i className="material-icons">delete</i></button>
                                 </div>
                             </div>

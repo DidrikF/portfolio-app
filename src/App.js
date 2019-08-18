@@ -21,7 +21,8 @@ import FileUploader from './FileUploader'
 
 import { GlobalContext } from './contexts'
 
-import { getId, gridLayouts } from './helpers'
+import { getId } from './helpers'
+import { gridLayouts } from './grid'
 import { updateHeightOfVideos } from './content-components/RichText';
 
 function moveContentUnderTopToolbar(e) {
@@ -67,6 +68,8 @@ class App extends React.Component {
             }
         })
 
+        this.showSideNavigation = this.showSideNavigation.bind(this)
+        this.closeSideNavigation = this.closeSideNavigation.bind(this)
 
         this.flashMessage = this.flashMessage.bind(this)
 
@@ -88,7 +91,7 @@ class App extends React.Component {
         this.handleColorChange = this.handleColorChange.bind(this)
         this.addSection = this.addSection.bind(this)
         this.addComponent = this.addComponent.bind(this)
-        this.makeGridSections = this.makeGridSections.bind(this) // may not need 
+        // this.makeGridSections = this.makeGridSections.bind(this) // may not need 
         this.updateSectionLayout = this.updateSectionLayout.bind(this)
         this.updateSectionWidths = this.updateSectionWidths.bind(this)
 
@@ -117,6 +120,13 @@ class App extends React.Component {
 
         this.state = {
             scrollableHeight: 0,
+            sideNavigationStyle: {
+                width: "0px"
+            },
+            mainContentStyle: {
+                marginLeft: "0px"
+            },
+            sideNavigationOpen: false,
 
             gridLayouts: gridLayouts,
             defaultGridLayout: 'oneColumn',
@@ -155,13 +165,38 @@ class App extends React.Component {
 
                 enableSpacing: false,
 
-                authenticated: false,
+                authenticated: true,
 
                 flashMessage: this.flashMessage,
 
             }
         }
     }
+
+    showSideNavigation() {
+        this.setState({
+            sideNavigationStyle: {
+                width: "300px"
+            },
+            mainContentStyle: {
+                marginLeft: "300px"
+            },
+            sideNavigationOpen: true,
+        })
+    }
+
+    closeSideNavigation() {
+        this.setState({
+            sideNavigationStyle: {
+                width: "0px"
+            },
+            mainContentStyle: {
+                marginLeft: "0px"
+            },
+            sideNavigationOpen: false,
+        })
+    }
+
     flashMessage(message, duration) {
         this.setState((state, props) => {
             state.messages.push(message)
@@ -419,101 +454,57 @@ class App extends React.Component {
         })
     }
 
-    // Need to update this when accomodating for more layouts.
-    makeGridSections(layoutName) {
-        if ((typeof(layoutName) === 'undefined') || (layoutName === null)) {
-            layoutName = 'oneColumn'
-        }
-        let gridLayout = this.state.gridLayouts[layoutName]
-
-        const containerElement = document.getElementsByClassName('Page')[0]
-        // const padding = window.getComputedStyle(containerElement).getPropertyValue('padding')
-        const padding = this.state.defaultSectionPadding
-
-        const width = containerElement.offsetWidth
-        const innerWidth = width - 2*parseInt(padding, 10)
-        const columnWidth = innerWidth / gridLayout.numColumns
-
-        let gridSections = [{
-            id: getId(),
-            style: {
-                gridColumnStart: 1,
-                gridColumnEnd: gridLayout.numColumns+1,
-                width: innerWidth, // px
-            },
-            coordinates: [1, 1],
-            componentStates: [{
-                id: getId(),
-                type: 'rich text',
-                state: "<p>Write some rich text here...<img src=\"/images/background.jpg\" style=\"width: 51%;\"></p><p><br></p><p><br></p><iframe class=\"ql-video ql-align-center\" frameborder=\"0\" allowfullscreen=\"true\" src=\"https://www.youtube.com/embed/vIfGgDnmBXg?showinfo=0\" style=\"width: 60%; height: 362.25px;\"></iframe><p><br></p>",
-            }],
-            styleInput: "{'border': '3px solid black',} ",
-        }]
-
-        for(let i=1; i <= gridLayout.numColumns; i++) {
-            gridSections.push({ // Do I want a column to be able to contain multiple components, quill and an image for instance?
-                id: getId(),
-                style: { // the style express fully which colum should get occupied 
-                    gridColumnStart: i,
-                    gridColumnEnd: i+1,
-                    width: columnWidth, // px
-                },
-                coordinates: [i, 2], // May extend to 3D layouts, this is somewhat redundant to style
-                componentStates: [{ // is the source of truth and state for components in the grid section
-                    id: getId(),
-                    type: 'rich text',
-                    state: '<p>Write some rich text here...</p>',
-                }], // React components and markup to be rendered, can be created from componentStates
-                styleInput: "{'border': '3px solid black',} ",
-            })
-        }
-        return gridSections
+    makeSection(template) {
+        const section = template
+        section["id"] = getId()
+        section["style"] = {}
+        section["styleInput"] = ""
+        section["gridSections"] = section["gridSections"].map(gridSection => {
+            gridSection["id"] = getId()
+            gridSection["style"] = {}
+            gridSection["styleInput"] = ""
+            gridSection["componentStates"] = []
+            return gridSection
+        })
+        return section
     }
-    
-    //____________________ SECTION CODE_______________________________ 
-    addSection(template) {
-        /* Add section under the currently selected one */
-        let newSection;
 
-        if (template) {
-            newSection = {
-                id: getId(),
-                style: template.style,
-                className: template.className,
-                styleInput: "",
-                selectedLayout: template.selectedLayout, 
-                gridSections: template.gridSections,
-            }
-        } else {
-            newSection = {
-                id: getId(),
-                style: {},
-                className: "",
-                styleInput: "",
-                selectedLayout: this.state.defaultGridLayout, 
-                gridSections: this.makeGridSections(this.state.defaultGridLayout)
-            }
+    addSection(template) {
+        if (!template) {
+            template = gridLayouts["Grid_1_1"]
         }
+
+        const section = this.makeSection(template)
 
         const sectionInFocusIndex = (this.state.globalContextObj.sectionInFocusIndex >= 0) ? this.state.globalContextObj.sectionInFocusIndex : 0
 
         this.setState((state, props) => {
-            state.pages[state.globalContextObj.editing].sections.splice(sectionInFocusIndex+1, 0, newSection)
+            state.pages[state.globalContextObj.editing].sections.splice(sectionInFocusIndex+1, 0, section)
             return {
                 pages: state.pages
             }
         })
+
     }
     
     // add logic to recreate columns from state objects
     updateSectionLayout(e) {
+        if (this.state.globalContextObj.sectionInFocusIndex < 0) return
+
         const layoutName = e.target.value
         // add logic to change the layout without loosing gridSections // maybe add this functionality in makeGridSections...
-        const gridSections = this.makeGridSections(layoutName)
-        
+        // const gridSections = this.makeGridSections(layoutName)
+        const sectionTemplateName = Object.keys(this.state.gridLayouts).find(gridLayoutName => {
+            const gridLayout = this.state.gridLayouts[gridLayoutName]
+            return gridLayout.layoutName === layoutName
+        })
+
+        const sectionTemplate = this.state.gridLayouts[sectionTemplateName]
+
+        const section = this.makeSection(sectionTemplate)
+
         this.setState((state, props) => {
-            state.pages[state.globalContextObj.editing].sections[this.state.globalContextObj.sectionInFocusIndex].gridSections = gridSections
-            state.pages[state.globalContextObj.editing].sections[this.state.globalContextObj.sectionInFocusIndex].selectedLayout = layoutName
+            state.pages[state.globalContextObj.editing].sections.splice(this.state.globalContextObj.sectionInFocusIndex, 1, section)
             return {
                 pages: state.pages
             }
@@ -1011,95 +1002,112 @@ class App extends React.Component {
 
     render() {
 
+        let openCloseButton;
+        if (this.state.sideNavigationOpen) {
+            openCloseButton = <button className="SN__close-button" onClick={this.closeSideNavigation}><i className="material-icons">close</i></button>    
+        } else {
+            openCloseButton = <button className="SN__show-button" onClick={this.showSideNavigation}><i className="material-icons">menu</i></button>
+        }
+
         return (
             <GlobalContext.Provider value={this.state.globalContextObj}>
                 <HashRouter>
                     <div className='App'>
                         {/* Side Navigation Area */}
-                        <div className="SN App__grid--side">
-                            
-                            {UserInfo(this.state.user) /* Logged in user, or the Admin (aka: me) */} 
-                            
-                            { this.state.globalContextObj.authenticated &&
-                                <AuthNav 
-                                    scrollableHeight={this.state.scrollableHeight}
-                                    pages={this.state.pages}
-                                    toggleEdit={this.toggleEdit}
-                                    saveActivePage={this.saveActivePage}
-                                    deletePage={this.deletePage}
+                        <button className="SN__show-button" onClick={this.showSideNavigation}><i className="material-icons">menu</i></button>
+                        <div 
+                            id="SN__container" 
+                            className="SN App__grid--side"
+                            style={this.state.sideNavigationStyle}
+                        >
+                            <div style={{width: "300px"}}> 
+                                <button className="SN__close-button" onClick={this.closeSideNavigation}><i className="material-icons">close</i></button>
+                                
+                                {UserInfo(this.state.user) /* Logged in user, or the Admin (aka: me) */} 
+                                
+                                { this.state.globalContextObj.authenticated &&
+                                    <AuthNav 
+                                        scrollableHeight={this.state.scrollableHeight}
+                                        pages={this.state.pages}
+                                        toggleEdit={this.toggleEdit}
+                                        saveActivePage={this.saveActivePage}
+                                        deletePage={this.deletePage}
 
-                                    createPage={this.createPage}
-                                    clearFocus={this.clearFocus}
-                                    toggleSpacing={this.toggleSpacing}
-                                    addSection={this.addSection}
-                                    addComponent={this.addComponent}
-                                />
-                            } 
-                            { !this.state.globalContextObj.authenticated && 
-                                <ViewNav 
-                                    scrollableHeight={this.state.scrollableHeight}
-                                    pages={this.state.pages}
-                                />
-                            }
-                            
-                            <div id="SN__account-info" className="SN__container">
-                                <p className="SN__menu-title">ACCOUNT</p>
-                                <div className='SN__widget'> {/* Section__toolbarMenu */}
-                                    <ul>
-                                        { !this.state.globalContextObj.authenticated &&
-                                            <React.Fragment>
-                                                <li><a className="SN__item" onClick={()=>{ this.setShowLogin(true) }}><i className="fas fa-sign-in-alt"></i><span>Log In</span></a></li>
-                                                <li><a className="SN__item" onClick={()=>{ this.setShowRegister(true) }}><i className="fas fa-sign-in-alt"></i><span>Register</span></a></li>  
-                                            </React.Fragment>
-                                        } 
-                                        { this.state.globalContextObj.authenticated &&
-                                            <React.Fragment>
-                                                <li><a className="SN__item" onClick={ this.logout }><i class="fas fa-sign-out-alt"></i><span>Log out</span></a></li>
-                                                <li>          
-                                                    <Link 
-                                                        to={{
-                                                            pathname: '/account',  
-                                                        }} 
-                                                        className="SN__item"
-                                                        activeClassName="SN__item--active" // not working, do not know why
-                                                    >
-                                                        <i className="material-icons">person</i><span>Account</span>
-                                                    </Link>
-                                                </li>
-                                            </React.Fragment>
+                                        createPage={this.createPage}
+                                        clearFocus={this.clearFocus}
+                                        toggleSpacing={this.toggleSpacing}
+                                        addSection={this.addSection}
+                                        addComponent={this.addComponent}
+                                    />
+                                } 
+                                { !this.state.globalContextObj.authenticated && 
+                                    <ViewNav 
+                                        scrollableHeight={this.state.scrollableHeight}
+                                        pages={this.state.pages}
+                                    />
+                                }
+                                
+                                <div id="SN__account-info" className="SN__container">
+                                    <p className="SN__menu-title">ACCOUNT</p>
+                                    <div className='SN__widget'> {/* Section__toolbarMenu */}
+                                        <ul>
+                                            { !this.state.globalContextObj.authenticated &&
+                                                <React.Fragment>
+                                                    <li><a className="SN__item" onClick={()=>{ this.setShowLogin(true) }}><i className="fas fa-sign-in-alt"></i><span>Log In</span></a></li>
+                                                    <li><a className="SN__item" onClick={()=>{ this.setShowRegister(true) }}><i className="fas fa-sign-in-alt"></i><span>Register</span></a></li>  
+                                                </React.Fragment>
+                                            } 
+                                            { this.state.globalContextObj.authenticated &&
+                                                <React.Fragment>
+                                                    <li><a className="SN__item" onClick={ this.logout }><i class="fas fa-sign-out-alt"></i><span>Log out</span></a></li>
+                                                    <li>          
+                                                        <Link 
+                                                            to={{
+                                                                pathname: '/account',  
+                                                            }} 
+                                                            className="SN__item"
+                                                            activeClassName="SN__item--active" // not working, do not know why
+                                                        >
+                                                            <i className="material-icons">person</i><span>Account</span>
+                                                        </Link>
+                                                    </li>
+                                                </React.Fragment>
 
+                                            }
+
+                                        </ul>
+
+                                        { this.state.showLogin &&
+                                            <div className="SN__login-form">
+                                                <Login // Need to be able to update the global context, this is why it is "easier" to render it here.
+                                                    showLogin={this.state.showLogin}
+                                                    authenticated={this.state.globalContextObj.authenticated}
+                                                    setAuthenticated={this.setAuthenticated}
+                                                    setShowLogin={this.setShowLogin}
+                                                    // setUser={setUser} // need to implement in the future to support multiple users.
+                                                />
+                                            </div>
                                         }
-
-                                    </ul>
-
-                                    { this.state.showLogin &&
-                                        <div className="SN__login-form">
-                                            <Login // Need to be able to update the global context, this is why it is "easier" to render it here.
-                                                showLogin={this.state.showLogin}
-                                                authenticated={this.state.globalContextObj.authenticated}
-                                                setAuthenticated={this.setAuthenticated}
-                                                setShowLogin={this.setShowLogin}
-                                                // setUser={setUser} // need to implement in the future to support multiple users.
-                                            />
-                                        </div>
-                                    }
-                                    { this.state.showRegister &&
-                                        <div className="SN__login-form">
-                                            <Register // Need to be able to update the global context, this is why it is "easier" to render it here.
-                                                showRegister={this.state.showRegister}
-                                                setShowRegister={this.setShowRegister}
-                                                // setUser={setUser} // need to implement in the future to support multiple users.
-                                            />
-                                        </div>
-                                    }
+                                        { this.state.showRegister &&
+                                            <div className="SN__login-form">
+                                                <Register // Need to be able to update the global context, this is why it is "easier" to render it here.
+                                                    showRegister={this.state.showRegister}
+                                                    setShowRegister={this.setShowRegister}
+                                                    // setUser={setUser} // need to implement in the future to support multiple users.
+                                                />
+                                            </div>
+                                        }
+                                    </div>
                                 </div>
                             </div>
 
                         </div>
 
 
-                        {/* This is the main content area */}
-                        <div className='App__grid--main'>
+                        {/* This is the main content area 
+                            only move the main content area to the right when in editing mode!
+                        */}
+                        <div className='App__grid--main' style={this.state.globalContextObj.editing ? this.state.mainContentStyle : {}}>
                             
                             {/* Editor Panel Area */}
                                 <div className='App__toolbar-container' style={{
@@ -1188,3 +1196,97 @@ class App extends React.Component {
 App.contextType = GlobalContext
 
 export default App
+
+
+
+/*
+
+// Need to update this when accomodating for more layouts.
+makeGridSections(layoutName) {
+    if ((typeof(layoutName) === 'undefined') || (layoutName === null)) {
+        layoutName = 'oneColumn'
+    }
+    let gridLayout = this.state.gridLayouts[layoutName]
+
+    const containerElement = document.getElementsByClassName('Page')[0]
+    // const padding = window.getComputedStyle(containerElement).getPropertyValue('padding')
+    const padding = this.state.defaultSectionPadding
+
+    const width = containerElement.offsetWidth
+    const innerWidth = width - 2*parseInt(padding, 10)
+    const columnWidth = innerWidth / gridLayout.numColumns
+
+    let gridSections = [{
+        id: getId(),
+        style: {
+            gridColumnStart: 1,
+            gridColumnEnd: gridLayout.numColumns+1,
+            width: innerWidth, // px
+        },
+        coordinates: [1, 1],
+        componentStates: [{
+            id: getId(),
+            type: 'rich text',
+            state: "<p>Write some rich text here...<img src=\"/images/background.jpg\" style=\"width: 51%;\"></p><p><br></p><p><br></p><iframe class=\"ql-video ql-align-center\" frameborder=\"0\" allowfullscreen=\"true\" src=\"https://www.youtube.com/embed/vIfGgDnmBXg?showinfo=0\" style=\"width: 60%; height: 362.25px;\"></iframe><p><br></p>",
+        }],
+        styleInput: "{'border': '3px solid black',} ",
+    }]
+
+    for(let i=1; i <= gridLayout.numColumns; i++) {
+        gridSections.push({ // Do I want a column to be able to contain multiple components, quill and an image for instance?
+            id: getId(),
+            style: { // the style express fully which colum should get occupied 
+                gridColumnStart: i,
+                gridColumnEnd: i+1,
+                width: columnWidth, // px
+            },
+            coordinates: [i, 2], // May extend to 3D layouts, this is somewhat redundant to style
+            componentStates: [{ // is the source of truth and state for components in the grid section
+                id: getId(),
+                type: 'rich text',
+                state: '<p>Write some rich text here...</p>',
+            }], // React components and markup to be rendered, can be created from componentStates
+            styleInput: "{'border': '3px solid black',} ",
+        })
+    }
+    return gridSections
+}
+
+//____________________ SECTION CODE_______________________________ 
+addSection(template) {
+    // Add section under the currently selected one
+    let newSection;
+
+    if (template) {
+        newSection = {
+            id: getId(),
+            style: template.style,
+            className: template.className,
+            styleInput: "",
+            selectedLayout: template.selectedLayout, 
+            gridSections: template.gridSections,
+        }
+    } else {
+        newSection = {
+            id: getId(),
+            style: {},
+            className: "",
+            styleInput: "",
+            selectedLayout: this.state.defaultGridLayout, 
+            gridSections: this.makeGridSections(this.state.defaultGridLayout)
+        }
+    }
+
+    const sectionInFocusIndex = (this.state.globalContextObj.sectionInFocusIndex >= 0) ? this.state.globalContextObj.sectionInFocusIndex : 0
+
+    this.setState((state, props) => {
+        state.pages[state.globalContextObj.editing].sections.splice(sectionInFocusIndex+1, 0, newSection)
+        return {
+            pages: state.pages
+        }
+    })
+    
+}
+
+
+*/

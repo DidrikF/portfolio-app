@@ -24,6 +24,7 @@ function setPageHeight() {
     })
 }
 
+// Try to get around this...
 function setServerImageContainerWidth() {
     const containerWidth = parseInt(document.getElementsByClassName("FU__server-images")[0].offsetWidth, 10)
     this.setState({

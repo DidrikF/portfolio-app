@@ -18,20 +18,38 @@
   width: 5px
 
 .SN
-  font-family: "Roboto"
-  display: inline-block
-  float: left
-  position: fixed
-  height: 100%
-  width: 300px
   background: #212329
   color: #8B8F9E
-  //box-sizing: border-box
-  z-index: 100000
   ul
     list-style: none
     margin: 0
     padding: 0
+
+.SN__close-button
+  position: absolute
+  right: 10px
+  top: 10px
+  border: none
+  border-radius: 0px 5px 5px 0
+  padding: 2px 2px 0 0 
+  margin: 0
+  background: #282A31
+  color: #8B8F9E
+
+
+.SN__show-button
+  position: fixed
+  z-index: 1000
+  left: 0px
+  top: 0px
+  border: none
+  border-radius: 0 0 5px 0
+  padding: 2px
+  margin: 0
+  background: #282A31
+  color: #8B8F9E
+
+
 
 .SN-Scrollable
   overflow-y: scroll
@@ -41,7 +59,6 @@
   border-bottom: 1px solid #474D55
 
 .SN-UserInfo__image
-  position: relative
   display: block
   margin: 0 auto 10px
   border-radius: 50%
@@ -313,3 +330,28 @@ a.SN__item--active
   &:hover
     color: red
     cursor: pointer
+
+
+
+  
+/* Tablet styles */
+@media only screen and (min-width: 600px) 
+  html, body 
+    
+
+/* Desktop styles */
+@media only screen and (min-width: 1000px) // 1200 originally
+  html, body 
+    
+  .SN
+    left: 0px
+
+  
+  
+@media only screen and (min-width: 1700px) 
+  html, body 
+    
+
+  
+
+

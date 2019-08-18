@@ -5,6 +5,33 @@
   display: grid
   box-sizing: border-box
 
+// 1 row and 1 column grid
+.Grid_1_1
+    grid-template-columns: minmax(0, 1fr)
+// 1 row and one column grid, girdsection at row index 1 and column index 1 (not 0-index based)
+.GridSection_1_1_1_1
+
+
+.Grid_1_2
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr)
+
+
+.GridSection_1_2_1_1
+
+
+.GridSection_1_2_1_2
+
+
+.Grid_1_3
+     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr)
+
+.GridSection_1_3_1_1
+
+.GridSection_1_3_1_2
+
+.GridSection_1_3_1_3
+
+
 
 
 .Section__toolbar 
@@ -106,6 +133,7 @@
 
 .GridSection
     box-sizing: border-box
+    height: 100%
 
 
 

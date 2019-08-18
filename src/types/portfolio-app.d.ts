@@ -19,7 +19,7 @@ type Section = {
     style?: {[key: string]: string},
     className?: string,
     styleInput?: string,
-    selectedLayout: "oneColumn" | "twoColumns" | "threeColumns", 
+    layoutName: "One column" | "Two columns" | "Three columns", 
     gridSections: GridSection[],
 }
 
