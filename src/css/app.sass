@@ -4,15 +4,18 @@ html, body
   min-width: 300px
   margin: 0px
   line-height: 1.2
-  min-height: 100%
+  min-height: 100vh
 
 *
   font-family: 'Roboto', sans-serif
 
 
-.root
+#root
+  min-height: 100vh
 
 .App 
+  min-height: 100vh
+
   //display: grid 
   //grid-template-columns: 0 1fr
   
@@ -37,29 +40,18 @@ html, body
   width: 300px // overwritten allways...
   height: 100%
   overflow-x: hidden
-  margin: 0
   z-index: 100000
   transition: 0.5s
-
-  // float: left
-  // position: fixed
-  //grid-column-start: 1
-  //grid-column-end: 2 
-  
-  // display: relative
-  // right: -300px
 
 
 .App__grid--main 
   display: block
-  margin: 0
-  //margin-left: 300px
   transition: margin-left .5s
-
-  // grid-column-start: 2
-  // grid-column-end: 3
+  min-height: 100vh
 
 
+.Page
+  min-height: 100vh
 
 
 #Toolbar__portal 
@@ -79,8 +71,6 @@ html, body
   bottom: 20px // will this cause it to grow upwards? 
   right: 20px
   width: 300px
-  // max-height: 500px
-  // overflow-y: scroll
 
 .App__flash-message
   padding: 10px 20px

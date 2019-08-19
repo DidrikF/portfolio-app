@@ -25,6 +25,13 @@ import { getId } from './helpers'
 import { gridLayouts } from './grid'
 import { updateHeightOfVideos } from './content-components/RichText';
 
+/**
+ * Refactoring:
+ * use IDs to get a hold of html elements
+ * Use css to set min height of a page, not javascript
+ * 
+ */
+
 function moveContentUnderTopToolbar(e) {
     let toolbarContainer = document.getElementsByClassName("App__toolbar-container")[0]
     if (toolbarContainer) {
@@ -35,6 +42,7 @@ function moveContentUnderTopToolbar(e) {
     }
 }
 
+// The use of this function is messy and I would like this logic to be handled by css. (use flex-basis? )
 function setScrollableHeight() {
     const userInfoElement = document.getElementsByClassName("SN-UserInfo")[0]
     const accountInfoElement = document.getElementById("SN__account-info")
