@@ -41,36 +41,6 @@ class Section extends React.Component {
         })
     } 
 
-    // May be able to get around this...
-    /*
-    updateDimensions() {
-        const containerElement = document.getElementsByClassName('Page')[0]
-        const sectionPaddingRight = window.getComputedStyle(this.sectionRef.current, null).getPropertyValue('padding-right')
-        const sectionPaddingLeft = window.getComputedStyle(this.sectionRef.current, null).getPropertyValue('padding-left')
-        const sectionMarginRight = window.getComputedStyle(this.sectionRef.current, null).getPropertyValue('margin-right')
-        const sectionMarginLeft = window.getComputedStyle(this.sectionRef.current, null).getPropertyValue('margin-right')
-        const sectionBorderRight = window.getComputedStyle(this.sectionRef.current, null).getPropertyValue('border-right')
-        const sectionBorderLeft = window.getComputedStyle(this.sectionRef.current, null).getPropertyValue('border-left')
-
-        const width = containerElement.offsetWidth
-        
-        const innerWidth = width - 
-            parseInt(sectionPaddingRight, 10) - 
-            parseInt(sectionPaddingLeft, 10) - 
-            parseInt(sectionMarginRight, 10) - 
-            parseInt(sectionMarginLeft, 10) -
-            parseInt(sectionBorderRight, 10) -
-            parseInt(sectionBorderLeft, 10)
-        const numColumns = this.state.gridLayouts[this.props.section.selectedLayout].numColumns
-        
-        const columnWidth = innerWidth / numColumns
-
-        this.props.updateSectionWidths({
-            innerWidth: innerWidth,
-            columnWidth: columnWidth
-        }, this.props.sectionIndex)
-    }
-    */
 
     onFocus (e) { 
         // e.stopPropagation()
@@ -163,43 +133,49 @@ class Section extends React.Component {
                         ...this.props.section.style,
                     }}
                     >
-                    { (!this.context.gridSectionInFocus && (this.context.sectionInFocus === this.props.id)) && 
+                    { (this.context.sectionInFocus === this.props.id) && 
                          <PageToolbarPortal>
-                            <div className="SN__container">
-                                <p className="SN__menu-title">SECTION CONFIG</p>
-                                <div className='SN__widget'> {/* Section__toolbarMenu */}
-                                    <select className="Section__toolbar-select" value={this.props.section.selectedLayout} onChange={this.props.updateSectionLayout}>
-                                        {
-                                            Object.keys(this.state.gridLayouts).map(sectionLayoutKey => {
-                                                return (
-                                                    <option 
-                                                        key={this.state.gridLayouts[sectionLayoutKey].layoutName} 
-                                                        value={this.state.gridLayouts[sectionLayoutKey].layoutName}
-                                                    >
-                                                            {this.state.gridLayouts[sectionLayoutKey].layoutName}
-                                                    </option>
-                                                    )
-                                                })
-                                            }
-                                    </select>
-                                    <button className="Section__toolbar-button" onClick={() => { this.props.moveObject(-1) }}><i className="material-icons">arrow_drop_up</i></button>
-                                    <button className="Section__toolbar-button" onClick={() => { this.props.moveObject(1) }}><i className="material-icons">arrow_drop_down</i></button>
-                                    
-                                    <textarea 
-                                        className={"SN__input-textarea"} 
-                                        placeholder="Styles in JSON format"
-                                        name="styleInput"
-                                        value={this.props.section.styleInput}
-                                        onChange={this.handleSectionInputChange} // OBS
-                                    >
 
-                                    </textarea>
-                                    <button className="SN__button-normal SN__button--create" onClick={this.applySectionStyles}>Apply Styles</button>
-                                    
-                                        {/*<button className="Section__toolbar-button" onClick={this.updateDimensions}><i className="material-icons">border_all</i></button>*/}
-                                    <button className="Section__toolbar-button" onClick={this.props.deleteObject}><i className="material-icons">delete</i></button>
+                            { !this.context.gridSectionInFocus && 
+                                <div className="SN__container">
+                                    <p className="SN__menu-title">SECTION CONFIG</p>
+                                    <div className='SN__widget'> {/* Section__toolbarMenu */}
+                                        <select className="Section__toolbar-select" value={this.props.section.selectedLayout} onChange={this.props.updateSectionLayout}>
+                                            {
+                                                Object.keys(this.state.gridLayouts).map(sectionLayoutKey => {
+                                                    return (
+                                                        <option 
+                                                            key={this.state.gridLayouts[sectionLayoutKey].layoutName} 
+                                                            value={this.state.gridLayouts[sectionLayoutKey].layoutName}
+                                                        >
+                                                                {this.state.gridLayouts[sectionLayoutKey].layoutName}
+                                                        </option>
+                                                        )
+                                                    })
+                                                }
+                                        </select>
+                                        {/*
+                                        <button className="Section__toolbar-button" onClick={() => { this.props.moveObject(-1) }}><i className="material-icons">arrow_drop_up</i></button>
+                                        <button className="Section__toolbar-button" onClick={() => { this.props.moveObject(1) }}><i className="material-icons">arrow_drop_down</i></button>
+                                        */}
+                                        
+                                        <textarea 
+                                            className={"SN__input-textarea"} 
+                                            placeholder="Styles in JSON format"
+                                            name="styleInput"
+                                            value={this.props.section.styleInput}
+                                            onChange={this.handleSectionInputChange} // OBS
+                                        >
+
+                                        </textarea>
+                                        <button className="SN__button-normal SN__button--create" onClick={this.applySectionStyles}>Apply Styles</button>
+                                        
+                                            {/*<button className="Section__toolbar-button" onClick={this.updateDimensions}><i className="material-icons">border_all</i></button>*/}
+                                        {/*<button className="Section__toolbar-button" onClick={this.props.deleteObject}><i className="material-icons">delete</i></button>*/}
+                                    </div>
                                 </div>
-                            </div>
+                            }
+
                             <div className="SN__container">
                                 <p className="SN__menu-title">COMPONENT TEMPLATES</p>
                                 <div className='SN__widget'> {/* Section__toolbarMenu */}
@@ -228,7 +204,7 @@ class Section extends React.Component {
                                     <div>
                                         <input 
                                             className="SN__input" 
-                                            placeholder="Page Templage Title"  
+                                            placeholder="Template Title"  
                                             name="componentTemplateTitle"
                                             value={this.state.componentTemplateTitle} 
                                             onChange={this.handleInputChange}
@@ -262,6 +238,7 @@ class Section extends React.Component {
                                 {/* Grid Section Toolbar (very similar to section toolbar */}
                                 { (!this.context.componentInFocus && (this.context.gridSectionInFocus === gridSection.id)) && 
                                     // Section Toolbar side
+                                    // PageToolbarPortal is used multiple places and the order of the content cannot be controlled
                                     <PageToolbarPortal>
                                         <div className="SN__container">
                                             <p className="SN__menu-title">GRID SECTION CONFIG</p>
@@ -555,3 +532,36 @@ handleGridSectionInputChange(e) {
 }
 
 */
+
+
+
+    // May be able to get around this...
+    /*
+    updateDimensions() {
+        const containerElement = document.getElementsByClassName('Page')[0]
+        const sectionPaddingRight = window.getComputedStyle(this.sectionRef.current, null).getPropertyValue('padding-right')
+        const sectionPaddingLeft = window.getComputedStyle(this.sectionRef.current, null).getPropertyValue('padding-left')
+        const sectionMarginRight = window.getComputedStyle(this.sectionRef.current, null).getPropertyValue('margin-right')
+        const sectionMarginLeft = window.getComputedStyle(this.sectionRef.current, null).getPropertyValue('margin-right')
+        const sectionBorderRight = window.getComputedStyle(this.sectionRef.current, null).getPropertyValue('border-right')
+        const sectionBorderLeft = window.getComputedStyle(this.sectionRef.current, null).getPropertyValue('border-left')
+
+        const width = containerElement.offsetWidth
+        
+        const innerWidth = width - 
+            parseInt(sectionPaddingRight, 10) - 
+            parseInt(sectionPaddingLeft, 10) - 
+            parseInt(sectionMarginRight, 10) - 
+            parseInt(sectionMarginLeft, 10) -
+            parseInt(sectionBorderRight, 10) -
+            parseInt(sectionBorderLeft, 10)
+        const numColumns = this.state.gridLayouts[this.props.section.selectedLayout].numColumns
+        
+        const columnWidth = innerWidth / numColumns
+
+        this.props.updateSectionWidths({
+            innerWidth: innerWidth,
+            columnWidth: columnWidth
+        }, this.props.sectionIndex)
+    }
+    */

@@ -37,13 +37,14 @@ export class Login extends React.Component {
         }).then(response => {
             this.props.setAuthenticated(true)
             this.props.setShowLogin(false)
-
+            
             localforage.setItem('token', response.data.token).catch((err) => {
-                console.log(err)
+                console.log("Failed to set token in localstorage after login. Error: ", err)
             });
             axios.defaults.headers.common['Authorization'] = response.data.token
-
-
+            this.props.loadProtectedData();
+            
+            
         }).catch(error => {
             this.context.flashMessage({text: "Failed to login", type: "error"}, 3)
 

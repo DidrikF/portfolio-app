@@ -3,9 +3,13 @@ var Schema = mongoose.Schema
 
 
 var TemplateSchema = mongoose.Schema({
+  owner: {
+    type: String,
+    required: [true, "Owner is requered"],
+  },
   title: {
     type: String,
-    required: [true, "Type is required"],
+    required: [true, "Title is required"],
   },
   type: {
     type: String,

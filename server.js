@@ -59,6 +59,18 @@ function register_validator(ctx) {
     return true
 }
 
+async function createDefaultUserResources(user) {
+    try {
+        let colorPallets = new ColorPallets({
+            owner: user.email,
+            pallets: [],
+        });
+        colorPallets = await colorPallets.save();
+    } catch(e) {
+        console.log("Critical failure: The creation of a resouce the app expects to be avialable failed. Error: ", e);
+    }
+}
+
 
 /* Remove this, user have to be added manyally and all resources belong to the "site" not the one editing */ 
 publicRouter.post('/register', async ctx => {
@@ -77,6 +89,8 @@ publicRouter.post('/register', async ctx => {
         let user = new User(ctx.request.body)
         user = await user.save()
         console.log('### ' + user.email + ' registered successfully!')
+
+        createDefaultUserResources();
 
         const token = jwt.sign({
             exp: Math.floor(Date.now() / 1000) + (60 * 60),
@@ -196,6 +210,7 @@ async function authorize(ctx, next) {
         var decoded = jwt.verify(token, process.env.JWT_SECRET);
         ctx.auth = {}
         ctx.auth['token'] = decoded
+        ctx.auth['user'] = decoded.data
         console.log("Decoded token: ", decoded)
 
     } catch (err) {
@@ -251,8 +266,7 @@ protectedRouter.post("/pages", async ctx => {
 
 protectedRouter.put("/pages/:pathTitle", async ctx => {
     try {
-        // not working as expected
-        const updatedPage = await Page.findOneAndUpdate({ pathTitle: ctx.params.pathTitle}, ctx.body)
+        const updatedPage = await Page.findOneAndUpdate({ pathTitle: ctx.params.pathTitle}, ctx.request.body)
 
         ctx.status = 200
         ctx.body = updatedPage
@@ -292,17 +306,16 @@ protectedRouter.get("/colors", async ctx => {
     }
 })
 
-/* Quick and dirty route to both create new and update a users color pallets */ 
+
 protectedRouter.post("/colors", async ctx => {
-
-    const unknownResponse = await ColorPallets.remove().exec().catch(error => { // PARAMS? 
-        console.log("Failed to delete color pallet, probably because it does not exists. In this case, just carry on.")
-    })
-
+    
     try {
+        const ownerEmail = ctx.auth.user.email;
+        if (!ownerEmail) throw new Error("No user.email on ctx.auth!")
+
         let colorPallets = new ColorPallets({
-            owner: ctx.auth.user,
-            colorPallets: ctx.request.body
+            owner: ownerEmail, // is unique
+            pallets: [],
         })
 
         colorPallets = await colorPallets.save()
@@ -313,20 +326,52 @@ protectedRouter.post("/colors", async ctx => {
         console.log(error)
         ctx.status = 400
         ctx.body = {
-            error: "Failed to set colors",
+            message: "Failed to create color pallets",
         }
+    }
+})
+
+protectedRouter.put("/colors", async ctx => {
+    try {
+        const ownerEmail = ctx.auth.user.email;
+        const updatedPallets = await ColorPallets.findOneAndUpdate({ owner: ownerEmail}, {
+            pallets: ctx.request.body
+        });
+        ctx.status = 200;
+        ctx.body = updatedPallets;
+    } catch (e) {
+        console.log(e)
+        ctx.status = 400
+        ctx.body = {
+            message: "Failed to update color pallets",
+        }
+    }
+})
+
+protectedRouter.delete("/colors", async ctx => {
+    try {
+        const ownerEmail = ctx.auth.user.email;
+        await ColorPallets.findByIdAndRemove({owner: ownerEmail});
+        ctx.status = 200;
+    } catch (e) {
+        console.log(e)
+        ctx.status = 400;
+        ctx.body = {
+            message: "Failed to delete color pallets"
+        };
     }
 })
 
 
 
-publicRouter.get("/templates", async ctx => {
+protectedRouter.get("/templates", async ctx => {
     try {
-        const templates = await Template.find().exec()
+        const templates = await Template.find({owner: ctx.auth.user.email}).exec() // templates are shared???
 
         ctx.status = 200
         ctx.body = templates
     } catch(error) {
+        console.log("Get templates error: ", error);
         ctx.status = 400
         ctx.body = {
             error: `Failed to get templates`,
@@ -336,7 +381,7 @@ publicRouter.get("/templates", async ctx => {
 
 protectedRouter.get("/templates/:id", async ctx => {
     try {
-        const template = await Template.findOne({ _id: ctx.params.id}).exec()
+        const template = await Template.findOne({ _id: ctx.params.id, owner: ctx.auth.user.email}).exec()
 
         ctx.status = 200
         ctx.body = template
@@ -351,12 +396,18 @@ protectedRouter.get("/templates/:id", async ctx => {
 
 protectedRouter.post("/templates", async ctx => {
     try {
-        let newTemplate = new Template(ctx.request.body)
-        newTemplate = await newTemplate.save()
 
+        const userEmail = ctx.auth.user.email;
+        if (!userEmail) throw new Error("No user.email on ctx.auth")
+        const template = {}
+        Object.assign(template, ctx.request.body)
+        template["owner"] = userEmail;
+        let newTemplate = new Template(template);
+        newTemplate = await newTemplate.save();
         ctx.status = 200
         ctx.body = newTemplate
     } catch(error) {
+        console.log("Failed to create new template: ", error)
         ctx.status = 400
         ctx.body = {
             error: `Failed to create new template`,
@@ -364,25 +415,10 @@ protectedRouter.post("/templates", async ctx => {
     }
 })
 
-/*
-protectedRouter.put("/templates/:id", async ctx => {
-    try {
-        const updatedTemplate = await Template.findOneAndUpdate({ _id: ctx.props.id }, ctx.body)
-
-        ctx.status = 200
-        ctx.body = updatedTemplate
-    } catch(error) {
-        ctx.status = 400
-        ctx.body = {
-            error: `Failed to update template`,
-        }
-    }
-})
-*/
 
 protectedRouter.delete("/templates/:id", async ctx => {
     try {
-        await Template.findOneAndDelete({ _id: ctx.params.id })
+        await Template.findOneAndDelete({ _id: ctx.params.id, owner: ctx.auth.user.email}); // Is this a decent way to do authorization, probably not?
 
         ctx.status = 200
     } catch(error) {

@@ -4,7 +4,8 @@ var Schema = mongoose.Schema
 
 var ColorPalletsSchema = mongoose.Schema({
 	owner: {
-		type: String,
+    type: String,
+    unique: true,
 	},
   pallets: {
       type: Array,

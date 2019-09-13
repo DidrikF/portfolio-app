@@ -69,14 +69,6 @@ class ColorManager extends React.Component {
             }
         })
     }
-    /*
-    toggleColorPicker() {
-        this.setState((state, props) => {
-            return {
-                showColorPicker: state.showColorPicker ? false : true,
-            }
-        }) 
-    }*/
 
     addColor(colorPalletIndex) {
         this.setState((state, props) => {
@@ -141,9 +133,9 @@ class ColorManager extends React.Component {
 
     loadColorPallets() {
         axios.get("/colors").then(response => {
-            if (response.data && Array.isArray(response.data)) {
+            if (response.data && Array.isArray(response.data.pallets)) {
                 this.setState({
-                    colorPallets: response.data
+                    colorPallets: response.data.pallets
                 })
             }
         }).catch(error => {
@@ -152,16 +144,19 @@ class ColorManager extends React.Component {
     }
 
     saveColorPallets() {
-        axios.post(`/colors`, this.state.colorPallets).then(response => {
+        axios.put(`/colors`, this.state.colorPallets).then(response => {
             if (response.data && Array.isArray(response.data)) {
                 this.setState({
                     colorPallets: response.data
                 })
             }
+            this.props.flashMessage({text: "Successfully saved pallets!", type: "success"}, 3);
         }).catch(error => {
             this.props.flashMessage({text: "Failed to save color pallets, please try again.", type: "error"}, 3)
         })
     }
+
+    // No post or delete for colorPallets
 
     componentDidMount() {
         this.loadColorPallets()
@@ -217,7 +212,7 @@ class ColorManager extends React.Component {
 
                         {this.state.showColorPicker &&
                             <SketchPicker
-                                className="Page-color-pallet"
+                                className="Page__color-pallet"
                                 color={this.state.colorPickerState}
                                 onChangeComplete={this.handleColorChange}
                             />
@@ -228,7 +223,6 @@ class ColorManager extends React.Component {
 
         )
     }
-
 }
 
 

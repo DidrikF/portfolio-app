@@ -23,13 +23,12 @@ html, body
 
 .App__toolbar-container 
   position: fixed
-  width: calc(100% - 300px) // This will not animate...
   top: 0
-  right: 0 
-  background-color: white 
-  /*background-color: #212329*/
-  z-index: 100000
+  width: 100%
+  z-index: 10000
+  background: white
   border-bottom: 0.5px solid grey
+  padding-left: 20px
 
 
 .App__grid--side 
@@ -37,17 +36,18 @@ html, body
   position: fixed
   top: 0
   left: 0
-  width: 300px // overwritten allways...
   height: 100%
   overflow-x: hidden
   z-index: 100000
   transition: 0.5s
 
 
+
 .App__grid--main 
   display: block
   transition: margin-left .5s
   min-height: 100vh
+  min-width: 800px
 
 
 .Page
@@ -76,6 +76,8 @@ html, body
   padding: 10px 20px
   margin: 10px 0
 
+
+/* reduce padding/margin on paragraphs */
 
 /* Tablet styles */
 @media only screen and (min-width: 600px) 

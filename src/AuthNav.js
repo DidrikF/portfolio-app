@@ -157,7 +157,10 @@ class AuthNav extends React.Component {
                                     <li><a className="SN__item SN__item--green" onClick={this.props.saveActivePage}><i className="material-icons">save</i><span>Save Active Page</span></a></li>
                                     <li><a className="SN__item" onClick={this.props.clearFocus}><i className="material-icons">clear</i><span>Clear Focus</span></a></li>
                                     <li><a className="SN__item" onClick={this.props.toggleSpacing}><i className="material-icons">border_all</i><span>Toggle Spacing</span></a></li>
-                                    <li><a className="SN__item" onClick={(e) => this.props.addSection()}><i className="material-icons">add_box</i><span>Add Section</span></a></li>                                                  
+                                    <li><a className="SN__item" onClick={(e) => this.props.addSection()}><i className="material-icons">add_box</i><span>Add Section</span></a></li>  
+                                    <li><a className="SN__item" onClick={(e) => this.props.deleteObject()}><i className="material-icons">add_box</i><span>Delete Object</span></a></li>   
+                                    <li><a className="SN__item" onClick={(e) => this.props.moveObject(-1)}><i className="material-icons">arrow_drop_up</i><span>Move Up</span></a></li>      
+                                    <li><a className="SN__item" onClick={(e) => this.props.moveObject(1)}><i className="material-icons">arrow_drop_down</i><span>Move Down</span></a></li>                                         
                                 </ul>
                             </div>
                         </div>

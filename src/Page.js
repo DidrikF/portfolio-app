@@ -56,7 +56,7 @@ class Page extends React.Component {
                 }}
             >
             
-            { this.context.editing && (!this.context.sectionInFocus) && 
+            { this.context.editing && 
                 <PageToolbarPortal>
                     <div className="SN__container">
                         <p className="SN__menu-title">PAGE CONFIG</p>
@@ -148,7 +148,7 @@ class Page extends React.Component {
                                     value={this.state.sectionTemplateTitle} 
                                     onChange={this.handleInputChange}
                                 />
-                                <button className="SN__button SN__add-button" onClick={() => this.props.createTemplate("section", this.state.pageTemplateTitle)}>
+                                <button className="SN__button SN__add-button" onClick={() => this.props.createTemplate("section", this.state.sectionTemplateTitle)}>
                                     <i className="material-icons">add_box</i>
                                 </button>
                             </div>
@@ -186,8 +186,8 @@ class Page extends React.Component {
                             updateSectionWidths={this.props.updateSectionWidths}
                             applyGridSectionStyles={this.props.applyGridSectionStyles}
 
-                            moveObject={this.props.moveObject}
-                            deleteObject={this.props.deleteObject}
+                            moveObject={this.props.moveObject} // #OBS remove i think
+                            deleteObject={this.props.deleteObject} // #OBS remove i think
                             
                             updateComponentState={this.props.updateComponentState} 
                             applyComponentStyles={this.props.applyComponentStyles}
