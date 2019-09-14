@@ -1,24 +1,74 @@
 .CSSM__container
-  position: fixed
-  top: 0
-  right: 0
-  height: 100%
-  background: #212329
+    position: fixed
+    top: 0
+    right: 0
+    height: 100%
+    background: #212329
+    overflow-y: scroll
+    ::placeholder
+        color: white
+
+.CSSM__heading
+
+.CSSM__item
+    position: relative
+
+
+.CSSM__form
+
+.CSSM__checkbox-container
+    span
+        font-size: 10px
+
+.CSSM__selector-input
+    width: 100px
+    border: none
+    border-bottom: 1px solid black
+    background: none
+    &:focus
+        outline: none
+
+.CSSM__attributes
+    th
+        font-size: 10px
+    
+.CSSM__attribute-input
+    width: 90px
+    border: none
+    border-bottom: 1px solid black
+    background: none
+    &:focus
+        outline: none
 
 .CSSM__item-info
-  padding: 0
-  margin: 5px 0
-  font-size: 12px
+    padding: 0
+    margin: 5px 0
+    font-size: 12px
 
-.CSSM__scope-select
-  width: 100px
-
-.CSSM__item-container-left
-
-
-.CSSM__item-container-right
-
-
-.CSSM__button-edit
 
 .CSSM__button-delete
+    padding: 0px
+    font-size: 8px
+    background: none
+    border: none
+    &:active, &:hover
+        color: red
+        cursor: pointer
+    .material-icons
+        font-size: 20px
+
+.CSSM__button-add
+    padding: 0px
+    font-size: 8px
+    background: none
+    border: none
+    &:active, &:hover
+        color: green
+        cursor: pointer
+    .material-icons
+        font-size: 20px
+
+.CSSM__top-right
+    position: absolute
+    top: 10px
+    right: 10px
