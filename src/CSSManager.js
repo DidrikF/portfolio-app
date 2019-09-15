@@ -33,7 +33,7 @@ const getItemStyle = (isDragging, draggableStyle) => ({
 const getListStyle = isDraggingOver => ({
   background: isDraggingOver ? "lightblue" : "lightgrey",
   padding: grid,
-  width: 250
+  width: 280
 });
 
 let scopes = [
@@ -277,116 +277,119 @@ class CSSManager extends React.Component {
     */
   }
 
+
   render() {
     return (
-      <div className="CSSM__container">
-        {/* Show/hide buttons */}
-        <div>
-          <h3 className="CSSM__heading">CSS Document</h3>
-          <DragDropContext onDragEnd={this.onDragEnd}>
-            <Droppable droppableId="droppable">
-              {(provided, snapshot) => (
-                <div
-                  {...provided.droppableProps}
-                  ref={provided.innerRef}
-                  style={getListStyle(snapshot.isDraggingOver)}
-                >
-                  {this.state.cssDocument.map((item, index) => (
-                    <Draggable key={item.id} draggableId={item.id} index={index}>
-                      {(provided, snapshot) => (
-                        <div
-                          ref={provided.innerRef}
-                          {...provided.draggableProps}
-                          {...provided.dragHandleProps}
-                          style={getItemStyle(
-                            snapshot.isDragging,
-                            provided.draggableProps.style
-                          )}
-                          className="CSSM__item"
-                        >
-                          <button className="CSSM__button-delete CSSM__top-right" onClick={() => this.deleteItem(item.id)}>
-                            <i className="material-icons">delete</i>                              
-                          </button>
-                          <form className="CSSM__form" onSubmit={(e) => e.preventDefault()}>
-                            <div className="CSSM__checkbox-container">
-                              { Object.keys(item.scopes).map(scope => {
-                                return (
-                                  <React.Fragment>
-                                    <input 
-                                      type="checkbox" 
-                                      name="scope" 
-                                      value={scope}
-                                      onChange={(e) => this.handleScopeChange(e, item.id)} 
-                                    />
-                                    <span>{scope.charAt(0).toUpperCase() + scope.slice(1)}</span>
-                                  </React.Fragment>
-                                )
-                              })
-                            }
-                            </div>
-                            <select onChange={(e) => this.handleQueryChange(e, item.id)}>
-                              { Object.keys(this.state.mediaQueris).map(queryName => {
+      <div className="CSSM__container" style={this.props.style}>
+        <div style={{width: "300px"}}>
+          <button className="CSSM__close-button" onClick={this.props.closeCSSM}><i className="material-icons">close</i></button>
+          <div>
+            <h3 className="CSSM__heading">CSS Document</h3>
+            <DragDropContext onDragEnd={this.onDragEnd}>
+              <Droppable droppableId="droppable">
+                {(provided, snapshot) => (
+                  <div
+                    {...provided.droppableProps}
+                    ref={provided.innerRef}
+                    style={getListStyle(snapshot.isDraggingOver)}
+                  >
+                    {this.state.cssDocument.map((item, index) => (
+                      <Draggable key={item.id} draggableId={item.id} index={index}>
+                        {(provided, snapshot) => (
+                          <div
+                            ref={provided.innerRef}
+                            {...provided.draggableProps}
+                            {...provided.dragHandleProps}
+                            style={getItemStyle(
+                              snapshot.isDragging,
+                              provided.draggableProps.style
+                            )}
+                            className="CSSM__item"
+                          >
+                            <button className="CSSM__button-delete CSSM__top-right" onClick={() => this.deleteItem(item.id)}>
+                              <i className="material-icons">delete</i>                              
+                            </button>
+                            <form className="CSSM__form" onSubmit={(e) => e.preventDefault()}>
+                              <div className="CSSM__checkbox-container">
+                                { Object.keys(item.scopes).map(scope => {
                                   return (
-                                    <option value={queryName}>
-                                      {queryName.charAt(0).toUpperCase() + queryName.slice(1)}
-                                    </option>
+                                    <React.Fragment>
+                                      <input 
+                                        type="checkbox" 
+                                        name="scope" 
+                                        value={scope}
+                                        onChange={(e) => this.handleScopeChange(e, item.id)} 
+                                      />
+                                      <span>{scope.charAt(0).toUpperCase() + scope.slice(1)}</span>
+                                    </React.Fragment>
                                   )
                                 })
                               }
-                            </select>
+                              </div>
+                              <select onChange={(e) => this.handleQueryChange(e, item.id)}>
+                                { Object.keys(this.state.mediaQueris).map(queryName => {
+                                    return (
+                                      <option value={queryName}>
+                                        {queryName.charAt(0).toUpperCase() + queryName.slice(1)}
+                                      </option>
+                                    )
+                                  })
+                                }
+                              </select>
 
-                            <input
-                              className="CSSM__selector-input"
-                              placeholder="CSS Selector"
-                              name="selector"
-                              value={item.selector}
-                              itemid={item.id}
-                              onChange={(e) => this.handleSelectorChange(e, item.id)}
-                            />
-                            <table className="CSSM__attributes">
-                              <thead>
-                                <tr>
-                                  <th>ATTRIBUTE</th>
-                                  <th>VALUE</th>
-                                  <th></th>
-                                  <th></th>
-                                </tr>
-                              </thead>
-                              <tbody>
-                                {item.attributes.map((att, index) => {
-                                  return (
-                                    <tr key={index}>
-                                      <td><input className="CSSM__attribute-input" name="key" value={att.key} onChange={(e) => this.handleAttributeInputChange(e, index, item.id)} /></td>
-                                      <td><input className="CSSM__attribute-input" name="value" value={att.value} onChange={(e) => this.handleAttributeInputChange(e, index, item.id)} /></td>
-                                      <td>
-                                        <button className="CSSM__button-delete" onClick={(e) => { e.preventDefault(); this.deleteAttribute(index, item.id) }}>
-                                          <i className="material-icons">delete</i>
-                                        </button>
-                                      </td>
-                                      <td>
-                                        <button className="CSSM__button-add" onClick={(e) => { e.preventDefault(); this.addAttribute(index, item.id) }}>
-                                          <i className="material-icons">add_box</i>
-                                        </button>
-                                      </td>
-                                    </tr>
-                                  )
-                                })}
-                              </tbody>
-                            </table>
-                            <button onClick={(e) => { e.preventDefault(); this.addAttribute(undefined, item.id) }}>New Attribute</button>
-                          </form>
-                        </div>
-                      )}
-                    </Draggable>
-                  ))}
-                  {provided.placeholder}
-                </div>
-              )}
-            </Droppable>
-          </DragDropContext>
-          <button onClick={this.createItem}>Create Item</button>
-          <button onClick={(e) => { e.preventDefault(); this.updateApplicationState() }}>Apply</button>
-        </div>
+                              <input
+                                className="CSSM__selector-input"
+                                placeholder="CSS Selector"
+                                name="selector"
+                                value={item.selector}
+                                itemid={item.id}
+                                onChange={(e) => this.handleSelectorChange(e, item.id)}
+                              />
+                              <table className="CSSM__attributes">
+                                <thead>
+                                  <tr>
+                                    <th>ATTRIBUTE</th>
+                                    <th>VALUE</th>
+                                    <th></th>
+                                    <th></th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {item.attributes.map((att, index) => {
+                                    return (
+                                      <tr key={index}>
+                                        <td><input className="CSSM__attribute-input" name="key" value={att.key} onChange={(e) => this.handleAttributeInputChange(e, index, item.id)} /></td>
+                                        <td><input className="CSSM__attribute-input" name="value" value={att.value} onChange={(e) => this.handleAttributeInputChange(e, index, item.id)} /></td>
+                                        <td>
+                                          <button className="CSSM__button-delete" onClick={(e) => { e.preventDefault(); this.deleteAttribute(index, item.id) }}>
+                                            <i className="material-icons">delete</i>
+                                          </button>
+                                        </td>
+                                        <td>
+                                          <button className="CSSM__button-add" onClick={(e) => { e.preventDefault(); this.addAttribute(index, item.id) }}>
+                                            <i className="material-icons">add_box</i>
+                                          </button>
+                                        </td>
+                                      </tr>
+                                    )
+                                  })}
+                                </tbody>
+                              </table>
+                              <button onClick={(e) => { e.preventDefault(); this.addAttribute(undefined, item.id) }}>New Attribute</button>
+                            </form>
+                          </div>
+                        )}
+                      </Draggable>
+                    ))}
+                    {provided.placeholder}
+                  </div>
+                )}
+              </Droppable>
+            </DragDropContext>
+            <button onClick={this.createItem}>Create Item</button>
+            <button onClick={(e) => { e.preventDefault(); this.updateApplicationState() }}>Apply</button>
+          </div>
+        </div>        
       </div>
     )
   }

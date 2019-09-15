@@ -40,7 +40,6 @@ import { updateHeightOfVideos } from './content-components/RichText';
  *  
  */
 
-
 function moveContentUnderTopToolbar(e) {
     let toolbarContainer = document.getElementsByClassName("App__toolbar-container")[0]
     if (toolbarContainer) {
@@ -93,6 +92,8 @@ class App extends React.Component {
 
         this.showSideNavigation = this.showSideNavigation.bind(this)
         this.closeSideNavigation = this.closeSideNavigation.bind(this)
+        this.showCSSM = this.showCSSM.bind(this)
+        this.closeCSSM = this.closeCSSM.bind(this)
 
         this.flashMessage = this.flashMessage.bind(this)
 
@@ -148,10 +149,13 @@ class App extends React.Component {
             sideNavigationStyle: {
                 width: "0px"
             },
-            mainContentStyle: {
-                marginLeft: "0px"
+            CSSMStyle: {
+                width: "0px",
             },
-            sideNavigationOpen: false,
+            mainContentStyle: {
+                marginLeft: "0px",
+                marginRight: "0px",
+            },
 
             gridLayouts: gridLayouts,
             defaultGridLayout: 'oneColumn',
@@ -209,25 +213,57 @@ class App extends React.Component {
     }
 
     showSideNavigation() {
-        this.setState({
-            sideNavigationStyle: {
-                width: "300px"
-            },
-            mainContentStyle: {
-                marginLeft: "300px"
-            },
-            sideNavigationOpen: true,
+        this.setState(state => {            
+            return {
+                sideNavigationStyle: {
+                    width: "300px"
+                },
+                mainContentStyle: {
+                    marginLeft: "300px",
+                    marginRight: state.mainContentStyle["marginRight"],
+                }
+            }
         })
     }
     closeSideNavigation() {
-        this.setState({
-            sideNavigationStyle: {
-                width: "0px"
-            },
-            mainContentStyle: {
-                marginLeft: "0px"
-            },
-            sideNavigationOpen: false,
+        this.setState(state => {
+            return {
+                sideNavigationStyle: {
+                    width: "0px"
+                },
+                mainContentStyle: {
+                    marginLeft: "0px",
+                    marginRight: state.mainContentStyle["marginRight"],
+                }
+            }
+        })
+    }
+
+    showCSSM() {
+        this.setState(state => {
+            return {
+                CSSMStyle: {
+                    width: "300px"
+                },
+                mainContentStyle: {
+                    marginLeft: state.mainContentStyle.marginLeft,
+                    marginRight: "300px",
+                },
+            }
+        })
+    }
+
+    closeCSSM() {
+        this.setState(state => {
+            return {
+                CSSMStyle: {
+                    width: "0px"
+                },
+                mainContentStyle: {
+                    marginLeft: state.mainContentStyle.marginLeft,
+                    marginRight: "0px",
+                },
+            }
         })
     }
 
@@ -517,7 +553,7 @@ class App extends React.Component {
 
     addSection(template) {
         let section;
-        if (template.template) {
+        if (template && template.template) {
             section = this.makeSectionFromUserTemplate(template);
         } else if (!template) {
             template = gridLayouts["Grid_1_1"]
@@ -1024,15 +1060,9 @@ class App extends React.Component {
             setScrollableHeight.bind(this)()
         }
     }
+
     // #REFACTOR: verify that only the needed props are passed down through the component tree
     render() {
-        let openCloseButton;
-        if (this.state.sideNavigationOpen) {
-            openCloseButton = <button className="SN__close-button" onClick={this.closeSideNavigation}><i className="material-icons">close</i></button>    
-        } else {
-            openCloseButton = <button className="SN__show-button" onClick={this.showSideNavigation}><i className="material-icons">menu</i></button>
-        }
-
         return (
             <GlobalContext.Provider value={this.state.globalContextObj}>
                 <HashRouter>
@@ -1040,6 +1070,9 @@ class App extends React.Component {
                         <style ref={this.state.styleSheetRef}></style>
                         {/* Side Navigation Area */}
                         <button className="SN__show-button" onClick={this.showSideNavigation}><i className="material-icons">menu</i></button>
+                        { this.state.globalContextObj.editing &&
+                            <button className="CSSM__show-button" onClick={this.showCSSM}><i className="material-icons">menu</i></button>
+                        }
                         <div 
                             id="SN__container" 
                             className="SN App__grid--side"
@@ -1129,26 +1162,20 @@ class App extends React.Component {
 
                         </div>
 
-
                         {/* This is the main content area 
                             only move the main content area to the right when in editing mode!
                         */}
-                        <div className='App__grid--main' style={this.state.globalContextObj.editing ? this.state.mainContentStyle : {}}>
+                        <div className='App__grid--main' style={this.state.mainContentStyle}> {/* this.state.globalContextObj.editing ? this.state.mainContentStyle : {} */}
                             
                             {/* Editor Panel Area */}
                                 <div className='App__toolbar-container' style={{
                                     display: (this.state.globalContextObj.editing) ? "block" : "none"
                                 }}>
-                                    
                                     {/* Quill toolbar here - it is tied together by the portal referencing this 
                                     element (using get element by id) and different components getting the 
                                     Portal and using it directly in their render methods. It's quite disorderly.*/}
                                     <div id='Toolbar__portal'></div>
                                 </div>
-                                <div className="test-div"></div>
-                                <span className="test-span"></span>
-
-
                             {
                                 this.state.pages.map((page, pageIndex) => {
                                     return (
@@ -1213,7 +1240,14 @@ class App extends React.Component {
                                 }
                             </div>     
                         </div>
-                        <CSSManager styleSheetRef={this.state.styleSheetRef} updateApplicationStyles={this.updateApplicationStyles}/>
+                        { this.state.globalContextObj.editing &&
+                            <CSSManager 
+                                styleSheetRef={this.state.styleSheetRef} 
+                                updateApplicationStyles={this.updateApplicationStyles}
+                                closeCSSM={this.closeCSSM}
+                                style={this.state.CSSMStyle}
+                            />
+                        }
 
                     </div>
                 </HashRouter>

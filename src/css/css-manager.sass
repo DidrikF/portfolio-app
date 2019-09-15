@@ -1,14 +1,47 @@
 .CSSM__container
+    z-index: 100000
     position: fixed
     top: 0
     right: 0
     height: 100%
     background: #212329
     overflow-y: scroll
+    transition: 350ms
+
     ::placeholder
         color: white
 
+.CSSM__close-button
+  position: absolute
+  left: 10px
+  top: 10px
+  border: none
+  border-radius: 0px 5px 5px 0
+  padding: 2px 2px 0 0 
+  margin: 0
+  background: #282A31
+  color: #8B8F9E
+
+
+.CSSM__show-button
+  position: fixed
+  z-index: 10000000
+  right: 0px
+  top: 0px
+  border: none
+  border-radius: 0 0 5px 0
+  padding: 2px
+  margin: 0
+  background: #282A31
+  color: #8B8F9E
+
+
+
+
 .CSSM__heading
+    text-align: center  
+    color: #EFF3F8
+    font-weight: 400
 
 .CSSM__item
     position: relative
