@@ -55,36 +55,34 @@ class CSSManager extends React.Component {
   constructor(props) {
     super(props)
     this.state = {
-      mediaQueris: [
-        {
-          name: "mobile",
-          query: "",
-        },
-        {
-          name: "tablet", // Mobile first, I guess that makes sence
-          query: "@media only screen and (min-width: 600px) ",
-        },
-        {
-          name: "desktop",
-          query: "@media only screen and (min-width: 1000px) "
-        }
-      ],
+      mediaQueris: {
+        mobile: "",
+        tablet: "@media only screen and (min-width: 600px) ",
+        desktop: "@media only screen and (min-width: 1000px) "
+      },
       scopes: scopes,
       editing: null, // The id of the item being edited!
       cssDocument: [ // these are what I want to edit
         {
           id: getId(), // GIV IT AN ID ON CREATION?
-          mediaQuery: "", // name
-          selector: "",
+          mediaQuery: "mobile", // name
+          selector: ".test-div",
           scopes: initiateScopes(scopes), // use only by the react app to help the user see only the relevant classes.
-          attributes: [], // array of {key: "...", val: "..."}
+          attributes: [
+            { key: "height", value: "100px"},
+            { key: "background", value: "blue"},
+          ], // array of {key: "...", val: "..."}
         },
         {
           id: getId(),
-          mediaQuery: "",
-          selector: "",
+          mediaQuery: "tablet",
+          selector: ".test-span",
           scopes: initiateScopes(scopes),
-          attributes: [],
+          attributes: [
+            { key: "height", value: "100px"},
+            { key: "width", value: "200px"},
+            { key: "background", value: "blue"},
+          ],
         }
       ],
     }
@@ -110,7 +108,7 @@ class CSSManager extends React.Component {
     this.setState((state, props) => {
       state.cssDocument.push({
         id: getId(),
-        mediaQuery: "",
+        mediaQuery: "mobile",
         selector: "",
         scopes: initiateScopes(scopes),
         attributes: [],
@@ -217,16 +215,18 @@ class CSSManager extends React.Component {
   updateApplicationState() { // why is this even necessary?
     this.props.updateApplicationStyles(this.state.cssDocument)
     const css = this.cssDocumentToString();
-    // this.props.stylesheetElement.innerHtml = css;
+    this.props.styleSheetRef.current.innerHTML = css;
   }
 
-  itemsToCss(items) {
+  itemsToCss(items, baseIndentation) {
+    const attributeIndentation = baseIndentation + "\t";
     let css = ""; 
     items.forEach(item => {
-      css += item.selector + "\n";
+      css += baseIndentation + item.selector + "{\n";
       item.attributes.forEach(att => {
-        css += "  " + att.key + ": " + att.value + ";\n";
+        css += attributeIndentation + att.key + ": " + att.value + ";\n";
       })
+      css += baseIndentation + "}\n";
     })
     return css;
   }
@@ -240,12 +240,17 @@ class CSSManager extends React.Component {
     let tabletItems = this.state.cssDocument.filter(item => item.mediaQuery === "tablet");
     let mobileItems = this.state.cssDocument.filter(item => item.mediaQuery === "mobile");
 
-    css += this.state.mediaQueris["desktop"].query + "\n";
-    css += this.itemsToCss(desktopItems);
-    css += this.state.mediaQueris["tablet"].query + "\n";
-    css += this.itemsToCss(tabletItems);
-    css += this.state.mediaQueris["mobile"].query + "\n";
-    css += this.itemsToCss(mobileItems);
+    css += this.state.mediaQueris["mobile"] + "\n";
+    css += this.itemsToCss(mobileItems, "");
+    css += "}\n";
+    css += this.state.mediaQueris["tablet"] + "\n";
+    css += this.itemsToCss(tabletItems, "\t");
+    css += "}\n";
+    css += this.state.mediaQueris["desktop"] + "{\n";
+    css += this.itemsToCss(desktopItems, "\t");
+    css += "}\n";
+
+    console.log(css);
     return css;
   }
 
@@ -264,9 +269,12 @@ class CSSManager extends React.Component {
 
     this.setState({
       cssDocument
-    }, () => { // call funciton after setState completes
-      this.writeClassesToStyleElement();
     });
+    /*
+    () => { // call funciton after setState completes
+      this.writeClassesToStyleElement();
+    }
+    */
   }
 
   render() {
@@ -317,10 +325,10 @@ class CSSManager extends React.Component {
                             }
                             </div>
                             <select onChange={(e) => this.handleQueryChange(e, item.id)}>
-                              { this.state.mediaQueris.map(q => {
+                              { Object.keys(this.state.mediaQueris).map(queryName => {
                                   return (
-                                    <option value={q.name}>
-                                      {q.name.charAt(0).toUpperCase() + q.name.slice(1)}
+                                    <option value={queryName}>
+                                      {queryName.charAt(0).toUpperCase() + queryName.slice(1)}
                                     </option>
                                   )
                                 })
@@ -377,7 +385,7 @@ class CSSManager extends React.Component {
             </Droppable>
           </DragDropContext>
           <button onClick={this.createItem}>Create Item</button>
-          <button onClick={(e) => { e.preventDefault(); this.updateApplicationState(item.id) }}>Apply</button>
+          <button onClick={(e) => { e.preventDefault(); this.updateApplicationState() }}>Apply</button>
         </div>
       </div>
     )

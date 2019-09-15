@@ -89,6 +89,7 @@ class App extends React.Component {
         })
 
         // #ADD: clear focus on click outside active element, but only in the "editable" area.
+        this.updateApplicationStyles = this.updateApplicationStyles.bind(this)
 
         this.showSideNavigation = this.showSideNavigation.bind(this)
         this.closeSideNavigation = this.closeSideNavigation.bind(this)
@@ -142,6 +143,7 @@ class App extends React.Component {
         this.logout = this.logout.bind(this)
 
         this.state = {
+            styleSheetRef: React.createRef(),
             scrollableHeight: 0,
             sideNavigationStyle: {
                 width: "0px"
@@ -168,6 +170,7 @@ class App extends React.Component {
 
             // Context Objects
             globalContextObj: {
+                cssDocument: [],
                 pathPrefix: '',
                 toggleEdit: this.toggleEdit,
                 editing: false, // when active, this holds the page index of the active page (not sure if this is robust)
@@ -194,6 +197,15 @@ class App extends React.Component {
 
             }
         }
+    }
+
+    updateApplicationStyles(cssDocument) {
+        this.setState(state => {
+            state.globalContextObj.cssDocument = cssDocument;
+            return {
+                globalContextObj: state.globalContextObj,
+            }
+        })
     }
 
     showSideNavigation() {
@@ -1025,6 +1037,7 @@ class App extends React.Component {
             <GlobalContext.Provider value={this.state.globalContextObj}>
                 <HashRouter>
                     <div className='App'>
+                        <style ref={this.state.styleSheetRef}></style>
                         {/* Side Navigation Area */}
                         <button className="SN__show-button" onClick={this.showSideNavigation}><i className="material-icons">menu</i></button>
                         <div 
@@ -1132,6 +1145,9 @@ class App extends React.Component {
                                     Portal and using it directly in their render methods. It's quite disorderly.*/}
                                     <div id='Toolbar__portal'></div>
                                 </div>
+                                <div className="test-div"></div>
+                                <span className="test-span"></span>
+
 
                             {
                                 this.state.pages.map((page, pageIndex) => {
@@ -1197,7 +1213,7 @@ class App extends React.Component {
                                 }
                             </div>     
                         </div>
-                        <CSSManager />
+                        <CSSManager styleSheetRef={this.state.styleSheetRef} updateApplicationStyles={this.updateApplicationStyles}/>
 
                     </div>
                 </HashRouter>
