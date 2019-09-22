@@ -30,6 +30,7 @@ const User = require('./models/user_model')
 const Page = require('./models/page_model')
 const ColorPallets = require("./models/color_pallets_model") 
 const Template = require("./models/template_model")
+const CSSDocument = require("./models/css_document_model")
 
 
 // let db_uri = 'mongodb://' + process.env.DB_USERNAME + ':' + process.env.DB_PASSWORD + '/localhost:27017/' + process.env.DB_NAME
@@ -215,7 +216,7 @@ async function authorize(ctx, next) {
 
     } catch (err) {
         console.log("Not authorized! Error: ", err)
-        ctx.status = 400
+        ctx.status = 401
         ctx.body = {
             error: "Not Authorized!"
         }
@@ -266,7 +267,10 @@ protectedRouter.post("/pages", async ctx => {
 
 protectedRouter.put("/pages/:pathTitle", async ctx => {
     try {
-        const updatedPage = await Page.findOneAndUpdate({ pathTitle: ctx.params.pathTitle}, ctx.request.body)
+        const updatedPage = await Page.findOneAndUpdate({ 
+            pathTitle: ctx.params.pathTitle, 
+            owner: ctx.auth.user.email
+        }, ctx.request.body)
 
         ctx.status = 200
         ctx.body = updatedPage
@@ -326,7 +330,7 @@ protectedRouter.post("/colors", async ctx => {
         console.log(error)
         ctx.status = 400
         ctx.body = {
-            message: "Failed to create color pallets",
+            error: "Failed to create color pallets",
         }
     }
 })
@@ -343,7 +347,7 @@ protectedRouter.put("/colors", async ctx => {
         console.log(e)
         ctx.status = 400
         ctx.body = {
-            message: "Failed to update color pallets",
+            error: "Failed to update color pallets",
         }
     }
 })
@@ -357,12 +361,72 @@ protectedRouter.delete("/colors", async ctx => {
         console.log(e)
         ctx.status = 400;
         ctx.body = {
-            message: "Failed to delete color pallets"
+            error: "Failed to delete color pallets"
         };
     }
 })
 
 
+protectedRouter.post("/cssdocuments", async ctx => {
+    try {
+        const ownerEmail = ctx.auth.user.email;
+        let doc = new CSSDocument({
+            owner: ownerEmail,
+            ...ctx.request.body,
+        });
+        doc = await doc.save();
+        ctx.status = 200;
+        ctx.body = doc;
+    } catch(e) {
+        console.log("post cssdocuments error: ", e);
+        ctx.status = 400;
+        ctx.body = {
+            error: "Failed to create css document"
+        }
+    }
+})
+
+protectedRouter.get("/cssdocuments", async ctx => {
+    try {
+        const ownerEmail = ctx.auth.user.email;
+        const docs = await CSSDocument.find({owner: ownerEmail}).exec();
+        ctx.status = 200;
+        ctx.body = docs;
+    } catch(e) {
+        console.log("/cssdocuments error: ", e);
+        ctx.status = 400;
+        ctx.body = {
+            error: "Failed to get css documents",
+        }
+    }
+})
+
+protectedRouter.put("/cssdocuments/:id", async ctx => {
+    try {
+        const ownerEmail = ctx.auth.user.email;
+        const doc = await CSSDocument.findOneAndUpdate({_id: ctx.params.id, owner: ownerEmail}, ctx.request.body);
+        ctx.status = 200;
+        ctx.body = doc;
+    } catch(e) {
+        ctx.status = 400;
+        ctx.body = {
+            error: "Failed to update css document with id " + ctx.params.id,
+        }
+    }
+})
+
+protectedRouter.delete("/cssdocuments/:id", async ctx => {
+    try {
+        const ownerEmail = ctx.auth.user.email;
+        const doc = await CSSDocument.findOneAndDelete({_id: ctx.params.id, owner: ownerEmail});
+        ctx.status = 200;
+    } catch(e) {
+        ctx.status = 200;
+        ctx.body = {
+            error: "Failed to delete css document with id: " + ctx.params.id,
+        }
+    }
+})
 
 protectedRouter.get("/templates", async ctx => {
     try {

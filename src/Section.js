@@ -154,11 +154,7 @@ class Section extends React.Component {
                                                     })
                                                 }
                                         </select>
-                                        {/*
-                                        <button className="Section__toolbar-button" onClick={() => { this.props.moveObject(-1) }}><i className="material-icons">arrow_drop_up</i></button>
-                                        <button className="Section__toolbar-button" onClick={() => { this.props.moveObject(1) }}><i className="material-icons">arrow_drop_down</i></button>
-                                        */}
-                                        
+
                                         <textarea 
                                             className={"SN__input-textarea"} 
                                             placeholder="Styles in JSON format"
@@ -169,9 +165,6 @@ class Section extends React.Component {
 
                                         </textarea>
                                         <button className="SN__button-normal SN__button--create" onClick={this.applySectionStyles}>Apply Styles</button>
-                                        
-                                            {/*<button className="Section__toolbar-button" onClick={this.updateDimensions}><i className="material-icons">border_all</i></button>*/}
-                                        {/*<button className="Section__toolbar-button" onClick={this.props.deleteObject}><i className="material-icons">delete</i></button>*/}
                                     </div>
                                 </div>
                             }
@@ -232,7 +225,7 @@ class Section extends React.Component {
                                 className={"GridSection "  + (this.context.enableSpacing ? "spacing" : "")}
                                 style={gridSection.style} // hold grid styles, I need to solve this...
                                 key={gridSection.id}
-                                onClick={(e) => { /*e.stopPropagation();*/ this.gridSectionOnFocus(gridSection.id, i); }}
+                                onClick={(e) => { this.gridSectionOnFocus(gridSection.id, i); }}
                                 > {/* gridSection.style['width'] */}
 
                                 {/* Grid Section Toolbar (very similar to section toolbar */}

@@ -8,13 +8,13 @@ import _ from 'lodash'
 import * as arrayMove from  'array-move'
 
 // import ContentEditable from 'react-contenteditable' // use for inputs that does not require rich text editing. This allows inputs to have the same style 
-import { Login, Register } from './helper-components/auth'
 import AuthNav from './AuthNav'
 import ViewNav from './ViewNav'
-import AccountInfo from './AccountInfo'
+import AccountInfo from './AccountInfo';
 import Page from './Page'
 import { UserInfo } from './side-navigation'
 
+import AccountPage from './AccountPage'
 import ImageUploader from './ImageUploader'
 import FileUploader from './FileUploader'
 
@@ -33,22 +33,11 @@ import { updateHeightOfVideos } from './content-components/RichText';
  * 
  */
 
-
 /**
  * Bugs:
  * 
  *  
  */
-
-function moveContentUnderTopToolbar(e) {
-    let toolbarContainer = document.getElementsByClassName("App__toolbar-container")[0]
-    if (toolbarContainer) {
-        let height = toolbarContainer.offsetHeight;
-        document.getElementsByClassName('App__grid--main')[0].style['margin-top'] = height + "px";
-    } else {
-        delete document.getElementsByClassName('App__grid--main')[0].style['margin-top']
-    }
-}
 
 // The use of this function is messy and I would like this logic to be handled by css. (use flex-basis? )
 // # REFACTOR: do in css
@@ -64,9 +53,8 @@ function setScrollableHeight() {
     
 }
 
-// #REFACTOR: find a better name
-function newMerge(obj, update) {
-    const newObj = _.assign(obj, update)
+function deepStyleMerge(obj, update) {
+    _.assign(obj, update)
     if (update.style && Object.keys(update.style).length === 0) {
         obj.style = {} // #REFACTOR Clear style (not optimal)
     }
@@ -78,7 +66,6 @@ class App extends React.Component {
         super(props)
         
         window.addEventListener("resize", updateHeightOfVideos) // #REFACTOR: solve in CSS
-        // window.addEventListener("resize", moveContentUnderTopToolbar)
         window.addEventListener("resize", setScrollableHeight.bind(this))
         
         window.addEventListener("keyup", (e) => {
@@ -138,10 +125,7 @@ class App extends React.Component {
         this.loadProtectedData = this.loadProtectedData.bind(this);
 
         this.setAuthenticated = this.setAuthenticated.bind(this)
-        this.setShowLogin = this.setShowLogin.bind(this)
-        this.setShowRegister = this.setShowRegister.bind(this)
 
-        this.logout = this.logout.bind(this)
 
         this.state = {
             styleSheetRef: React.createRef(),
@@ -162,9 +146,6 @@ class App extends React.Component {
             defaultSectionPadding: '0px',
             // Application State
             messages: [],
-            showLogin: false,
-            showRegister: false, 
-
 
             user: {},
 
@@ -286,19 +267,7 @@ class App extends React.Component {
         }, duration * 1000)
     }
 
-    // _______________ Authentication ______________________
-    logout() {
-        axios.post("/logout").then(response => {
-            this.setAuthenticated(false)
-            this.setShowLogin(false)
-            localforage.removeItem("token").catch(error => {
-                console.log("Failed to remove token on logout, with error: ", error)
-            })
-            delete axios.defaults.headers.common["Authorization"]
-        }).catch(error => {
-            this.flashMessage({text: "Failed to log out, please try again.", type: "error"}, 3)
-        })
-    }
+
 
     // ________________Global context related_____________________
     toggleEdit(e) {
@@ -325,6 +294,7 @@ class App extends React.Component {
 
     // #REFACTOR: merge into one function (control only the most specific element selected and deduce its "parents", but not requring walking the DOM).
     updateSectionInFocus(sectionId, sectionIndex) {
+        if (!this.state.globalContextObj.editing) return
         this.setState((state, props) => {
             let globalContextObj = state.globalContextObj
             if (sectionIndex !== globalContextObj.sectionInFocusIndex) {
@@ -340,6 +310,7 @@ class App extends React.Component {
         })
     }
     updateGridSectionInFocus(gridSectionId, gridSectionIndex) {
+        if (!this.state.globalContextObj.editing) return
         this.setState((state, props) => {
             let globalContextObj = state.globalContextObj
             globalContextObj.gridSectionInFocus = gridSectionId 
@@ -351,6 +322,7 @@ class App extends React.Component {
         })
     }
     updateComponentInFocus(componentId, componentStateIndex) {
+        if (!this.state.globalContextObj.editing) return
         this.setState((state, props) => {
             let globalContextObj = state.globalContextObj
             globalContextObj.componentInFocus = componentId
@@ -408,18 +380,6 @@ class App extends React.Component {
         })
     }
 
-    // # REFACTOR: only one setter method for top level app state manipulation
-    setShowLogin(value) {
-        this.setState({
-            showLogin: value
-        })
-    }
-    setShowRegister(value) {
-        this.setState({
-            showRegister: value
-        })
-    }
-
     createPage(type, pageTitle) {
         console.log(axios.defaults)
         let path;
@@ -462,7 +422,7 @@ class App extends React.Component {
 
         this.setState((state, props) => {
             let page = state.pages[pageIndex]
-            state.pages[pageIndex]= newMerge(page, pageUpdate)
+            state.pages[pageIndex]= deepStyleMerge(page, pageUpdate)
             return {
                 pages: state.pages
             }
@@ -633,7 +593,7 @@ class App extends React.Component {
 
             let section = state.pages[state.globalContextObj.editing].sections[sectionIndex]
             
-            state.pages[state.globalContextObj.editing].sections[sectionIndex] = newMerge(section, sectionUpdate)
+            state.pages[state.globalContextObj.editing].sections[sectionIndex] = deepStyleMerge(section, sectionUpdate)
             return {
                 pages: state.pages
             }
@@ -665,7 +625,7 @@ class App extends React.Component {
 
         this.setState((state, props) => {
             let gridSection = state.pages[state.globalContextObj.editing].sections[sectionIndex].gridSections[gridSectionIndex]
-            state.pages[state.globalContextObj.editing].sections[sectionIndex].gridSections[gridSectionIndex] = newMerge(gridSection, gridSectionUpdate)
+            state.pages[state.globalContextObj.editing].sections[sectionIndex].gridSections[gridSectionIndex] = deepStyleMerge(gridSection, gridSectionUpdate)
             return {
                 pages: state.pages
             }
@@ -743,7 +703,7 @@ class App extends React.Component {
 
         this.setState((state, props) => {
             let component = state.pages[state.globalContextObj.editing].sections[sectionIndex].gridSections[gridSectionIndex].componentStates[componentStateIndex]
-            state.pages[state.globalContextObj.editing].sections[sectionIndex].gridSections[gridSectionIndex].componentStates[componentStateIndex] = newMerge(component, componentUpdate)
+            state.pages[state.globalContextObj.editing].sections[sectionIndex].gridSections[gridSectionIndex].componentStates[componentStateIndex] = deepStyleMerge(component, componentUpdate)
             return {
                 pages: state.pages
             }
@@ -1051,7 +1011,6 @@ class App extends React.Component {
 
     // #REFACTOR: remove once the toolbar issue and is solved in css 
     componentDidUpdate(prevProps, prevState) {
-        // moveContentUnderTopToolbar() 
         if (
             !_.isEqual(prevState.user, this.state.user) || 
             (prevState.pages.length !== this.state.pages.length) || 
@@ -1106,58 +1065,10 @@ class App extends React.Component {
                                         pages={this.state.pages}
                                     />
                                 }
-                                
-                                <div id="SN__account-info" className="SN__container">
-                                    <p className="SN__menu-title">ACCOUNT</p>
-                                    <div className='SN__widget'> {/* Section__toolbarMenu */}
-                                        <ul>
-                                            { !this.state.globalContextObj.authenticated &&
-                                                <React.Fragment>
-                                                    <li><a className="SN__item" onClick={()=>{ this.setShowLogin(true) }}><i className="fas fa-sign-in-alt"></i><span>Log In</span></a></li>
-                                                    <li><a className="SN__item" onClick={()=>{ this.setShowRegister(true) }}><i className="fas fa-sign-in-alt"></i><span>Register</span></a></li>  
-                                                </React.Fragment>
-                                            } 
-                                            { this.state.globalContextObj.authenticated &&
-                                                <React.Fragment>
-                                                    <li><a className="SN__item" onClick={ this.logout }><i class="fas fa-sign-out-alt"></i><span>Log out</span></a></li>
-                                                    <li>          
-                                                        <Link 
-                                                            to={{
-                                                                pathname: '/account',  
-                                                            }} 
-                                                            className="SN__item"
-                                                            activeClassName="SN__item--active" // not working, do not know why
-                                                        >
-                                                            <i className="material-icons">person</i><span>Account</span>
-                                                        </Link>
-                                                    </li>
-                                                </React.Fragment>
-                                            }
-                                        </ul>
-
-                                        { this.state.showLogin &&
-                                            <div className="SN__login-form">
-                                                <Login // Need to be able to update the global context, this is why it is "easier" to render it here.
-                                                    showLogin={this.state.showLogin}
-                                                    authenticated={this.state.globalContextObj.authenticated}
-                                                    setAuthenticated={this.setAuthenticated}
-                                                    setShowLogin={this.setShowLogin}
-                                                    loadProtectedData={this.loadProtectedData}
-                                                    // setUser={setUser} // need to implement in the future to support multiple users.
-                                                />
-                                            </div>
-                                        }
-                                        { this.state.showRegister &&
-                                            <div className="SN__login-form">
-                                                <Register // Need to be able to update the global context, this is why it is "easier" to render it here.
-                                                    showRegister={this.state.showRegister}
-                                                    setShowRegister={this.setShowRegister}
-                                                    // setUser={setUser} // need to implement in the future to support multiple users.
-                                                />
-                                            </div>
-                                        }
-                                    </div>
-                                </div>
+                                <AccountInfo 
+                                    setAuthenticated={this.setAuthenticated}
+                                    loadProtectedData={this.loadProtectedData}
+                                />
                             </div>
 
                         </div>
@@ -1176,6 +1087,9 @@ class App extends React.Component {
                                     Portal and using it directly in their render methods. It's quite disorderly.*/}
                                     <div id='Toolbar__portal'></div>
                                 </div>
+                                { this.state.globalContextObj.editing &&
+                                    <div className="Toolbar__spacer"></div>
+                                }
                             {
                                 this.state.pages.map((page, pageIndex) => {
                                     return (
@@ -1217,7 +1131,7 @@ class App extends React.Component {
                                 <React.Fragment>
                                     <Route exact path="/image-uploader" render={(props) => <ImageUploader {...props} flashMessage={this.flashMessage} />} />
                                     <Route exact path="/file-uploader" render={(props) => <FileUploader {...props} flashMessage={this.flashMessage} />} />
-                                    <Route exact path="/account" render={(props) => <AccountInfo {...props} flashMessage={this.flashMessage} />} />
+                                    <Route exact path="/account" render={(props) => <AccountPage {...props} flashMessage={this.flashMessage} />} />
                                 </React.Fragment>
                             }
 
@@ -1255,7 +1169,6 @@ class App extends React.Component {
         )
     }
 }
-
 
 App.contextType = GlobalContext
 

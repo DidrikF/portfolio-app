@@ -20,7 +20,6 @@ html, body
   //grid-template-columns: 0 1fr
   
 
-
 .App__toolbar-container 
   position: fixed
   top: 0
@@ -30,6 +29,8 @@ html, body
   border-bottom: 0.5px solid grey
   padding-left: 20px
 
+.Toolbar__spacer 
+  height: 40px
 
 .App__grid--side 
   display: block
@@ -68,6 +69,7 @@ html, body
 
 .App__messages-container
   position: fixed
+  z-index: 200000
   bottom: 20px // will this cause it to grow upwards? 
   right: 20px
   width: 300px

@@ -4,6 +4,7 @@ import axios from 'axios'
 
 import PageToolbarPortal from './helper-components/PageToolbarPortal'
 import Section from './Section'
+import ClassSelector from './ClassSelector'
 import { GlobalContext } from './contexts'  
 
   
@@ -19,6 +20,8 @@ class Page extends React.Component {
         this.handleInputChange = this.handleInputChange.bind(this)
         this.handlePageInputChange = this.handlePageInputChange.bind(this)
         this.applyPageStyles = this.applyPageStyles.bind(this)
+        
+        this.updateSelectedClasses = this.updateSelectedClasses.bind(this)
     }
 
 
@@ -45,6 +48,12 @@ class Page extends React.Component {
         this.props.applyPageStyles(this.props.pageIndex)
     }
 
+    updateSelectedClasses(selectedClasses) {
+        const pageUpdate = {
+            className: selectedClasses.join(", "),
+        };
+        this.props.updatePageState(pageUpdate, this.props.pageIndex);
+    }
     
     render() {
         return (
@@ -71,6 +80,8 @@ class Page extends React.Component {
 
                             </textarea>
                             <button className="SN__button-normal SN__button--create" onClick={this.applyPageStyles}>Apply Styles</button>
+
+                            <ClassSelector cssDocument={this.context.cssDocument} scope="page" updateSelectedClasses={this.updateSelectedClasses}/>
 
                         </div>
                     </div>
