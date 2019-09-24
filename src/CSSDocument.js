@@ -74,7 +74,7 @@ class CSSDocument extends React.Component {
                             }
                           </div>
                           <select onChange={(e) => this.props.handleQueryChange(e, item.id)}>
-                            {Object.keys(this.props.mediaQueris).map(queryName => {
+                            {Object.keys(this.props.mediaQueries).map(queryName => {
                               return (
                                 <option value={queryName}>
                                   {queryName.charAt(0).toUpperCase() + queryName.slice(1)}

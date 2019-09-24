@@ -1,48 +1,41 @@
 import React from 'react';
 
 
-class ClassSelector extends React.Component {
+class ClassSelector extends React.Component {    
     constructor(props) {
         super(props);
-        this.filterTest = this.filterTest.bind(this);
+        this.handleInputChange = this.handleInputChange.bind(this);
     } 
 
-    filterTest() {
-        console.log(this.props.cssDocument)
-        let classes = this.props.cssDocument
-            .filter(item => {
-                console.log("Item being filtered: ", item);                
-                return item.scopes[this.props.scope];
+    handleInputChange(e) {
+        const clsName = e.target.name;
+        const checked = e.target.checked;
+        let updatedClasses = null;
 
-            })
-        console.log("Filtered classes: ", classes)
+        if (checked === true) {
+            updatedClasses = [...this.props.activeClasses.split(/\s+/), clsName];
+        } else if (checked === false) {
+            updatedClasses = this.props.activeClasses.split(/\s+/)
+            updatedClasses = updatedClasses.filter(cls => (cls !== clsName));
+        }
 
-        classes = classes.reduce((accumulator, item) => {
-                const classRegex = /\.(\w+)/ig;
-                const res = classRegex.exec(item.selector)
-                console.log("Item selector: ", item.selector)
-                console.log("Result of regex exec: ", res)
-                if(res) {
-                    const className = res[1];
-                    accumulator.add(className)
-                    console.log("accumulator: ", accumulator)
-                }
-                return accumulator;
-            }, new Set());
+        updatedClasses = updatedClasses.filter(cls => cls !== "");
 
-        console.log("Filtered and reduced classes: ",  classes)
+        if (updatedClasses.length > 0) {
+            this.props.updateSelectedClasses(updatedClasses.join(" "))
+        } else {
+            this.props.updateSelectedClasses("");
+        }
     }
 
     render() {
-        
+        // console.log("css document: ", this.props.cssDocument)
         let classes = this.props.cssDocument
             .filter(item => {
-                console.log("Item being filtered: ", item);                
-                return item.scopes[this.props.scope];
-
+                return (item.scopes[this.props.scope] || item.scopes["all"]);
             }).reduce((accumulator, item) => {
-                const classRegex = /\.(\w+)/ig;
-                const res = classRegex.exec(item.selector)
+                const res = /\.([\w-]+)/ig.exec(item.selector)
+                // console.log(item.selector, res);
                 if(res) {
                     const className = res[1];
                     accumulator.add(className)
@@ -50,25 +43,47 @@ class ClassSelector extends React.Component {
                 return accumulator
             }, new Set());
 
-        if (classes && classes instanceof Set) {
+        if (classes) {
             classes = Array.from(classes);
+        } else {
+            classes = [];
         }
+        // console.log("classes from css document: ", classes)
+
+        const activeClasses = this.props.activeClasses.split(/\s+/);        
+        classes = [...classes, ...activeClasses];
+
+        // console.log("active classes: ", activeClasses)
+
+        classes = classes.filter(cls => cls !== "")
+
+        const clsState = {};
+
+        for(let cls of classes) {
+            if (activeClasses.includes(cls)) {
+                clsState[cls] = true;
+            } else {
+                clsState[cls] = false;
+            }
+        }
+        // console.log("clsState: ", clsState)
 
         return (
-            <div className="CS__container">
-               <p className="SN__menu-title">CLASSES</p>
-               { Array.isArray(classes) &&
-                    classes.map(cls => {
-                        return (
-                            <React.Fragment>
-                                <input type="checkbox" name={cls} value={cls} /> 
-                                <span>{cls}</span>
-                            </React.Fragment>
-                        )
-                    })
+            <div className="SN__container">
+                <p className="SN__menu-title">{this.props.heading}</p>
+                <div className='SN__widget'> {/* Section__toolbarMenu */}
+                    { 
+                        Object.keys(clsState).map(clsName => {
+                            return (
+                                <div>                                
+                                    <input type="checkbox" onChange={this.handleInputChange} name={clsName} checked={clsState[clsName]} /> 
+                                    <span>{clsName}</span>
+                                </div>
+                            )
+                        })
+                    }
 
-               }
-               <button onClick={this.filterTest}>Filter</button>
+                </div>
             </div>
         )
     }

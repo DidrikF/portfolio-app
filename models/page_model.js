@@ -3,6 +3,10 @@ var Schema = mongoose.Schema
 
 
 var PageSchema = mongoose.Schema({
+  owner: {
+    type: String,
+    required: [true, "Owner is required"],
+  },
   style: {
     type: Object,
   },

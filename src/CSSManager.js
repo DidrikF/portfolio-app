@@ -4,7 +4,7 @@ import axios from 'axios'
 import { getId } from './helpers';
 import CSSDocument from './CSSDocument'
 import { GlobalContext } from './contexts';
-
+import { cssDocumentToString, combineCssDocuments, mediaQueries } from "./helpers";
 
 
 const reorder = (list, startIndex, endIndex) => {
@@ -19,7 +19,7 @@ let scopes = [
   "all",
   "page",
   "section",
-  "girdSection",
+  "gridSection",
   "component",
   "rich text",
 ];
@@ -35,11 +35,7 @@ class CSSManager extends React.Component {
     super(props)
     this.state = {
       cssDocumentName: "",
-      mediaQueris: {
-        mobile: "",
-        tablet: "@media only screen and (min-width: 600px) ",
-        desktop: "@media only screen and (min-width: 1000px) "
-      },
+      mediaQueries: mediaQueries,
       scopes: scopes,
       editing: null, // The id of the item being edited!
       
@@ -142,7 +138,7 @@ class CSSManager extends React.Component {
       const cssDocumentIndex = state.cssDocuments.findIndex(doc => doc.id === state.activeDoc);
       if (cssDocumentIndex <= -1) return
 
-      const indexToDelete = state.cssDocument.findIndex(item => item.id === id);
+      const indexToDelete = state.cssDocuments[cssDocumentIndex].items.findIndex(item => item.id === id);
       state.cssDocuments[cssDocumentIndex].items.splice(indexToDelete, 1);
       return {
         cssDocuments: state.cssDocuments,
@@ -279,17 +275,8 @@ class CSSManager extends React.Component {
     */
   }
 
-  combineCssDocuments(cssDocuments) {
-    if (!cssDocuments) {
-      cssDocuments = this.state.cssDocuments;
-    }
-    return cssDocuments.reduce((combined, doc) => {
-      return [...combined, ...doc.items]
-    }, [])
-  }
-
   applyStylesToStyleSheet(combinedCssDocument) {
-    const css = this.cssDocumentToString(combinedCssDocument);
+    const css = cssDocumentToString(combinedCssDocument);
     this.props.styleSheetRef.current.innerHTML = css;
   }
 
@@ -304,53 +291,20 @@ class CSSManager extends React.Component {
   }
 
   updateApplicationStateAndSave() { // why is this even necessary?
-    const combinedCssDocument = this.combineCssDocuments();
+    const combinedCssDocument = combineCssDocuments(this.state.cssDocuments);
     this.props.updateApplicationStyles(combinedCssDocument);
     this.applyStylesToStyleSheet(combinedCssDocument);
     this.saveCssDocuments();
   }
 
-  itemsToCss(items, baseIndentation) {
-    const attributeIndentation = baseIndentation + "\t";
-    let css = ""; 
-    items.forEach(item => {
-      css += baseIndentation + item.selector + "{\n";
-      item.attributes.forEach(att => {
-        css += attributeIndentation + att.key + ": " + att.value + ";\n";
-      })
-      css += baseIndentation + "}\n";
-    })
-    return css;
-  }
 
-  cssDocumentToString(combinedCssDocument) {
-    let css = ""; 
-  
-    // sort based on media query
-    let desktopItems = combinedCssDocument.filter(item => item.mediaQuery === "desktop");
-    let tabletItems = combinedCssDocument.filter(item => item.mediaQuery === "tablet");
-    let mobileItems = combinedCssDocument.filter(item => item.mediaQuery === "mobile");
-
-    css += this.state.mediaQueris["mobile"] + "\n";
-    css += this.itemsToCss(mobileItems, "");
-    css += "}\n";
-    css += this.state.mediaQueris["tablet"] + "\n";
-    css += this.itemsToCss(tabletItems, "\t");
-    css += "}\n";
-    css += this.state.mediaQueris["desktop"] + "{\n";
-    css += this.itemsToCss(desktopItems, "\t");
-    css += "}\n";
-
-    console.log(css);
-    return css;
-  }
 
   getCssDocuments() {
     axios.get("/cssdocuments").then(response => {
       this.setState({
         cssDocuments: response.data,
       })
-      const combinedCssDocument = this.combineCssDocuments(response.data);
+      const combinedCssDocument = combineCssDocuments(response.data);
       this.props.updateApplicationStyles(combinedCssDocument);
       this.applyStylesToStyleSheet(combinedCssDocument);
     }).catch(e => {
@@ -396,7 +350,7 @@ class CSSManager extends React.Component {
           { !!activeCssDocument &&
             <CSSDocument
               cssDocument={activeCssDocument}
-              mediaQueris={this.state.mediaQueris}
+              mediaQueries={this.state.mediaQueries}
               createItem={this.createItem}
               deleteItem={this.deleteItem}
               handleScopeChange={this.handleScopeChange}

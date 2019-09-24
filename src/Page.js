@@ -50,7 +50,7 @@ class Page extends React.Component {
 
     updateSelectedClasses(selectedClasses) {
         const pageUpdate = {
-            className: selectedClasses.join(", "),
+            className: selectedClasses, // .join(", ")
         };
         this.props.updatePageState(pageUpdate, this.props.pageIndex);
     }
@@ -68,7 +68,7 @@ class Page extends React.Component {
             { this.context.editing && 
                 <PageToolbarPortal>
                     <div className="SN__container">
-                        <p className="SN__menu-title">PAGE CONFIG</p>
+                        <p className="SN__menu-title">PAGE STYLES</p>
                         <div className='SN__widget'> {/* Section__toolbarMenu */}
                             <textarea 
                                 className={"SN__input-textarea"} 
@@ -81,10 +81,12 @@ class Page extends React.Component {
                             </textarea>
                             <button className="SN__button-normal SN__button--create" onClick={this.applyPageStyles}>Apply Styles</button>
 
-                            <ClassSelector cssDocument={this.context.cssDocument} scope="page" updateSelectedClasses={this.updateSelectedClasses}/>
 
                         </div>
                     </div>
+
+                    <ClassSelector heading="PAGE CLASSES" cssDocument={this.context.cssDocument} scope="page" updateSelectedClasses={this.updateSelectedClasses} activeClasses={this.props.page.className} />
+                    
                     <div className="SN__container">
                         <p className="SN__menu-title">PAGE TEMPLATES</p>
                         <div className='SN__widget'> {/* Section__toolbarMenu */}

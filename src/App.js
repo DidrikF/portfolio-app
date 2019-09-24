@@ -19,6 +19,7 @@ import ImageUploader from './ImageUploader'
 import FileUploader from './FileUploader'
 
 import CSSManager from './CSSManager'
+import { cssDocumentToString, combineCssDocuments } from './helpers';
 
 import { GlobalContext } from './contexts'
 
@@ -413,6 +414,8 @@ class App extends React.Component {
                 return {
                     pages: state.pages
                 }
+            }).catch(e => {
+                this.flashMessage({text: "Failed to create page, it will not be possible to save updates.", type: "error"}, 3)
             })
         })
     }
@@ -456,6 +459,8 @@ class App extends React.Component {
 
     deletePage(pageIndex) {
         const pageToDelete = this.state.pages[pageIndex]
+
+        if(!window.confirm(`Are you sure you want to delete page: ${pageToDelete.title}?`)) return
 
         axios.delete(`/pages/${pageToDelete.pathTitle}`).then(response => {
             this.setState((state, props) => {
@@ -531,8 +536,9 @@ class App extends React.Component {
     
     updateSectionLayout(e) {
         if (this.state.globalContextObj.sectionInFocusIndex < 0) return
-
         const layoutName = e.target.value
+        if (!window.confirm(`Are you sure you want to change layout to "${layoutName}"? \nThe current state of the section will be lost.`)) return
+        
         const sectionTemplateName = Object.keys(this.state.gridLayouts).find(gridLayoutName => {
             const gridLayout = this.state.gridLayouts[gridLayoutName]
             return gridLayout.layoutName === layoutName
@@ -954,9 +960,19 @@ class App extends React.Component {
         })
     }
 
+    loadCssDocuments() {
+        axios.get("/cssdocuments").then(response => {
+            const combinedCssDocument = combineCssDocuments(response.data);
+            const css = cssDocumentToString(combinedCssDocument);
+            console.log(css);
+            this.state.styleSheetRef.current.innerHTML = css;
+          }).catch(e => {
+            this.context.flashMessage({text: "Failed to get css documents, please try to reload the page.", type: "error"}, 3);
+          })
+    }
+
     loadProtectedData() {
         this.loadTemplates()
-
         // Add more as needed
     }
 
@@ -975,8 +991,10 @@ class App extends React.Component {
 
     // #REFACTOR: more data loading here?
     componentDidMount() {
-        this.loadPages()
-        this.loadUser()
+        this.loadCssDocuments();
+        this.loadPages();
+        this.loadUser();
+
 
         setScrollableHeight.bind(this)()
 

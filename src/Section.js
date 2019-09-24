@@ -1,12 +1,12 @@
 
 import React from 'react';
-import { GlobalContext } from './contexts';
-import RichText from './content-components/RichText'
-import PageToolbarPortal from './helper-components/PageToolbarPortal'
 import * as _ from 'lodash'
-import 'react-quill/dist/quill.snow.css';
+
+import { GlobalContext } from './contexts';
+import PageToolbarPortal from './helper-components/PageToolbarPortal'
+import ClassSelector from './ClassSelector';
 import { gridLayouts } from './grid'
-import { thisExpression } from '@babel/types';
+import RichText from './content-components/RichText'
 
 class Section extends React.Component {
     constructor(props) {
@@ -28,6 +28,9 @@ class Section extends React.Component {
         this.applyGridSectionStyles = this.applyGridSectionStyles.bind(this)
         this.handleSectionInputChange = this.handleSectionInputChange.bind(this)
         this.applySectionStyles = this.applySectionStyles.bind(this)
+
+        this.updateSelectedSectionClasses = this.updateSelectedSectionClasses.bind(this);
+        this.updateSelectedGridSectionClasses = this.updateSelectedGridSectionClasses.bind(this);
 
         // this.updateDimensions = this.updateDimensions.bind(this)
         // this.onBlur = this.onBlur.bind(this)
@@ -92,7 +95,19 @@ class Section extends React.Component {
         this.props.applySectionStyles(this.context.sectionInFocusIndex)
     }
 
+    updateSelectedSectionClasses(classes) {
+        const sectionUpdate = {
+            className: classes,
+        }
+        this.props.updateSectionState(sectionUpdate, this.context.sectionInFocusIndex);
+    }
 
+    updateSelectedGridSectionClasses(classes) {
+        const gridSectionUpdate = {
+            className: classes,
+        }
+        this.props.updateGridSectionState(gridSectionUpdate, this.context.sectionInFocusIndex, this.context.gridSectionInFocusIndex);
+    }
 
     componentDidMount() {
         // this.updateDimensions();
@@ -133,40 +148,44 @@ class Section extends React.Component {
                         ...this.props.section.style,
                     }}
                     >
+
                     { (this.context.sectionInFocus === this.props.id) && 
                          <PageToolbarPortal>
 
                             { !this.context.gridSectionInFocus && 
-                                <div className="SN__container">
-                                    <p className="SN__menu-title">SECTION CONFIG</p>
-                                    <div className='SN__widget'> {/* Section__toolbarMenu */}
-                                        <select className="Section__toolbar-select" value={this.props.section.selectedLayout} onChange={this.props.updateSectionLayout}>
-                                            {
-                                                Object.keys(this.state.gridLayouts).map(sectionLayoutKey => {
-                                                    return (
-                                                        <option 
+                                <React.Fragment>
+                                    <div className="SN__container">
+                                        <p className="SN__menu-title">SECTION CONFIG</p>
+                                        <div className='SN__widget'> {/* Section__toolbarMenu */}
+                                            <select className="Section__toolbar-select" value={this.props.section.selectedLayout} onChange={this.props.updateSectionLayout}>
+                                                {
+                                                    Object.keys(this.state.gridLayouts).map(sectionLayoutKey => {
+                                                        return (
+                                                            <option 
                                                             key={this.state.gridLayouts[sectionLayoutKey].layoutName} 
                                                             value={this.state.gridLayouts[sectionLayoutKey].layoutName}
-                                                        >
-                                                                {this.state.gridLayouts[sectionLayoutKey].layoutName}
-                                                        </option>
-                                                        )
-                                                    })
-                                                }
-                                        </select>
+                                                            >
+                                                                    {this.state.gridLayouts[sectionLayoutKey].layoutName}
+                                                            </option>
+                                                            )
+                                                        })
+                                                    }
+                                            </select>
 
-                                        <textarea 
-                                            className={"SN__input-textarea"} 
-                                            placeholder="Styles in JSON format"
-                                            name="styleInput"
-                                            value={this.props.section.styleInput}
-                                            onChange={this.handleSectionInputChange} // OBS
-                                        >
+                                            <textarea 
+                                                className={"SN__input-textarea"} 
+                                                placeholder="Styles in JSON format"
+                                                name="styleInput"
+                                                value={this.props.section.styleInput}
+                                                onChange={this.handleSectionInputChange} // OBS
+                                            >
 
-                                        </textarea>
-                                        <button className="SN__button-normal SN__button--create" onClick={this.applySectionStyles}>Apply Styles</button>
+                                            </textarea>
+                                            <button className="SN__button-normal SN__button--create" onClick={this.applySectionStyles}>Apply Styles</button>
+                                        </div>
                                     </div>
-                                </div>
+                                    <ClassSelector heading="SECTION CLASSES" cssDocument={this.context.cssDocument} scope="section" updateSelectedClasses={this.updateSelectedSectionClasses} activeClasses={this.props.section.className} />
+                                </React.Fragment>
                             }
 
                             <div className="SN__container">
@@ -222,7 +241,7 @@ class Section extends React.Component {
                             >
                             
                                 <div 
-                                className={"GridSection "  + (this.context.enableSpacing ? "spacing" : "")}
+                                className={`GridSection ${gridSection.className} ${this.context.enableSpacing ? "spacing" : ""}`}
                                 style={gridSection.style} // hold grid styles, I need to solve this...
                                 key={gridSection.id}
                                 onClick={(e) => { this.gridSectionOnFocus(gridSection.id, i); }}
@@ -248,6 +267,8 @@ class Section extends React.Component {
                                                 <button className="SN__button-normal SN__button--create" onClick={this.applyGridSectionStyles}>Apply Styles</button>
                                             </div>
                                         </div>
+                                        
+                                        <ClassSelector heading="GRID SECTION CLASSES" cssDocument={this.context.cssDocument} scope="gridSection" updateSelectedClasses={this.updateSelectedGridSectionClasses} activeClasses={gridSection.className} />
                                     </PageToolbarPortal>
                                 }
                                 

@@ -16,6 +16,9 @@ import './css/class-selector.sass'
 import './css/quill.core.css'
 import './css/quill.snow.css'
 
+// Don't know if I can remove
+import 'react-quill/dist/quill.snow.css';
+
 
 window.katex = katex
 

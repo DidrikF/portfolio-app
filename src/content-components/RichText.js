@@ -3,6 +3,7 @@ import React from 'react';
 import { GlobalContext } from '../contexts'
 import RichTextToolbarPortal from './RichTextToolbarPortal';
 import PageToolbarPortal from '../helper-components/PageToolbarPortal'
+import ClassSelector from '../ClassSelector';
 import { quillItems } from './config'
 
 import _ from './react-quill/quill-extensions' // Evaluate the module
@@ -12,7 +13,7 @@ import ReactQuillv2 from './react-quill/ReactQuillv2';
 import ReactQuillv2Toolbar from './react-quill/ReactQuillv2Toolbar';
 
 
-
+// Is it possible to refactor this away?
 export function updateHeightOfVideos() {
     let videos = document.querySelectorAll("iframe.ql-video")
     if (videos.length > 0) {
@@ -24,7 +25,7 @@ export function updateHeightOfVideos() {
     }
 }
 
-export default class RichText extends React.Component {
+class RichText extends React.Component {
     constructor(props) {
         super(props)
         this.state = {
@@ -37,10 +38,11 @@ export default class RichText extends React.Component {
             }
         ]
 
-        this.updateComponentState = this.updateComponentState.bind(this)
-        this.updateFocus = this.updateFocus.bind(this)
-        this.handleComponentInputChange = this.handleComponentInputChange.bind(this)
-        this.applyComponentStyles = this.applyComponentStyles.bind(this)
+        this.updateComponentState = this.updateComponentState.bind(this);
+        this.updateFocus = this.updateFocus.bind(this);
+        this.handleComponentInputChange = this.handleComponentInputChange.bind(this);
+        this.applyComponentStyles = this.applyComponentStyles.bind(this);
+        this.updateSelectedClasses = this.updateSelectedClasses.bind(this);
     }
 
     updateFocus(e) {
@@ -49,6 +51,7 @@ export default class RichText extends React.Component {
         this.context.setActiveRichTextEditor(this.props.id)
     }
 
+    // Passed to quill
     updateComponentState(newState) {
         const componentUpdate  = {
             state: newState
@@ -70,13 +73,17 @@ export default class RichText extends React.Component {
         this.props.applyComponentStyles(this.props.sectionIndex, this.props.gridSectionIndex, this.props.componentStateIndex)
     }
     
+    updateSelectedClasses(classes) {
+        const componentUpdate = {
+            className: classes,
+        }
+        this.props.updateComponentState(componentUpdate, this.props.sectionIndex, this.props.gridSectionIndex, this.props.componentStateIndex);
+    }
 
     componentDidMount() {
-        setTimeout(updateHeightOfVideos, 500)
+        setTimeout(updateHeightOfVideos, 500); // Hack to wait for video thumbnail to load, such that the video has some width.
     }
     
-    
-
     render() {
         return (
             <div
@@ -115,6 +122,15 @@ export default class RichText extends React.Component {
                                     <button className="SN__button-normal SN__button--create" onClick={this.applyComponentStyles}>Apply Styles</button>
                                 </div>
                             </div>
+
+                            <ClassSelector 
+                                heading="COMPONENT CLASSES" 
+                                cssDocument={this.context.cssDocument} 
+                                scope="component" 
+                                updateSelectedClasses={this.updateSelectedClasses} 
+                                activeClasses={this.props.componentState.className} 
+                            />
+                        
                         </PageToolbarPortal>
                     }
 
@@ -144,3 +160,5 @@ export default class RichText extends React.Component {
 
 
 RichText.contextType = GlobalContext
+
+export default RichText;

@@ -1,6 +1,4 @@
 //require('dotenv').config()
-//let koa = require('koa')
-//let mongoose = require('mongoose')
 const fs = require("fs")
 const util = require("util")
 
@@ -35,6 +33,7 @@ const CSSDocument = require("./models/css_document_model")
 
 // let db_uri = 'mongodb://' + process.env.DB_USERNAME + ':' + process.env.DB_PASSWORD + '/localhost:27017/' + process.env.DB_NAME
 let db_uri = 'mongodb://localhost:27017/' + process.env.DB_NAME
+mongoose.set('useFindAndModify', false);
 mongoose.connect(db_uri, { useNewUrlParser: true })
 
 const db = mongoose.connection
@@ -236,7 +235,7 @@ protectedRouter.get("/authcheck", ctx => {
         data: ctx.auth["token"]["data"],
     }, process.env.JWT_SECRET)
 
-    console.log("New Token in authcheck: ", token)
+    // console.log("New Token in authcheck: ", token)
 
     ctx.status = 200
     ctx.set('Authorization', token)
@@ -250,7 +249,10 @@ protectedRouter.get("/authcheck", ctx => {
 protectedRouter.post("/pages", async ctx => {
     try {
         console.log(ctx.request.body)
-        let newPage = Page(ctx.request.body)
+        const ownerEmail = ctx.auth.user.email;
+        const page = ctx.request.body;
+        page["owner"] = ownerEmail;
+        let newPage = Page(page)
         newPage = await newPage.save()
         ctx.status = 201
         ctx.body = newPage
@@ -266,11 +268,14 @@ protectedRouter.post("/pages", async ctx => {
 })
 
 protectedRouter.put("/pages/:pathTitle", async ctx => {
+    console.log("/pages", ctx.request.body)
     try {
         const updatedPage = await Page.findOneAndUpdate({ 
             pathTitle: ctx.params.pathTitle, 
             owner: ctx.auth.user.email
         }, ctx.request.body)
+
+        console.log("updated page: ", updatedPage)
 
         ctx.status = 200
         ctx.body = updatedPage
@@ -386,10 +391,11 @@ protectedRouter.post("/cssdocuments", async ctx => {
     }
 })
 
-protectedRouter.get("/cssdocuments", async ctx => {
+publicRouter.get("/cssdocuments", async ctx => {
     try {
-        const ownerEmail = ctx.auth.user.email;
-        const docs = await CSSDocument.find({owner: ownerEmail}).exec();
+        // No support for css documents per user site...
+        // const ownerEmail = ctx.auth.user.email;
+        const docs = await CSSDocument.find().exec(); // {owner: ownerEmail}
         ctx.status = 200;
         ctx.body = docs;
     } catch(e) {
