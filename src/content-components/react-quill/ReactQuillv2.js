@@ -104,99 +104,46 @@ export default class ReactQuillv2 extends React.Component {
 		var editor = new Quill(el, config);
 
 		editor.getModule("toolbar").addHandler("image", function () {
-			console.log("IMAGE HANDLER")
 			const page = document.querySelector(".Page")
 			const container = document.createElement("div")
 			container.id = "image-selector"
 			container.classList.add("RichText__image-selector-container")
 
-			//___ REPLACE____
-
-			let serverImages = [
-				{ path: "/images/background.jpg", width: 2600, height: 2200 },
-				{ path: "/images/background_bw.jpg", width: 2598, height: 1204 },
-				{ path: "/images/background_color.jpg", width: 2598, height: 1193 },
-				{ path: "/images/chatapp_chat.PNG", width: 926, height: 801 },
-				{ path: "/images/chatapp_login.PNG", width: 869, height: 752 },
-				{ path: "/images/chatapp_register.PNG", width: 879, height: 756 },
-				{ path: "/images/codetube_frontpage.png", width: 1093, height: 868 },
-				{ path: "/images/coding.jpg", width: 3543, height: 2365 },
-			]
-
-			serverImages.forEach(image => {
-				const img = document.createElement("img")
-				img.src = image.path
-				img.classList.add("RichText__image-selector-image")
-				img.addEventListener("click", (e) => {
-					
-					page.removeChild(container)
-					
-					let range = editor.getSelection(true);
-					editor.updateContents(new Delta()
-						.retain(range.index)
-						.delete(range.length)
-						.insert({ image: image.path })
-						, Quill.sources.USER);
-					editor.setSelection(range.index + 1, Quill.sources.SILENT);
-				
-				})
-				container.appendChild(img)
-			})
-			// ____________
-
-			/*
 			axios.get("/images").then(response => {
 				const images = response.data.images
+
 				images.forEach(image => {
 					const img = document.createElement("img")
 					img.src = image.path
+					img.height = 90
+					img.width = 90*(image.width/image.height);
 					img.classList.add("RichText__image-selector-image")
 					img.addEventListener("click", (e) => {
 						
 						page.removeChild(container)
 						
-						let range = this.quill.getSelection(true);
-						this.quill.updateContents(new Delta()
+						let range = editor.getSelection(true);
+						editor.updateContents(new Delta()
 							.retain(range.index)
 							.delete(range.length)
 							.insert({ image: image.path })
 							, Quill.sources.USER);
-						this.quill.setSelection(range.index + 1, Quill.sources.SILENT);
+						editor.setSelection(range.index + 1, Quill.sources.SILENT);
 					
 					})
 
 					container.appendChild(img)
+					page.appendChild(container);
 				})
 			}).catch(error => {
-				console.log(error)
+				this.props.flashMessage()
 			})
-			*/
 
-			
-			
-			page.appendChild(container)
+		});
 
-			return
-			
-			/*
-			fileInput.addEventListener('change', () => {
-				if (fileInput.files != null && fileInput.files[0] != null) {
-					let reader = new FileReader();
-					reader.onload = (e) => {
-						let range = this.quill.getSelection(true);
-						this.quill.updateContents(new Delta()
-							.retain(range.index)
-							.delete(range.length)
-							.insert({ image: e.target.result })
-							, Quill.sources.USER);
-						this.quill.setSelection(range.index + 1, Quill.sources.SILENT);
-						fileInput.value = "";
-					}
-					reader.readAsDataURL(fileInput.files[0]);
-				}
-			});
-			window.appendChild(fileInput);
-			*/
+		editor.getModule("toolbar").addHandler("video", function () {
+			// Load and show videos from server...
+			// I want to be able to add my own custom videos...
 		});
 
 		if (config.tabIndex !== undefined) {
@@ -621,7 +568,7 @@ export default class ReactQuillv2 extends React.Component {
 
 	
 	//__________________Custom Editing Methods____________________
-	toggleBold() {
+	toggleBold() { // Is this just an example?
         let quill = this.rqRef.getEditor()
         quill.format('bold', true); // need access to the quill instance...
 	}
@@ -761,3 +708,61 @@ ReactQuillv2.cleanContextProperties = [
 	'activeRichTextEditor',
 	'componentInFocus'
 ]
+
+
+/*
+serverImages.forEach(image => {
+	const img = document.createElement("img")
+	img.src = image.path
+	img.classList.add("RichText__image-selector-image")
+	img.addEventListener("click", (e) => {
+		
+		page.removeChild(container)
+		
+		let range = editor.getSelection(true);
+		editor.updateContents(new Delta()
+			.retain(range.index)
+			.delete(range.length)
+			.insert({ image: image.path })
+			, Quill.sources.USER);
+		editor.setSelection(range.index + 1, Quill.sources.SILENT);
+	
+	})
+	container.appendChild(img)
+})
+
+page.appendChild(container)
+
+return
+
+
+fileInput.addEventListener('change', () => {
+	if (fileInput.files != null && fileInput.files[0] != null) {
+		let reader = new FileReader();
+		reader.onload = (e) => {
+			let range = this.quill.getSelection(true);
+			this.quill.updateContents(new Delta()
+				.retain(range.index)
+				.delete(range.length)
+				.insert({ image: e.target.result })
+				, Quill.sources.USER);
+			this.quill.setSelection(range.index + 1, Quill.sources.SILENT);
+			fileInput.value = "";
+		}
+		reader.readAsDataURL(fileInput.files[0]);
+	}
+});
+window.appendChild(fileInput);
+
+let serverImages = [
+	{ path: "/images/background.jpg", width: 2600, height: 2200 },
+	{ path: "/images/background_bw.jpg", width: 2598, height: 1204 },
+	{ path: "/images/background_color.jpg", width: 2598, height: 1193 },
+	{ path: "/images/chatapp_chat.PNG", width: 926, height: 801 },
+	{ path: "/images/chatapp_login.PNG", width: 869, height: 752 },
+	{ path: "/images/chatapp_register.PNG", width: 879, height: 756 },
+	{ path: "/images/codetube_frontpage.png", width: 1093, height: 868 },
+	{ path: "/images/coding.jpg", width: 3543, height: 2365 },
+]
+
+*/

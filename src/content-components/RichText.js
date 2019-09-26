@@ -139,6 +139,10 @@ class RichText extends React.Component {
                         enable={this.context.editing ? true : false}
                         sectionId={this.props.sectionId}
                         id={this.props.id}
+                        flashMessage={this.context.flashMessage}
+                        // Pass in reference to PageToolbarPortal?
+
+
                         /**might not need */
                         sectionIndex={this.props.sectionIndex}
                         gridSectionIndex={this.props.gridSectionIndex}

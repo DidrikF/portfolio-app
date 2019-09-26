@@ -33,7 +33,7 @@ export class Toolbar extends BaseModule {
     onUpdate = () => {};
 
     _defineAlignments = () => {
-        this.alignments = [
+        this.toolbarInputs = [
             {
                 icon: IconAlignLeft,
                 apply: () => {
@@ -150,21 +150,21 @@ export class Toolbar extends BaseModule {
 
     _addToolbarButtons = () => {
 		const buttons = [];
-		this.alignments.forEach((alignment, idx) => {
+		this.toolbarInputs.forEach((input, idx) => {
 
-            if (alignment.type === "input") {
-                const input = this._createInput(alignment, idx)
+            if (input.type === "input") {
+                const input = this._createInput(input, idx)
                 this.toolbar.appendChild(input);
                 return 
             }
 
 			const button = document.createElement('span');
 			buttons.push(button);
-			button.innerHTML = alignment.icon;
+			button.innerHTML = input.icon;
 			button.addEventListener('click', () => {
 					// deselect all buttons
 				buttons.forEach(button => button.style.filter = ''); // reset styles on click
-                if (alignment.isApplied()) {
+                if (input.isApplied()) {
                     PullLeftClass.remove(this.img)
                     CenterClass.remove(this.img)
                     PullRightClass.remove(this.img)
@@ -173,11 +173,11 @@ export class Toolbar extends BaseModule {
                     CenterClass.remove(this.img)
                     PullRightClass.remove(this.img)
                     this._selectButton(button)
-                    alignment.apply()
+                    input.apply()
                 }
 
                 /*
-                if (alignment.isApplied()) {
+                if (input.isApplied()) {
 					// If applied, unapply
 					FloatStyle.remove(this.img);
 					MarginStyle.remove(this.img);
@@ -186,7 +186,7 @@ export class Toolbar extends BaseModule {
 
 					// otherwise, select button and apply
 					this._selectButton(button);
-					alignment.apply();
+					input.apply();
 				}*/
                 
                 // image may change position; redraw drag handles
@@ -200,7 +200,7 @@ export class Toolbar extends BaseModule {
             }
             console.log("Button children in Toolbar: ", button.children)
 			Object.assign(button.children[0].style, this.options.toolbarButtonSvgStyles);
-			if (alignment.isApplied()) {
+			if (input.isApplied()) {
 					// select button if previously applied
 				this._selectButton(button);
             }
@@ -246,3 +246,8 @@ export class Toolbar extends BaseModule {
     };
 
 }
+
+/**
+ * Want to be able to toggle classes here, but where do I want the class-toggelig to happen?
+ * 
+ */
