@@ -4,7 +4,7 @@ import { GlobalContext } from '../contexts'
 import RichTextToolbarPortal from './RichTextToolbarPortal';
 import PageToolbarPortal from '../helper-components/PageToolbarPortal'
 import ClassSelector from '../ClassSelector';
-import { quillItems } from './config'
+import { quillItems } from './quil-toobar-config'
 
 import _ from './react-quill/quill-extensions' // Evaluate the module
 import Quill from 'quill'
