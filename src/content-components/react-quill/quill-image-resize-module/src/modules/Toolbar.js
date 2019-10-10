@@ -153,8 +153,8 @@ export class Toolbar extends BaseModule {
 		this.toolbarInputs.forEach((input, idx) => {
 
             if (input.type === "input") {
-                const input = this._createInput(input, idx)
-                this.toolbar.appendChild(input);
+                const inputContainer = this._createInput(input, idx)
+                this.toolbar.appendChild(inputContainer);
                 return 
             }
 
@@ -162,7 +162,7 @@ export class Toolbar extends BaseModule {
 			buttons.push(button);
 			button.innerHTML = input.icon;
 			button.addEventListener('click', () => {
-					// deselect all buttons
+				// deselect all buttons
 				buttons.forEach(button => button.style.filter = ''); // reset styles on click
                 if (input.isApplied()) {
                     PullLeftClass.remove(this.img)

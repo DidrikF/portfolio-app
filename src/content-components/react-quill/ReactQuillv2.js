@@ -421,8 +421,7 @@ export default class ReactQuillv2 extends React.Component {
 		if (this.state.generation !== prevState.generation) {
 			this.componentDidMount();
 		}
-		
-		
+		// NOTE: here you can detect prop changes and notify the underlying editor and toolbar
 	}
 	
 	getEditorConfig() {
