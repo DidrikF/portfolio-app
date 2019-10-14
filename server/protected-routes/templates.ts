@@ -1,8 +1,11 @@
-const Template = require("../models/template_model")
+import Router = require("koa-router")
+import { Context } from "koa"
+
+import { Template } from '../models';
 
 
-export default (protectedRouter) => {
-    protectedRouter.get("/templates", async ctx => {
+export default (protectedRouter: Router): Router => {
+    protectedRouter.get("/templates", async (ctx: Context) => {
         try {
             const templates = await Template.find({owner: ctx.auth.user.email}).exec() // templates are shared???
     
@@ -17,7 +20,7 @@ export default (protectedRouter) => {
         }
     })
     
-    protectedRouter.get("/templates/:id", async ctx => {
+    protectedRouter.get("/templates/:id", async (ctx: Context) => {
         try {
             const template = await Template.findOne({ _id: ctx.params.id, owner: ctx.auth.user.email}).exec()
     
@@ -32,12 +35,12 @@ export default (protectedRouter) => {
     })
     
     
-    protectedRouter.post("/templates", async ctx => {
+    protectedRouter.post("/templates", async (ctx: Context) => {
         try {
     
             const userEmail = ctx.auth.user.email;
             if (!userEmail) throw new Error("No user.email on ctx.auth")
-            const template = {}
+            const template: any = {}
             Object.assign(template, ctx.request.body)
             template["owner"] = userEmail;
             let newTemplate = new Template(template);
@@ -54,7 +57,7 @@ export default (protectedRouter) => {
     })
     
     
-    protectedRouter.delete("/templates/:id", async ctx => {
+    protectedRouter.delete("/templates/:id", async (ctx: Context) => {
         try {
             await Template.findOneAndDelete({ _id: ctx.params.id, owner: ctx.auth.user.email}); // Is this a decent way to do authorization, probably not?
     

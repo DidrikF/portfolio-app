@@ -1,7 +1,6 @@
-var mongoose = require('mongoose')
+import * as mongoose from 'mongoose';
 
-
-var CSSDocumentSchema = mongoose.Schema({
+const CSSDocumentSchema: mongoose.Schema = new mongoose.Schema({
     owner: {
         type: String,
         required: [true, "Owner is required"],
@@ -18,8 +17,9 @@ var CSSDocumentSchema = mongoose.Schema({
         type: Array,
         required: [true, "Items are required"],
     }
-})
-var cssDocument = module.exports = mongoose.model('CSSDocument', CSSDocumentSchema)
+});
+
+export const CSSDocument = mongoose.model('CSSDocument', CSSDocumentSchema);
 
 
 /* items has the following structure
@@ -34,7 +34,7 @@ mediaQuery: {
 },
 selector: {
     type: string,
-    requred: [true, "Selector is required"],
+    required: [true, "Selector is required"],
 },
 scopes: {
     type: object,

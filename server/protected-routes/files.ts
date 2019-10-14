@@ -1,16 +1,12 @@
-import protectedRouter from "."
-
-const fs = require('fs')
-const util = require('util')
+import * as fs from 'fs';
+import * as util from 'util';
+import * as Router from 'koa-router';
+import { Context } from 'koa';
 
 const rename = util.promisify(fs.rename)
 
-const writeFile = util.promisify(fs.writeFile)
-const copyFile = util.promisify(fs.copyFile)
-
-
-export default (protectedRouter) => {
-    protectedRouter.get("/files", async ctx => {
+export default (protectedRouter: Router) => {
+    protectedRouter.get("/files", async (ctx: Context) => {
         try {
             let fileObjects = fs.readdirSync("./public/files").map(fileName => {
                 const splitName = fileName.split(".")
@@ -35,12 +31,12 @@ export default (protectedRouter) => {
         }
     })
     
-    protectedRouter.post("/files", async ctx => {
-        const errors = []
+    protectedRouter.post("/files", async (ctx: Context) => {
+        const errors: any[] = []
     
         for(let fileName in ctx.request.files) {
             const file = ctx.request.files[fileName]
-            const err = await rename(file.path, "./public/files/"+fileName)
+            const err: any = await rename(file.path, "./public/files/"+fileName)
     
             // const copyError = await copyFile("./build/images/"+fileName, "./public/images/"+fileName)
             if (err) {
@@ -58,7 +54,7 @@ export default (protectedRouter) => {
         }
     })
     
-    protectedRouter.delete("/files/:name", async ctx => {
+    protectedRouter.delete("/files/:name", async (ctx: Context) => {
         const fileName = ctx.params.name
         const publicPath = "./public/files/"+fileName
         const buildPath = "./build/files/"+fileName

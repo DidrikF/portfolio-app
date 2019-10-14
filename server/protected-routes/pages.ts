@@ -1,13 +1,16 @@
-const Page = require('../models/page_model')
+import Router = require("koa-router");
+import { Context } from "koa";
 
-export default (protectedRouter) => {
-    protectedRouter.post("/pages", async ctx => {
+import { Page } from '../models';
+
+export default (protectedRouter: Router): Router => {
+    protectedRouter.post("/pages", async (ctx: Context) => {
         try {
             console.log(ctx.request.body)
             const ownerEmail = ctx.auth.user.email;
             const page = ctx.request.body;
             page["owner"] = ownerEmail;
-            let newPage = Page(page)
+            let newPage = new Page(page)
             newPage = await newPage.save()
             ctx.status = 201
             ctx.body = newPage
@@ -22,7 +25,7 @@ export default (protectedRouter) => {
         }
     })
     
-    protectedRouter.put("/pages/:pathTitle", async ctx => {
+    protectedRouter.put("/pages/:pathTitle", async (ctx: Context) => {
         console.log("/pages", ctx.request.body)
         try {
             const updatedPage = await Page.findOneAndUpdate({ 
@@ -43,7 +46,7 @@ export default (protectedRouter) => {
         }
     })
     
-    protectedRouter.delete("/pages/:pathTitle", async ctx => {
+    protectedRouter.delete("/pages/:pathTitle", async (ctx: Context) => {
         try {
             await Page.findOneAndRemove({ pathTitle: ctx.params.pathTitle})
     

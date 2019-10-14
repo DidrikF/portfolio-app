@@ -1,13 +1,14 @@
-const validator = require('validator');
-const bcrypt = require('bcrypt');
+import Router = require("koa-router");
+import { Context } from "koa";
+import * as validator from 'validator';
+import * as bcrypt from 'bcrypt';
+import * as jwt from 'jsonwebtoken';
 
-const User = require('../models/user_model')
+import { ColorPallets, IColorPallets, User, IUser } from '../models';
 
 
-
-module.exports = function (publicRouter: Router) {
-    /* Remove this, user have to be added manyally and all resources belong to the "site" not the one editing */ 
-    publicRouter.post('/register', async ctx => {
+export default function (publicRouter: Router): Router {
+    publicRouter.post('/register', async (ctx: Context) => {
         if (!register_validator(ctx)) {
             ctx.status = 400
             ctx.body = {
@@ -20,16 +21,17 @@ module.exports = function (publicRouter: Router) {
         
             ctx.request.body.password = password
     
-            let user = new User(ctx.request.body)
+            let user: IUser = new User(ctx.request.body)
             user = await user.save()
             console.log('### ' + user.email + ' registered successfully!')
     
             createDefaultUserResources(user);
-    
+
+            const jwtSecret: string = process.env.JWT_SECRET || "";
             const token = jwt.sign({
                 exp: Math.floor(Date.now() / 1000) + (60 * 60),
                 data: user,
-            }, process.env.JWT_SECRET)
+            }, jwtSecret)
         
             ctx.status = 200
             ctx.set('Authorization', token)
@@ -43,10 +45,9 @@ module.exports = function (publicRouter: Router) {
             ctx.set('Content-Type', 'application/json')
             ctx.body = { error: error }
         }
-        // not calling next will cause the nested functions to resolve
     })
     
-    publicRouter.post('/login', async (ctx) => {
+    publicRouter.post('/login', async (ctx: Context) => {
         try {
             let user = await User.findOne({ email: ctx.request.body.email }).select('+password').exec()
     
@@ -62,11 +63,12 @@ module.exports = function (publicRouter: Router) {
                 return 
             }
             delete user.password
-    
+
+            const jwtSecret: string = process.env.JWT_SECRET || "";            
             const token = jwt.sign({
                 exp: Math.floor(Date.now() / 1000) + (60 * 60),
                 data: user,
-            }, process.env.JWT_SECRET)
+            }, jwtSecret)
         
             ctx.status = 200
             ctx.set('Authorization', token)
@@ -85,8 +87,8 @@ module.exports = function (publicRouter: Router) {
     
     })
     
-    publicRouter.post("/logout", async ctx => {
-        ctx.set("Authorization", null)
+    publicRouter.post("/logout", async (ctx: Context) => {
+        ctx.remove("Authorization");
         ctx.status = 200
     })
     
@@ -102,54 +104,19 @@ module.exports = function (publicRouter: Router) {
             }
         }
     })
-    
-    publicRouter.get("/pages", async ctx => {
-        // Need to figure out this...
-        // Maybe I assume that this app will only support one admin/owner/user and 
-        // s that users must be manually added to get be able to modify the resources of the site
-    
-        try {
-            const pages = await Page.find().exec()
-    
-            ctx.status = 200
-            ctx.body = pages
-        } catch (error) {
-            ctx.status = 400
-            ctx.body = {
-                error: "Failed to get pages from the database",
-            }
-        }
-    })
-    
-    publicRouter.get("/pages/:pathTitle", async ctx => {
-        try {
-            const pages = await Page.findOne({ pathTitle: ctx.params.pathTitle }).exec()
-    
-            ctx.status = 200
-            ctx.body = pages
-        } catch(error) {
-            ctx.status = 400
-            ctx.body = {
-                error: "Failed to get page from the database",
-            }
-        }
-    })
-    
+        
     return publicRouter;
 }
 
 
-
-
-
-function register_validator(ctx) {
+function register_validator(ctx: Context) {
     if (validator.isEmail(ctx.request.body.email) === false) return false
     return true
 }
 
-async function createDefaultUserResources(user) {
+async function createDefaultUserResources(user: IUser) {
     try {
-        let colorPallets = new ColorPallets({
+        let colorPallets: IColorPallets = new ColorPallets({
             owner: user.email,
             pallets: [],
         });

@@ -1,9 +1,10 @@
+import { CSSDocument } from '../models';
+import { Context } from 'koa';
+import * as Router from 'koa-router';
 
-const CSSDocument = require("../models/css_document_model")
+export default (protectedRouter: Router): Router => {
 
-export default (protectedRouter) => {
-
-    protectedRouter.post("/cssdocuments", async ctx => {
+    protectedRouter.post("/cssdocuments", async (ctx: Context) => {
         try {
             const ownerEmail = ctx.auth.user.email;
             let doc = new CSSDocument({
@@ -22,7 +23,7 @@ export default (protectedRouter) => {
         }
     })
     
-    protectedRouter.put("/cssdocuments/:id", async ctx => {
+    protectedRouter.put("/cssdocuments/:id", async (ctx: Context) => {
         try {
             const ownerEmail = ctx.auth.user.email;
             const doc = await CSSDocument.findOneAndUpdate({_id: ctx.params.id, owner: ownerEmail}, ctx.request.body);
@@ -36,7 +37,7 @@ export default (protectedRouter) => {
         }
     })
     
-    protectedRouter.delete("/cssdocuments/:id", async ctx => {
+    protectedRouter.delete("/cssdocuments/:id", async (ctx: Context) => {
         try {
             const ownerEmail = ctx.auth.user.email;
             const doc = await CSSDocument.findOneAndDelete({_id: ctx.params.id, owner: ownerEmail});

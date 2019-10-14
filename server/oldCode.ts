@@ -1,57 +1,3 @@
-//require('dotenv').config()
-const Koa = require('koa')
-var Router = require('koa-router');
-const koaBody = require('koa-body');
-require('dotenv').config()
-
-const { promisify } = require('util');
-const sizeOf = promisify(require('image-size'));
-
-
-const app = new Koa();
-
-import publicRouter from './server/public-routes';
-import protectedRouter from './server/protected-routes';
-
-
-
-import { authorize } from './server/middleware';
-
-
-require('./server/db');
-
-// static assets 
-app.use(require('koa-static')('./build'))
-app.use(require('koa-static')('./public'))
-app.use(koaBody({ 
-    // formidable:{uploadDir: './uploads'},
-    multipart: true 
-}))
-
-
-app.use(publicRouter.routes())
-app.use(publicRouter.allowedMethods());
-
-app.use(authorize); 
-
-app.use(protectedRouter.routes())
-app.use(protectedRouter.allowedMethods());
-
-
-app.on('error', err => {
-    console.error('server error', err)
-    // Serve 404 or 500?
-});
-
-
-app.listen(4000);
-
-
-
-
-
-
-
 /*
 publicRouter.put("/files/:name", async ctx => {
     // if exists then delete and replace
@@ -182,7 +128,5 @@ protectedRouter.put('/projects/:id', async (ctx, next) => {
     ctx.status = 200
     ctx.body = project
 }) 
-
-
 
 */

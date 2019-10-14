@@ -1,8 +1,7 @@
-var mongoose = require('mongoose')
-var Schema = mongoose.Schema
+import * as mongoose from 'mongoose';
 
 
-var TemplateSchema = mongoose.Schema({
+var TemplateSchema: mongoose.Schema = new mongoose.Schema({
   owner: {
     type: String,
     required: [true, "Owner is requered"],
@@ -18,8 +17,8 @@ var TemplateSchema = mongoose.Schema({
   template: {
     type: Object, // page, section, gridSection, component
   }
-})  
+});
 
 
-var template = module.exports = mongoose.model('Template', TemplateSchema)
+export const Template = mongoose.model('Template', TemplateSchema);
 

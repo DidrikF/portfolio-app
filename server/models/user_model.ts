@@ -1,8 +1,16 @@
-var mongoose = require('mongoose')
-var Schema = mongoose.Schema
+import * as mongoose from 'mongoose';
 
 
-var UserSchema = mongoose.Schema({
+export interface IUser extends mongoose.Document {
+	email: string,
+	password: string,
+	firstName: string,
+	lastName: string,
+	description?: string,
+	image?: string
+}
+
+var UserSchema: mongoose.Schema = new mongoose.Schema({
 	email: {
 		type: String,
 		required: [true, "Email is required"],
@@ -27,8 +35,8 @@ var UserSchema = mongoose.Schema({
 	image: {
 		type: String,
 	}
-})  
+});
 
 
-var user = module.exports = mongoose.model('User', UserSchema)
+export const User = mongoose.model<IUser>('User', UserSchema);
 

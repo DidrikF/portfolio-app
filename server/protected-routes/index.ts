@@ -1,11 +1,16 @@
-var Router = require('koa-router');
-const protectedRouter = new Router();
+import * as Router from 'koa-router';
+import authCheckRoutes from './authcheck';
+import pagesRoutes from './pages';
+import cssDocumentsRoutes from './cssdocuments';
+import imagesRoutes from './images';
+import filesRoutes from './files';
 
-require('./authcheck')(protectedRouter);
-require('./pages')(protectedRouter);
-require('./colors')(protectedRouter);
-require('./cssdocuments')(protectedRouter);
-require('./images')(protectedRouter);
-require('./files')(protectedRouter);
+let protectedRouter = new Router();
+
+protectedRouter = authCheckRoutes(protectedRouter);
+protectedRouter = pagesRoutes(protectedRouter);
+protectedRouter = cssDocumentsRoutes(protectedRouter);
+protectedRouter = imagesRoutes(protectedRouter);
+protectedRouter = filesRoutes(protectedRouter);
 
 export default protectedRouter;

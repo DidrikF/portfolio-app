@@ -1,7 +1,9 @@
-const ColorPallets = require("../models/color_pallets_model") 
+import { ColorPallets } from '../models';
+import * as Router from 'koa-router';
+import { Context } from 'koa';
 
-export default (protectedRouter) => {
-    protectedRouter.get("/colors", async ctx => {
+export default (protectedRouter: Router): Router => {
+    protectedRouter.get("/colors", async (ctx: Context) => {
         try {
             const colors = await ColorPallets.findOne().exec() // dont know if findOne needs parameters
             ctx.status = 200
@@ -16,7 +18,7 @@ export default (protectedRouter) => {
     })
     
     
-    protectedRouter.post("/colors", async ctx => {
+    protectedRouter.post("/colors", async (ctx: Context) => {
         
         try {
             const ownerEmail = ctx.auth.user.email;
@@ -40,11 +42,11 @@ export default (protectedRouter) => {
         }
     })
     
-    protectedRouter.put("/colors", async ctx => {
+    protectedRouter.put("/colors", async (ctx: Context) => {
         try {
             const ownerEmail = ctx.auth.user.email;
             const updatedPallets = await ColorPallets.findOneAndUpdate({ owner: ownerEmail}, {
-                pallets: ctx.request.body
+                pallets: ctx.request.body,
             });
             ctx.status = 200;
             ctx.body = updatedPallets;
@@ -57,7 +59,7 @@ export default (protectedRouter) => {
         }
     })
     
-    protectedRouter.delete("/colors", async ctx => {
+    protectedRouter.delete("/colors", async (ctx: Context) => {
         try {
             const ownerEmail = ctx.auth.user.email;
             await ColorPallets.findByIdAndRemove({owner: ownerEmail});
@@ -72,5 +74,4 @@ export default (protectedRouter) => {
     })
 
     return protectedRouter;
-
 } 

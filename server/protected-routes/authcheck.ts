@@ -1,15 +1,15 @@
-const jwt = require('jsonwebtoken')
+import * as Router from 'koa-router';
+import * as jwt from 'jsonwebtoken';
+import { Context } from 'koa';
 
-
-export default (protectedRouter) => {
-    protectedRouter.get("/authcheck", ctx => {
+export default (protectedRouter: Router): Router => {
+    protectedRouter.get("/authcheck", (ctx: Context) => {
+        const secret: string = process.env.JWT_SECRET || "";
         const token = jwt.sign({
             exp: Math.floor(Date.now() / 1000) + (60 * 60),
             data: ctx.auth["token"]["data"],
-        }, process.env.JWT_SECRET)
-    
-        // console.log("New Token in authcheck: ", token)
-    
+        }, secret);
+
         ctx.status = 200
         ctx.set('Authorization', token)
         ctx.body = {
@@ -19,3 +19,4 @@ export default (protectedRouter) => {
     })
     return protectedRouter;
 }
+

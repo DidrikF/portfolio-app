@@ -1,8 +1,6 @@
-var mongoose = require('mongoose')
-var Schema = mongoose.Schema
+import * as mongoose from 'mongoose';
 
-
-var PageSchema = mongoose.Schema({
+var PageSchema: mongoose.Schema = new mongoose.Schema({
   owner: {
     type: String,
     required: [true, "Owner is required"],
@@ -36,5 +34,6 @@ var PageSchema = mongoose.Schema({
     type: Boolean,
   }
 
-})
-var page = module.exports = mongoose.model('Page', PageSchema)
+});
+
+export const Page = mongoose.model('Page', PageSchema);

@@ -1,6 +1,8 @@
+import { Context } from "koa";
+
 const jwt = require('jsonwebtoken')
 
-async function authorize(ctx, next) {
+export async function authorize(ctx: Context, next: Function): Promise<void> {
     try {
         const token = ctx.request.header['authorization']
 
@@ -19,8 +21,5 @@ async function authorize(ctx, next) {
         return
     }
 
-
     await next()
 }
-
-export default authorize; 

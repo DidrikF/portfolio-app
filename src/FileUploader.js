@@ -3,7 +3,6 @@ import Dropzone from 'react-dropzone';
 import axios from 'axios';
 
 
-
 function updateWidth() {
     const width = (parseInt(window.innerWidth, 10) - 302) * 0.9
 
@@ -107,16 +106,11 @@ class FileUploader extends React.Component {
         
         Promise.all(this.state.clientFiles.map(async file => {
             let blob = await fetch(file.path).then(response => response.blob())
-            console.log("blob: ", blob)
-
             form.append(file.name, blob)
-
             
         })).then(files => {
             for (var pair of form.entries()) {
-                console.log(pair[0]+ ', ' + pair[1]); 
             }
-    
             axios.post("/files", form).then(response => {
                 this.setState((state, props) => {
                     state.clientFiles.forEach(file => {
@@ -133,8 +127,6 @@ class FileUploader extends React.Component {
         }).catch(error => {
             console.log(error)
         })
-
-        // remove urls from clientImages
     }
 
     handleInputChange(e) {
@@ -212,9 +204,7 @@ class FileUploader extends React.Component {
                 clientFiles: clientFiles
             }
         })
-
     }
-
 
     componentDidMount() {
 
@@ -224,7 +214,6 @@ class FileUploader extends React.Component {
         this.updateWidth()
         this.setPageHeight()
         // this.setServerImageContainerWidth()
-
         this.getServerFiles()
     }
 
@@ -245,7 +234,6 @@ class FileUploader extends React.Component {
                 </div>
                 <div className="FU__server-files">
                     {
-
                         this.state.serverFiles.map(file => {
                             let fileIcon
                             if (file.type === "pdf") {
@@ -263,8 +251,7 @@ class FileUploader extends React.Component {
                             } else {
                                 fileIcon = <i className="fas fa-file"></i>
                             }
-
-                                            
+      
                             return (
                                 <div key={file.path} className="FU__file-container">
                                     <div className="FU__file">

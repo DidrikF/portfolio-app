@@ -1,19 +1,28 @@
-const fs = require("fs")
-const util = require("util")
+import * as fs from 'fs';
+import * as util from 'util';
 
-const rename = util.promisify(fs.rename)
+import * as Router from 'koa-router';
+import { Context } from 'koa';
 
-export default (protectedRouter) => {
+const rename = util.promisify(fs.rename);
+const sizeOf = util.promisify(require('image-size'));
 
-    protectedRouter.get('/images', async (ctx) => {
+interface ImagePaths {
+    serverPath: string,
+    path: string
+}
+
+export default (protectedRouter: Router): Router => {
+
+    protectedRouter.get('/images', async (ctx: Context) => {
         try {
-            let imagePaths = fs.readdirSync("./public/images").map(imageFile => {
+            let imagePaths = fs.readdirSync("./public/images").map((imageFile: string): ImagePaths => {
                 return {
                     serverPath: "./public/images/" + imageFile,
                     path: "/images/" + imageFile,
                 }
             })
-            const imageObjects = await Promise.all(imagePaths.map(async imagePaths => {
+            const imageObjects = await Promise.all(imagePaths.map(async (imagePaths: ImagePaths) => {
                 const dimensions = await sizeOf(imagePaths.serverPath)
     
                 return {
@@ -37,21 +46,21 @@ export default (protectedRouter) => {
     
     })
     
-    protectedRouter.post("/images", async(ctx) => {
-        const errors = []
+    protectedRouter.post("/images", async (ctx: Context) => {
+        const errors: Error[] = []
     
         for(let fileName in ctx.request.files) {
             const file = ctx.request.files[fileName]
-            const err = await rename(file.path, "./public/images/"+fileName)
+            const err: any = await rename(file.path, "./public/images/"+fileName)
     
             // const copyError = await copyFile("./build/images/"+fileName, "./public/images/"+fileName)
             if (err) {
                 errors.push(err)
             }   
         }
-    
+
         if (errors.length > 0) {
-            ctx.staus = 400
+            ctx.status = 400
             ctx.body = {
                 error: errors
             }
@@ -62,10 +71,8 @@ export default (protectedRouter) => {
     
     })
     
-    protectedRouter.post("/images/:name", async ctx => {
-    // if exists then delete and replace
-        // if not exists, just create
-        const errors = []
+    protectedRouter.post("/images/:name", async (ctx: Context) => {
+        const errors: Error[] = []
         
         const fileName = ctx.params.name
         const publicPath = "./public/images/"+fileName
@@ -85,16 +92,14 @@ export default (protectedRouter) => {
                     text: "Filed to remove the old image when updating.",
                     error: error
                 }]
-            }
-    
+            }    
             return
         }
         
         for(let fileName in ctx.request.files) { // should only be one file...
-            const file = ctx.request.files[fileName]
-            const err = await rename(file.path, "./public/images/"+fileName)
+            const file: any = ctx.request.files[fileName]
+            const err: any = await rename(file.path, "./public/images/"+fileName)
     
-            // const copyError = await copyFile("./build/images/"+fileName, "./public/images/"+fileName)
             if (err) {
                 errors.push(err)
             }   
@@ -110,10 +115,10 @@ export default (protectedRouter) => {
         }
     })
     
-    protectedRouter.delete("/images/:name", async (ctx) => {
-        const fileName = ctx.params.name
-        const publicPath = "./public/images/"+fileName
-        const buildPath = "./build/images/"+fileName
+    protectedRouter.delete("/images/:name", async (ctx: Context) => {
+        const fileName: string = ctx.params.name
+        const publicPath: string = "./public/images/"+fileName
+        const buildPath: string = "./build/images/"+fileName
         try {
             if (fs.existsSync(publicPath)) {
                 fs.unlinkSync(publicPath)

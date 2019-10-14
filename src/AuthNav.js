@@ -26,7 +26,6 @@ changePageTitle
 */
 
 class AuthNav extends React.Component {
-
     constructor(props) {
         super(props)
 
@@ -45,7 +44,6 @@ class AuthNav extends React.Component {
         })
     }
 
-    // Create new projects in the side navigation
     changeProjectTitle(e) {
         this.setState({
             newProjectTitle: e.target.value
