@@ -3,7 +3,7 @@ import Router = require("koa-router");
 
 import { CSSDocument } from '../models';
 
-export default (publicRouter: Router): Router {
+export default (publicRouter: Router): Router => {
     publicRouter.get("/cssdocuments", async (ctx: Context) => {
         try {
             // No support for css documents per user site...

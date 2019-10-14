@@ -5,8 +5,8 @@ module.exports = {
     mode: "development",
     devtool: 'inline-source-map',
     entry: {
-        app: ["./src/index.ts"],
-        server: ["./server/index.ts"],
+        app: ["./src/index.tsx"],
+        // server: ["./server/index.ts"],
     },
     output: {
         path: path.resolve(__dirname, "dist"),

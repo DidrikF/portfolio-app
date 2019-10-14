@@ -1,7 +1,7 @@
 import Router = require("koa-router");
 import { Context } from "koa";
 
-import Page from '../models/page_model'; 
+import { Page } from '../models'; 
 
 
 export default function (publicRouter: Router): Router {

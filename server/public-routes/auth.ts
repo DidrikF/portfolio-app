@@ -48,6 +48,7 @@ export default function (publicRouter: Router): Router {
     })
     
     publicRouter.post('/login', async (ctx: Context) => {
+        console.log("login context: ", ctx)
         try {
             let user = await User.findOne({ email: ctx.request.body.email }).select('+password').exec()
     

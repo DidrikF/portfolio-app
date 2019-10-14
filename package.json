@@ -4,7 +4,9 @@
   "private": true,
   "dependencies": {
     "@types/bcrypt": "^3.0.0",
+    "@types/dotenv": "^6.1.1",
     "@types/jsonwebtoken": "^8.3.4",
+    "@types/katex": "^0.10.2",
     "@types/koa-router": "^7.0.42",
     "@types/mongoose": "^5.5.20",
     "@types/validator": "^10.11.3",
@@ -50,8 +52,9 @@
   },
   "scripts": {
     "cstart": "webpack-dev-server",
+    "cserve": "node --inspect=5858 -r ts-node/register ./server/index.ts",
+    "nodemon": "nodemon",
     "cbuild": "webpack",
-    "cserve": "nodemon server/index.js",
     "cwatch": "webpack --watch",
     "start": "react-scripts start",
     "build": "react-scripts build",
@@ -85,6 +88,22 @@
     "npm-watch": "^0.6.0",
     "sass": "^1.22.10",
     "sass-loader": "^7.2.0",
+    "ts-node": "^8.4.1",
     "webpack-cli": "^3.3.9"
+  },
+  "nodemonConfig": {
+    "ignore": [
+      "**/*.test.ts",
+      ".git",
+      "node_modules",
+      "src",
+      "build",
+      "dist"
+    ],
+    "watch": [
+      "server"
+    ],
+    "exec": "npm run cserve",
+    "ext": "ts"
   }
 }

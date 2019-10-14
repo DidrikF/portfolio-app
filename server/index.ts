@@ -1,4 +1,4 @@
-require('dotenv').config();
+import * as dotenv from 'dotenv';
 import * as Koa from 'koa';
 import * as koaBody from 'koa-body';
 
@@ -6,7 +6,9 @@ import { authorize } from './middleware';
 import publicRouter from './public-routes';
 import protectedRouter from './protected-routes';
 
-require('./server/db');
+import db from './database';
+
+dotenv.config();
 
 const app = new Koa();
 app.use(require('koa-static')('./build'));
@@ -30,7 +32,6 @@ app.on('error', (err: Error) => {
     console.error('server error', err);
     // Serve 404 or 500?
 });
-
 
 app.listen(4000);
 

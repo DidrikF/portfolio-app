@@ -999,6 +999,7 @@ class App extends React.Component {
         setScrollableHeight.bind(this)()
 
         localforage.getItem("token").then(token => {
+            console.log("token from local storrage: ", token)
             axios.get("/authcheck", {
                 headers: {
                     "Authorization": token,

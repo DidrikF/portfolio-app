@@ -86,25 +86,25 @@
 /************************************************************************/
 /******/ ({
 
-/***/ "./src/index.ts":
-/*!**********************!*\
-  !*** ./src/index.ts ***!
-  \**********************/
+/***/ "./src/index.tsx":
+/*!***********************!*\
+  !*** ./src/index.tsx ***!
+  \***********************/
 /*! no static exports found */
 /***/ (function(module, exports) {
 
-throw new Error("Module build failed (from ./node_modules/babel-loader/lib/index.js):\nError: Cannot find module 'babel-plugin-transform-runtime' from 'c:\\Code\\portfolio-app'\n- Did you mean \"@babel/transform-runtime\"?\n    at Function.module.exports [as sync] (c:\\Code\\portfolio-app\\node_modules\\resolve\\lib\\sync.js:58:15)\n    at resolveStandardizedName (c:\\Code\\portfolio-app\\node_modules\\@babel\\core\\lib\\config\\files\\plugins.js:101:31)\n    at resolvePlugin (c:\\Code\\portfolio-app\\node_modules\\@babel\\core\\lib\\config\\files\\plugins.js:54:10)\n    at loadPlugin (c:\\Code\\portfolio-app\\node_modules\\@babel\\core\\lib\\config\\files\\plugins.js:62:20)\n    at createDescriptor (c:\\Code\\portfolio-app\\node_modules\\@babel\\core\\lib\\config\\config-descriptors.js:154:9)\n    at c:\\Code\\portfolio-app\\node_modules\\@babel\\core\\lib\\config\\config-descriptors.js:109:50\n    at Array.map (<anonymous>)\n    at createDescriptors (c:\\Code\\portfolio-app\\node_modules\\@babel\\core\\lib\\config\\config-descriptors.js:109:29)\n    at createPluginDescriptors (c:\\Code\\portfolio-app\\node_modules\\@babel\\core\\lib\\config\\config-descriptors.js:105:10)\n    at plugins (c:\\Code\\portfolio-app\\node_modules\\@babel\\core\\lib\\config\\config-descriptors.js:40:19)\n    at mergeChainOpts (c:\\Code\\portfolio-app\\node_modules\\@babel\\core\\lib\\config\\config-chain.js:319:26)\n    at c:\\Code\\portfolio-app\\node_modules\\@babel\\core\\lib\\config\\config-chain.js:283:7\n    at buildRootChain (c:\\Code\\portfolio-app\\node_modules\\@babel\\core\\lib\\config\\config-chain.js:120:22)\n    at loadPrivatePartialConfig (c:\\Code\\portfolio-app\\node_modules\\@babel\\core\\lib\\config\\partial.js:85:55)\n    at Object.loadPartialConfig (c:\\Code\\portfolio-app\\node_modules\\@babel\\core\\lib\\config\\partial.js:110:18)\n    at Object.<anonymous> (c:\\Code\\portfolio-app\\node_modules\\babel-loader\\lib\\index.js:140:26)\n    at Generator.next (<anonymous>)\n    at asyncGeneratorStep (c:\\Code\\portfolio-app\\node_modules\\babel-loader\\lib\\index.js:3:103)\n    at _next (c:\\Code\\portfolio-app\\node_modules\\babel-loader\\lib\\index.js:5:194)\n    at c:\\Code\\portfolio-app\\node_modules\\babel-loader\\lib\\index.js:5:364\n    at new Promise (<anonymous>)\n    at Object.<anonymous> (c:\\Code\\portfolio-app\\node_modules\\babel-loader\\lib\\index.js:5:97)\n    at Object._loader (c:\\Code\\portfolio-app\\node_modules\\babel-loader\\lib\\index.js:220:18)\n    at Object.loader (c:\\Code\\portfolio-app\\node_modules\\babel-loader\\lib\\index.js:56:18)\n    at Object.<anonymous> (c:\\Code\\portfolio-app\\node_modules\\babel-loader\\lib\\index.js:51:12)");
+throw new Error("Module build failed (from ./node_modules/babel-loader/lib/index.js):\nError: Cannot find module 'babel-plugin-transform-runtime' from 'c:\\Code\\portfolio-app'\n- Did you mean \"@babel/transform-runtime\"?\n    at Function.module.exports [as sync] (c:\\Code\\portfolio-app\\node_modules\\resolve\\lib\\sync.js:58:15)\n    at resolveStandardizedName (c:\\Code\\portfolio-app\\node_modules\\@babel\\core\\lib\\config\\files\\plugins.js:101:31)\n    at resolvePlugin (c:\\Code\\portfolio-app\\node_modules\\@babel\\core\\lib\\config\\files\\plugins.js:54:10)\n    at loadPlugin (c:\\Code\\portfolio-app\\node_modules\\@babel\\core\\lib\\config\\files\\plugins.js:62:20)\n    at createDescriptor (c:\\Code\\portfolio-app\\node_modules\\@babel\\core\\lib\\config\\config-descriptors.js:154:9)\n    at c:\\Code\\portfolio-app\\node_modules\\@babel\\core\\lib\\config\\config-descriptors.js:109:50\n    at Array.map (<anonymous>)\n    at createDescriptors (c:\\Code\\portfolio-app\\node_modules\\@babel\\core\\lib\\config\\config-descriptors.js:109:29)\n    at createPluginDescriptors (c:\\Code\\portfolio-app\\node_modules\\@babel\\core\\lib\\config\\config-descriptors.js:105:10)\n    at plugins (c:\\Code\\portfolio-app\\node_modules\\@babel\\core\\lib\\config\\config-descriptors.js:40:19)\n    at mergeChainOpts (c:\\Code\\portfolio-app\\node_modules\\@babel\\core\\lib\\config\\config-chain.js:319:26)\n    at c:\\Code\\portfolio-app\\node_modules\\@babel\\core\\lib\\config\\config-chain.js:283:7\n    at buildRootChain (c:\\Code\\portfolio-app\\node_modules\\@babel\\core\\lib\\config\\config-chain.js:120:22)\n    at loadPrivatePartialConfig (c:\\Code\\portfolio-app\\node_modules\\@babel\\core\\lib\\config\\partial.js:85:55)\n    at Object.loadPartialConfig (c:\\Code\\portfolio-app\\node_modules\\@babel\\core\\lib\\config\\partial.js:110:18)\n    at Object.<anonymous> (c:\\Code\\portfolio-app\\node_modules\\babel-loader\\lib\\index.js:140:26)\n    at Generator.next (<anonymous>)\n    at asyncGeneratorStep (c:\\Code\\portfolio-app\\node_modules\\babel-loader\\lib\\index.js:3:103)\n    at _next (c:\\Code\\portfolio-app\\node_modules\\babel-loader\\lib\\index.js:5:194)\n    at c:\\Code\\portfolio-app\\node_modules\\babel-loader\\lib\\index.js:5:364\n    at new Promise (<anonymous>)\n    at Object.<anonymous> (c:\\Code\\portfolio-app\\node_modules\\babel-loader\\lib\\index.js:5:97)\n    at Object.loader (c:\\Code\\portfolio-app\\node_modules\\babel-loader\\lib\\index.js:56:18)\n    at Object.<anonymous> (c:\\Code\\portfolio-app\\node_modules\\babel-loader\\lib\\index.js:51:12)");
 
 /***/ }),
 
 /***/ 0:
-/*!****************************!*\
-  !*** multi ./src/index.ts ***!
-  \****************************/
+/*!*****************************!*\
+  !*** multi ./src/index.tsx ***!
+  \*****************************/
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
-module.exports = __webpack_require__(/*! ./src/index.ts */"./src/index.ts");
+module.exports = __webpack_require__(/*! ./src/index.tsx */"./src/index.tsx");
 
 
 /***/ })

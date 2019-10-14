@@ -1,12 +1,16 @@
 import { Context } from "koa";
 
-const jwt = require('jsonwebtoken')
+import * as jwt from 'jsonwebtoken';
 
 export async function authorize(ctx: Context, next: Function): Promise<void> {
     try {
         const token = ctx.request.header['authorization']
+        Object.keys(token).forEach(key => {
+            console.log(`Token key: ${key}: ${token[key]}`)
+        })
 
-        var decoded = jwt.verify(token, process.env.JWT_SECRET);
+        const jwtSecret: string = process.env.JWT_SECRET || "";
+        var decoded: any = jwt.verify(token, jwtSecret);
         ctx.auth = {}
         ctx.auth['token'] = decoded
         ctx.auth['user'] = decoded.data
