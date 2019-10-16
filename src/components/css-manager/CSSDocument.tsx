@@ -1,11 +1,16 @@
 import React from 'react';
-
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
+import { ICSSDocument } from './CSSManager';
 
+export interface CSSDocumentProps {
+  onDragEnd: Function,
+  cssDocument: ICSSDocument,
+
+}
 
 const grid = 8;
 
-const getItemStyle = (isDragging, draggableStyle) => ({
+const getItemStyle = (isDragging: boolean, draggableStyle: ) => ({
   // some basic styles to make the items look a bit nicer
   userSelect: "none",
   padding: grid * 1,
@@ -25,11 +30,9 @@ const getListStyle = isDraggingOver => ({
 });
 
 
-class CSSDocument extends React.Component {
-
+class CSSDocument extends React.Component<ICSSDocument> {
   render() {
     return (
-
       <div>
         <DragDropContext onDragEnd={this.props.onDragEnd}>
           <Droppable droppableId="droppable">

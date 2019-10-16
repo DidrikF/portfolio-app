@@ -2,26 +2,25 @@ import * as ReactDOM from 'react-dom';
 import * as React from 'react';
 import * as serviceWorker from './serviceWorker';
 import * as katex from 'katex';
-import App from './App'
+import App from './App';
 
-import './css/app.sass' 
-import './css/navigation.sass'
-import './css/section.sass'
-import './css/file-uploader.sass'
-import './css/auth.sass'
-import './css/quill.extentions.sass'
-import './css/css-manager.sass'
-import './css/class-selector.sass'
+import './css/main.sass'; 
+import './components/navigation/navigation.sass';
+import './components/core/section.sass';
+import './components/uploaders/file-uploader.sass';
+import './components/authentication/auth.sass';
+import './components/rich-text/quill.extensions.sass';
+import './components/css-manager/css-manager.sass';
+import './components/css-manager/class-selector.sass';
 
-import './css/quill.core.css'
-import './css/quill.snow.css'
+import './components/rich-text/quill.core.css';
+import './components/rich-text/quill.snow.css';
 
 // Don't know if I can remove
 import 'react-quill/dist/quill.snow.css';
-import { any } from 'prop-types';
 
 
-(window as any).katex = katex
+(window as any).katex = katex;
 
 /*
 window.hljs.configure({   // optionally configure hljs

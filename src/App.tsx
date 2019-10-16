@@ -1,31 +1,32 @@
 import React from 'react'
 import axios from 'axios'
 import update from 'immutability-helper';
-import { BrowserRouter as Router, Route, Link, NavLink, HashRouter, Redirect } from "react-router-dom"; 
+import { Route, HashRouter } from "react-router-dom"; 
 
 import localforage from 'localforage'
 import _ from 'lodash'
 import * as arrayMove from  'array-move'
 
 // import ContentEditable from 'react-contenteditable' // use for inputs that does not require rich text editing. This allows inputs to have the same style 
-import AuthNav from './AuthNav'
-import ViewNav from './ViewNav'
-import AccountInfo from './AccountInfo';
-import Page from './Page'
-import { UserInfo } from './side-navigation'
+import AuthNav from './components/navigation/AuthNav'
+import ViewNav from './components/navigation/ViewNav'
+import AccountInfo from './components/navigation/AccountInfo';
+import Page from './components/core/Page'
+import { UserInfo } from './components/navigation/UserInfo'
 
-import AccountPage from './AccountPage'
-import ImageUploader from './ImageUploader'
-import FileUploader from './FileUploader'
+import AccountPage from './components/account/AccountPage'
+import ImageUploader from './components/uploaders/ImageUploader'
+import FileUploader from './components/uploaders/FileUploader'
 
-import CSSManager from './CSSManager'
-import { cssDocumentToString, combineCssDocuments } from './helpers';
+import CSSManager from './components/css-manager/CSSManager'
+import { CSSDocument } from './components/css-manager/CSSDocument';
+import { cssDocumentToString, combineCssDocuments } from './components/css-manager/helpers';
 
-import { GlobalContext } from './contexts'
+import { GlobalContext } from './contexts/GlobalContext'
 
-import { getId } from './helpers'
-import { gridLayouts } from './grid'
-import { updateHeightOfVideos } from './content-components/RichText';
+import { getId, setScrollableHeight, deepStyleMerge } from './helpers'
+import { gridLayouts } from './components/core/grid'
+import { updateHeightOfVideos } from './components/rich-text/RichText';
 
 /**
  * Refactoring:
@@ -42,30 +43,40 @@ import { updateHeightOfVideos } from './content-components/RichText';
 
 // The use of this function is messy and I would like this logic to be handled by css. (use flex-basis? )
 // # REFACTOR: do in css
-function setScrollableHeight() {
-    const userInfoElement = document.getElementsByClassName("SN-UserInfo")[0]
-    const accountInfoElement = document.getElementById("SN__account-info")
-    const documentHeight = document.documentElement.clientHeight
-    const scrollableHeight = documentHeight - userInfoElement.offsetHeight - accountInfoElement.offsetHeight
-    
-    this.setState({
-        scrollableHeight: scrollableHeight
-    })
-    
+
+export interface AppProps {
+
 }
 
-function deepStyleMerge(obj, update) {
-    _.assign(obj, update)
-    if (update.style && Object.keys(update.style).length === 0) {
-        obj.style = {} // #REFACTOR Clear style (not optimal)
-    }
-    return obj
+export interface AppState {
+
 }
 
-class App extends React.Component {
-    constructor(props) {
+export interface GlobalContext {
+    cssDocument: CSSDocument[],
+    pathPrefix: string,
+    toggleEdit: boolean,
+    editing: boolean,
+    setActiveRichTextEditor: Function,
+    activeRichTextEditor: string,
+    updateSectionInFocus: Function
+    sectionInFocus: string,
+    sectionInFocusIndex: number,
+    updateGridSectionInFocus: Function,
+    gridSectionInFocus: string,
+    gridSectionInFocusIndex: number,
+    updateComponentInFocus: Function,
+    componentInFocus: string,
+    componentInFocusIndex: number,
+    enableSpacing: boolean,
+    authenticated: boolean,
+    flashMessage: Function
+}
+
+class App extends React.Component<AppProps, AppState> {
+    constructor(props: AppProps) {
         super(props)
-        
+
         window.addEventListener("resize", updateHeightOfVideos) // #REFACTOR: solve in CSS
         window.addEventListener("resize", setScrollableHeight.bind(this))
         
@@ -180,7 +191,6 @@ class App extends React.Component {
                 authenticated: false,
 
                 flashMessage: this.flashMessage,
-
             }
         }
     }

@@ -1,9 +1,3 @@
-import uuidv4 from 'uuid/v4'
-
-export function getId() {
-    return uuidv4()
-}
-
 export const mediaQueries = {
     mobile: "",
     tablet: "@media only screen and (min-width: 600px) ",

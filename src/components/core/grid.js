@@ -1,5 +1,3 @@
-import { getId } from './helpers';
-
 
 export const gridLayouts = {
     Grid_1_1: {

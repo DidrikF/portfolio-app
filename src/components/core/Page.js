@@ -2,10 +2,10 @@ import React from 'react'
 import axios from 'axios'
 
 
-import PageToolbarPortal from './helper-components/PageToolbarPortal'
+import PageToolbarPortal from '../rich-text/PageToolbarPortal'
 import Section from './Section'
-import ClassSelector from './ClassSelector'
-import { GlobalContext } from './contexts'  
+import ClassSelector from '../css-manager/ClassSelector'
+import { GlobalContext } from '../../contexts/GlobalContext'  
 
   
 class Page extends React.Component {

@@ -1,17 +1,48 @@
 import React from 'react';
 import axios from 'axios'
 
-import { getId } from './helpers';
+import { getId } from '../../helpers';
 import CSSDocument from './CSSDocument'
-import { GlobalContext } from './contexts';
+import { GlobalContext } from '../../contexts/GlobalContext';
 import { cssDocumentToString, combineCssDocuments, mediaQueries } from "./helpers";
+import { Id, KeyValue, ExHTMLInputElement } from '../../types/basic-types';
 
+export interface ICSSDocument {
+  _id?: string,
+  id: Id,
+  name: string,
+  items: Item[],
+}
 
-const reorder = (list, startIndex, endIndex) => {
+interface Item {
+  id: Id,
+  mediaQuery: string,
+  selector: string,
+  scopes: KeyValue<boolean>,
+  attributes: CSSAttributes[]
+}
+
+interface CSSAttributes {
+
+}
+
+export interface CSSManagerProps {
+
+}
+
+export interface CSSManagerState {
+  cssDocumentName: string,
+  mediaQueries: KeyValue<string>,
+  scopes: string[],
+  editing: Id,
+  activeDoc: Id,
+  cssDocuments: ICSSDocument[]
+}
+
+const reorder = (list: Iterable<T>, startIndex: number, endIndex: number): any[] => {
   const result = Array.from(list);
   const [removed] = result.splice(startIndex, 1);
   result.splice(endIndex, 0, removed);
-
   return result;
 };
 
@@ -24,26 +55,24 @@ let scopes = [
   "rich text",
 ];
 
-function initiateScopes(scopes) {
-  const scopeObject = {};
+function initiateScopes(scopes: string[]): {[key: string]: boolean} {
+  const scopeObject: {[key: string]: boolean}  = {};
   scopes.forEach(scope => scopeObject[scope] = false);
   return scopeObject;
 }
 
-class CSSManager extends React.Component {
-  constructor(props) {
+class CSSManager extends React.Component<CSSManagerProps, CSSManagerState> {
+  constructor(props: CSSManagerProps) {
     super(props)
     this.state = {
       cssDocumentName: "",
       mediaQueries: mediaQueries,
       scopes: scopes,
-      editing: null, // The id of the item being edited!
-      
-      activeDoc: null,
-
+      editing: "",
+      activeDoc: "",
       cssDocuments: [],
     }
-    this.handleInputChange = this.handleInputChange.bind(this);
+    
     this.createCssDocument = this.createCssDocument.bind(this);
     this.deleteCssDocument = this.deleteCssDocument.bind(this);
     this.createItem = this.createItem.bind(this);
@@ -57,18 +86,16 @@ class CSSManager extends React.Component {
     this.updateApplicationStateAndSave = this.updateApplicationStateAndSave.bind(this);
     this.onDragEnd = this.onDragEnd.bind(this);
     this.saveCssDocuments = this.saveCssDocuments.bind(this);
-
   }
 
-  handleInputChange(e) {
-    const name = e.target.name;
-    const value = e.target.value
+  private handleNameChange = (event: React.SyntheticEvent<HTMLInputElement, InputEvent>) => {
+    const value: string = (event.target as any).value
     this.setState({
-      [name]: value,
+      cssDocumentName: value,
     })
   }
 
-  createCssDocument(e) {
+  private createCssDocument = (_: React.SyntheticEvent<HTMLButtonElement, MouseEvent>) => {
     const cssDocument = {
       name: this.state.cssDocumentName,
       id: getId(),
@@ -88,7 +115,7 @@ class CSSManager extends React.Component {
     })
   }
 
-  deleteCssDocument(docToDelete) {
+  deleteCssDocument(docToDelete: ICSSDocument) {
     if (!window.confirm(`Are you sure you want to delete css document: ${docToDelete.name}`)) return
 
     axios.delete("/cssDocuments/" + docToDelete._id).then(response => {
@@ -104,7 +131,7 @@ class CSSManager extends React.Component {
     })
   }
 
-  openDocument(docId) {
+  openDocument(docId: Id) {
     this.setState({
       activeDoc: docId,
     });
@@ -116,9 +143,9 @@ class CSSManager extends React.Component {
   }
 
   createItem() {
-    this.setState((state, props) => {
+    this.setState<any>((state: CSSManagerState): Partial<CSSManagerState> => {
       const cssDocumentIndex = state.cssDocuments.findIndex(doc => doc.id === state.activeDoc);
-      if (cssDocumentIndex <= -1) return
+      if (cssDocumentIndex <= -1) return {};
 
       state.cssDocuments[cssDocumentIndex].items.push({
         id: getId(),
@@ -133,8 +160,8 @@ class CSSManager extends React.Component {
     });
   }
 
-  deleteItem(id) { // maybe not rely on the index at all, and do all manipulation based on the ID
-    this.setState((state) => {
+  deleteItem(id: Id) { // maybe not rely on the index at all, and do all manipulation based on the ID
+    this.setState((state: CSSManagerState) => {
       const cssDocumentIndex = state.cssDocuments.findIndex(doc => doc.id === state.activeDoc);
       if (cssDocumentIndex <= -1) return
 
@@ -146,9 +173,9 @@ class CSSManager extends React.Component {
     });
   }
 
-  handleScopeChange(e, editingId) {
-    e.persist();
-    this.setState(state => {
+  handleScopeChange(event: React.SyntheticEvent, editingId: Id) {
+    event.persist();
+    this.setState((state: CSSManagerState):  => {
       const cssDocumentIndex = state.cssDocuments.findIndex(doc => doc.id === state.activeDoc);
       if (cssDocumentIndex <= -1) return
 
@@ -328,7 +355,7 @@ class CSSManager extends React.Component {
 
           {/* UI to create, delete and switch between pages */}
           <div className="CSSM__tabs">
-            <input name="cssDocumentName" placeholder="Document name" value={this.state.cssDocumentName} onChange={this.handleInputChange} />
+            <input name="cssDocumentName" placeholder="Document name" value={this.state.cssDocumentName} onChange={this.handleNameChange} />
             <button onClick={this.createCssDocument}>Add Doc</button>
 
             <div>

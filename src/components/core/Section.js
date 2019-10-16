@@ -2,11 +2,11 @@
 import React from 'react';
 import * as _ from 'lodash'
 
-import { GlobalContext } from './contexts';
-import PageToolbarPortal from './helper-components/PageToolbarPortal'
-import ClassSelector from './ClassSelector';
+import { GlobalContext } from '../../contexts/GlobalContext';
+import PageToolbarPortal from '../rich-text/PageToolbarPortal'
+import ClassSelector from '../css-manager/ClassSelector';
 import { gridLayouts } from './grid'
-import RichText from './content-components/RichText'
+import RichText from '../rich-text/RichText'
 
 class Section extends React.Component {
     constructor(props) {

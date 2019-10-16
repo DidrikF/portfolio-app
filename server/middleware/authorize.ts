@@ -4,10 +4,8 @@ import * as jwt from 'jsonwebtoken';
 
 export async function authorize(ctx: Context, next: Function): Promise<void> {
     try {
-        const token = ctx.request.header['authorization']
-        Object.keys(token).forEach(key => {
-            console.log(`Token key: ${key}: ${token[key]}`)
-        })
+        const token: string = ctx.request.header['authorization'] || "";
+        console.log("Token: ", token)
 
         const jwtSecret: string = process.env.JWT_SECRET || "";
         var decoded: any = jwt.verify(token, jwtSecret);

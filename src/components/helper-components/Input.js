@@ -1,11 +1,6 @@
 import React from 'react'
 
-class Input extends React.Component {
-    constructor(props) {
-        super(props)
-
-    }
- 
+class Input extends React.Component { 
     render () {
         return (
             this.props.editable ? 
@@ -15,6 +10,5 @@ class Input extends React.Component {
     }
 
 }
-
 
 export default Input

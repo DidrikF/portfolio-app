@@ -1,7 +1,7 @@
 import React from 'react'
 import { BrowserRouter as Router, Route, Link, NavLink, HashRouter, Redirect } from "react-router-dom"; 
-import ColorManager from './ColorManager'
-import { GlobalContext } from './contexts'  
+import ColorManager from '../color-manager/ColorManager'
+import { GlobalContext } from '../../contexts/GlobalContext'  
 
 /* Need
 state.scrollableHeight

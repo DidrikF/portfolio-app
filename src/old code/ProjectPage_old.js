@@ -1,5 +1,5 @@
 import React from 'react';
-import RichText from '../content-components/RichText'
+import RichText from '../components/rich-text/RichText'
 import * as _ from 'lodash'
 import axios from 'axios';
 

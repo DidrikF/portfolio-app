@@ -1,6 +1,6 @@
 import React from 'react'
 import { BrowserRouter as Router, Route, Link, NavLink, HashRouter, Redirect } from "react-router-dom"; 
-import { GlobalContext } from './contexts'  
+import { GlobalContext } from '../../contexts/GlobalContext'  
 
 
 class ViewNav extends React.Component {

@@ -1,7 +1,7 @@
 
 import React from 'react';
 import axios from 'axios';
-import { GlobalContext } from '../contexts'  
+import { GlobalContext } from '../../contexts/GlobalContext'  
 
 import localforage from 'localforage'
 
@@ -17,7 +17,6 @@ class Login extends React.Component {
         this.handle_submit = this.handle_submit.bind(this)
 
     }
-
 
     handle_input_change(event) {
         const target = event.target;

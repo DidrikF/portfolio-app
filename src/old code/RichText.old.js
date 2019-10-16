@@ -2,12 +2,11 @@
 
 import ReactQuill from 'react-quill';
 import React from 'react'
-import { GlobalContext } from '../contexts'
+import { GlobalContext } from '../contexts/GlobalContext'
 import Portal from './react-quill/RichTextToolbarPortal'
 import { quillItems } from '../helpers';
 import Quill, { Emitter } from 'quill'
 import Delta from 'quill-delta';
-import { notEqual } from 'assert';
 
 let Inline = Quill.import('blots/inline');
 let Block = Quill.import('blots/block');

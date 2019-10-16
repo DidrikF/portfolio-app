@@ -1,8 +1,8 @@
 import React from 'react'
 import ContentEditable from 'react-contenteditable'
 
-import { GlobalContext } from '../contexts'
-import Input from '../helper-components/Input'
+import { GlobalContext } from '../contexts/GlobalContext'
+import Input from '../components/helper-components/Input'
 
 
 

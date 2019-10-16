@@ -1,19 +1,28 @@
-
 {
   "compilerOptions": {
     "outDir": "./dist",
-    "module": "commonjs",
+    "module": "esnext",
     "target": "es6",
-    "lib": ["es6", "dom"],
+    "lib": [
+      "es6",
+      "dom"
+    ],
     "sourceMap": true,
-    "jsx": "react",
+    "jsx": "preserve",
     "moduleResolution": "node",
-    
     "allowJs": true,
     "noImplicitReturns": true,
     "noImplicitThis": true,
     "noImplicitAny": true,
-    "strictNullChecks": true
+    "strictNullChecks": true,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "strict": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true
   },
   "exclude": [
     "node_modules",
@@ -26,5 +35,8 @@
   ],
   "types": [
     "typePatches"
+  ],
+  "include": [
+    "src"
   ]
 }

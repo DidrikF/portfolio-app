@@ -1,7 +1,7 @@
 import React from 'react'
 import axios from 'axios'
 
-import { GlobalContext } from './contexts'  
+import { GlobalContext } from '../../contexts/GlobalContext'  
 
   
 class AccountPage extends React.Component {

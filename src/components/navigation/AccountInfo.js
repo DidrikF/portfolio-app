@@ -3,8 +3,9 @@ import { BrowserRouter as Router, Route, Link, NavLink, HashRouter, Redirect } f
 import localforage from "localforage";
 import axios from "axios";
 
-import { GlobalContext } from './contexts';
-import { Login, Register } from './helper-components/auth';
+import { GlobalContext } from '../../contexts/GlobalContext';
+import Login from '../authentication/Login';
+import Register from '../authentication/Register';
 
 
 class AccountInfo extends React.Component {
