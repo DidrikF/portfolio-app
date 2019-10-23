@@ -24,12 +24,20 @@ import { cssDocumentToString, combineCssDocuments } from './components/css-manag
 
 import { GlobalContext } from './contexts/GlobalContext'
 
-import { getId, setScrollableHeight, deepStyleMerge } from './helpers'
+import { getId, deepStyleMerge } from './helpers'
 import { gridLayouts } from './components/core/grid'
 import { updateHeightOfVideos } from './components/rich-text/RichText';
 
 type KeyValue<T> = import('../types/basic-types').KeyValue<T>;
-type 
+
+// Is this a good way to avoid name crashes?
+type PageObj = import('../types/platform_types').Page;
+type SectionObj = import('../types/platform_types').Section;
+type GridSectionObj = import('../types/platform_types').GridSection;
+type ComponentState = import('../types/platform_types').ComponentState;
+type TemplateObj = import('../types/platform_types').Template;
+type UserObj = Partial<import('../types/platform_types').User>;
+
 /**
  * Refactoring:
  * use IDs to get a hold of html elements
@@ -51,10 +59,6 @@ export type Message = {
     type: "error" | "success"
 }
 
-export type User = import('../server/models/user_model').IUser;
-export type Page = import('../server/models/page_model').IPage;
-export type Template = import('../server/models/template_model').ITemplate;
-
 export type AppState = {
     styleSheetRef: React.RefObject<StyleSheet>,
     scrollableHeight: number,
@@ -62,13 +66,13 @@ export type AppState = {
     CSSMStyle: KeyValue<string>,
     mainContentStyle: KeyValue<string>,
     gridLayouts: import('./components/core/grid').GridLayouts,
-    defaultGridLayout: import('./components/core/grid').Grid,
-    defaultSectionPadding: number,
+    defaultGridLayout: keyof import('./components/core/grid').GridLayouts, // or just string, because type script does not know about the layouts from the GridLayouts type?
+    defaultSectionPadding: string,
     messages: Message[],
-    user: User,
-    pages: Page[],
-    activePage: number,
-    templates: Template[],
+    user: UserObj,
+    pages: PageObj[],
+    activePage: string,
+    templates: TemplateObj[],
     globalContextObj: IGlobalContext,
 
 }
@@ -91,11 +95,23 @@ export type IGlobalContext = {
     componentInFocusIndex: number,
     enableSpacing: boolean,
     authenticated: boolean,
-    flashMessage: Function
+    flashMessage: (message: Message, duration: number) => void
+}
+
+// OBS: does not look right
+function setScrollableHeight() {
+    const userInfoElement = document.getElementsByClassName("SN-UserInfo")[0]
+    const accountInfoElement = document.getElementById("SN__account-info")
+    const documentHeight = document.documentElement.clientHeight
+    const scrollableHeight = documentHeight - userInfoElement.offsetHeight - accountInfoElement.offsetHeight
+
+    this.setState({ // can I typehint this
+        scrollableHeight: scrollableHeight
+    })
 }
 
 class App extends React.Component<null, AppState> {
-    state = {
+    state: AppState = {
         styleSheetRef: React.createRef(),
         scrollableHeight: 0,
         sideNavigationStyle: {
@@ -147,6 +163,7 @@ class App extends React.Component<null, AppState> {
             authenticated: false,
             flashMessage: this.flashMessage,
         }
+    }
     
     constructor(props: AppProps) {
         super(props)
@@ -160,6 +177,7 @@ class App extends React.Component<null, AppState> {
             }
         })
 
+        /* use arrow functions instead?
         // #ADD: clear focus on click outside active element, but only in the "editable" area.
         this.updateApplicationStyles = this.updateApplicationStyles.bind(this)
 
@@ -211,14 +229,12 @@ class App extends React.Component<null, AppState> {
         this.loadProtectedData = this.loadProtectedData.bind(this);
 
         this.setAuthenticated = this.setAuthenticated.bind(this)
+        */
 
-
-        this.
-        }
     }
 
-    updateApplicationStyles(cssDocument) {
-        this.setState(state => {
+    updateApplicationStyles = (cssDocument: CSSDocument) => {
+        this.setState<any>((state) => {
             state.globalContextObj.cssDocument = cssDocument;
             return {
                 globalContextObj: state.globalContextObj,

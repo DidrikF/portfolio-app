@@ -37,6 +37,6 @@
     "typePatches"
   ],
   "include": [
-    "src"
+    "src", "types"
   ]
 }
