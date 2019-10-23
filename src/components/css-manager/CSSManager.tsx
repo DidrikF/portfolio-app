@@ -5,7 +5,9 @@ import { getId } from '../../helpers';
 import CSSDocument from './CSSDocument'
 import { GlobalContext } from '../../contexts/GlobalContext';
 import { cssDocumentToString, combineCssDocuments, mediaQueries } from "./helpers";
-import { Id, KeyValue, ExHTMLInputElement } from '../../types/basic-types';
+
+import { Id, KeyValue } from '../../../types/basic-types';
+import { IGlobalContext } from '../../App'
 
 export interface ICSSDocument {
   _id?: string,
@@ -14,20 +16,24 @@ export interface ICSSDocument {
   items: Item[],
 }
 
-interface Item {
+export  interface Item {
   id: Id,
   mediaQuery: string,
   selector: string,
   scopes: KeyValue<boolean>,
-  attributes: CSSAttributes[]
+  attributes: CSSAttribute[]
 }
 
-interface CSSAttributes {
-
+interface CSSAttribute {
+  key: string,
+  value: string
 }
 
 export interface CSSManagerProps {
-
+  styleSheetRef: any[], 
+  updateApplicationStyles: (x: Partial<>) => something, 
+  closeCSSM: () => something,
+  style: any
 }
 
 export interface CSSManagerState {
@@ -39,7 +45,7 @@ export interface CSSManagerState {
   cssDocuments: ICSSDocument[]
 }
 
-const reorder = (list: Iterable<T>, startIndex: number, endIndex: number): any[] => {
+const reorder = <T extends unknown>(list: Iterable<T>, startIndex: number, endIndex: number): T[] => {
   const result = Array.from(list);
   const [removed] = result.splice(startIndex, 1);
   result.splice(endIndex, 0, removed);
@@ -143,9 +149,9 @@ class CSSManager extends React.Component<CSSManagerProps, CSSManagerState> {
   }
 
   createItem() {
-    this.setState<any>((state: CSSManagerState): Partial<CSSManagerState> => {
+    this.setState<any>((state: CSSManagerState): Partial<CSSManagerState> | undefined => {
       const cssDocumentIndex = state.cssDocuments.findIndex(doc => doc.id === state.activeDoc);
-      if (cssDocumentIndex <= -1) return {};
+      if (cssDocumentIndex <= -1) return;
 
       state.cssDocuments[cssDocumentIndex].items.push({
         id: getId(),
@@ -161,7 +167,7 @@ class CSSManager extends React.Component<CSSManagerProps, CSSManagerState> {
   }
 
   deleteItem(id: Id) { // maybe not rely on the index at all, and do all manipulation based on the ID
-    this.setState((state: CSSManagerState) => {
+    this.setState<any>((state: CSSManagerState): Partial<CSSManagerState> | undefined => {
       const cssDocumentIndex = state.cssDocuments.findIndex(doc => doc.id === state.activeDoc);
       if (cssDocumentIndex <= -1) return
 
@@ -175,7 +181,7 @@ class CSSManager extends React.Component<CSSManagerProps, CSSManagerState> {
 
   handleScopeChange(event: React.SyntheticEvent, editingId: Id) {
     event.persist();
-    this.setState((state: CSSManagerState):  => {
+    this.setState<any>((state: CSSManagerState): Partial<CSSManagerState> | undefined => {
       const cssDocumentIndex = state.cssDocuments.findIndex(doc => doc.id === state.activeDoc);
       if (cssDocumentIndex <= -1) return
 
@@ -189,11 +195,10 @@ class CSSManager extends React.Component<CSSManagerProps, CSSManagerState> {
     })
   }
 
-  handleQueryChange(e, editingId) {
+  handleQueryChange(e: React.SyntheticEvent & {target: HTMLInputElement}, editingId: Id) {
     e.persist();
-    // console.log("Query event: ", e)
-    const name = e.target.value
-    this.setState(state => {
+    const name = e.target.value;
+    this.setState<any>((state: CSSManagerState): Partial<CSSManagerState> | undefined => {
       const cssDocumentIndex = state.cssDocuments.findIndex(doc => doc.id === state.activeDoc);
       if (cssDocumentIndex <= -1) return
       
@@ -206,30 +211,34 @@ class CSSManager extends React.Component<CSSManagerProps, CSSManagerState> {
     })
   }
 
-  handleSelectorChange(e, editingId) {
+  handleSelectorChange(e: React.SyntheticEvent & {target: HTMLInputElement}, editingId: Id) {
     e.persist();
-    const name = e.target.name;
     const value = e.target.value;
-    this.setState(state => {
+    this.setState<any>((state: CSSManagerState): Partial<CSSManagerState> | undefined => {
       const cssDocumentIndex = state.cssDocuments.findIndex(doc => doc.id === state.activeDoc);
       if (cssDocumentIndex <= -1) return
 
       const itemIndex = state.cssDocuments[cssDocumentIndex].items.findIndex(item => item.id === editingId);
-      state.cssDocuments[cssDocumentIndex].items[itemIndex][name] = value;
+      if (itemIndex <= -1) return
+
+      state.cssDocuments[cssDocumentIndex].items[itemIndex]["selector"] = value;
       return {
         cssDocuments: state.cssDocuments,
       };
     });
   }
 
-  handleAttributeInputChange(e, index, editingId) {
-    const name = e.target.name;
+  handleAttributeInputChange(e: React.SyntheticEvent & {target: HTMLInputElement}, index: number, editingId: Id) {
+    const name = e.target.name as keyof CSSAttribute;
     const value = e.target.value;
-    this.setState(state => {
+    this.setState<any>((state: CSSManagerState): Partial<CSSManagerState> | undefined => {
       const cssDocumentIndex = state.cssDocuments.findIndex(doc => doc.id === state.activeDoc);
-      if (cssDocumentIndex <= -1) return
+      if (cssDocumentIndex <= -1) return;
 
       const itemIndex = state.cssDocuments[cssDocumentIndex].items.findIndex(item => item.id === editingId);
+
+      if (itemIndex <= -1) return;
+
       state.cssDocuments[cssDocumentIndex].items[itemIndex]["attributes"][index][name] = value
       return {
         cssDocuments: state.cssDocuments,
@@ -237,10 +246,10 @@ class CSSManager extends React.Component<CSSManagerProps, CSSManagerState> {
     });
   }
 
-  addAttribute(attributeIndex, editingId) {
-    this.setState(state => {
+  addAttribute(attributeIndex: number, editingId: Id) {
+    this.setState<any>((state: CSSManagerState): Partial<CSSManagerState> | undefined => {
       const cssDocumentIndex = state.cssDocuments.findIndex(doc => doc.id === state.activeDoc);
-      if (cssDocumentIndex <= -1) return
+      if (cssDocumentIndex <= -1) return;
       
       const itemIndex = state.cssDocuments[cssDocumentIndex].items.findIndex(item => item.id === editingId);
       if (typeof attributeIndex !== "undefined") {
@@ -261,29 +270,28 @@ class CSSManager extends React.Component<CSSManagerProps, CSSManagerState> {
   }
 
 
-  deleteAttribute(attributeIndex, editingId) {
-    this.setState(state => {
+  deleteAttribute(attributeIndex: number, editingId: Id) {
+    this.setState<any>((state: CSSManagerState): Partial<CSSManagerState> | undefined => {
       const cssDocumentIndex = state.cssDocuments.findIndex(doc => doc.id === state.activeDoc);
-      if (cssDocumentIndex <= -1) return
+      if (cssDocumentIndex <= -1) return;
 
       const itemIndex = state.cssDocuments[cssDocumentIndex].items.findIndex(item => item.id === editingId);
       state.cssDocuments[cssDocumentIndex].items[itemIndex]["attributes"].splice(attributeIndex, 1)
       return {
         cssDocuments: state.cssDocuments,
-      }
+      };
     })
   }
 
 
-  onDragEnd(result) {
+  onDragEnd(result: any) {
     // dropped outside the list
     if (!result.destination) {
       return;
     }
-
-    this.setState(state => {
+    this.setState<any>((state: CSSManagerState): Partial<CSSManagerState> | undefined => {
       const cssDocumentIndex = state.cssDocuments.findIndex(doc => doc.id === state.activeDoc);
-      if (cssDocumentIndex <= -1) return
+      if (cssDocumentIndex <= -1) return;
 
       state.cssDocuments[cssDocumentIndex].items = reorder(
         state.cssDocuments[cssDocumentIndex].items,
@@ -293,16 +301,11 @@ class CSSManager extends React.Component<CSSManagerProps, CSSManagerState> {
       
       return {
         cssDocuments: state.cssDocuments,
-      }
+      };
     });
-    /*
-    () => { // call funciton after setState completes
-      this.writeClassesToStyleElement();
-    }
-    */
   }
 
-  applyStylesToStyleSheet(combinedCssDocument) {
+  applyStylesToStyleSheet(combinedCssDocument: Item[]) {
     const css = cssDocumentToString(combinedCssDocument);
     this.props.styleSheetRef.current.innerHTML = css;
   }
@@ -344,10 +347,9 @@ class CSSManager extends React.Component<CSSManagerProps, CSSManagerState> {
   }
 
 
-  render() {
+  render(): JSX.Element {
 
     let activeCssDocument = this.state.cssDocuments.find(doc => doc.id === this.state.activeDoc);
-
     return (
       <div className="CSSM__container" style={this.props.style}>
         <div style={{width: "300px"}}>
@@ -397,7 +399,7 @@ class CSSManager extends React.Component<CSSManagerProps, CSSManagerState> {
 
 }
 
-CSSManager.contextType = GlobalContext;
+CSSManager.contextType = GlobalContext as IGlobalContext;
 
 
 export default CSSManager

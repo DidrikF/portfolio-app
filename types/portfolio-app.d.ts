@@ -42,11 +42,6 @@ type ComponentState = {
 }
 
 
-interface AppState {
-    pages: Page[],
-
-}
-
 /*
 gridLayouts: gridLayouts,
     defaultGridLayout: 'oneColumn',

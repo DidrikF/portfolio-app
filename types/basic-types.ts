@@ -4,6 +4,7 @@ export interface KeyValue<T> {
 
 export type Id = string;
 
+export type Email = string;
 
 export interface InEvent extends InputEvent {
 

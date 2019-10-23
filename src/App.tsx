@@ -19,7 +19,7 @@ import ImageUploader from './components/uploaders/ImageUploader'
 import FileUploader from './components/uploaders/FileUploader'
 
 import CSSManager from './components/css-manager/CSSManager'
-import { CSSDocument } from './components/css-manager/CSSDocument';
+import CSSDocument from './components/css-manager/CSSDocument';
 import { cssDocumentToString, combineCssDocuments } from './components/css-manager/helpers';
 
 import { GlobalContext } from './contexts/GlobalContext'
@@ -28,6 +28,8 @@ import { getId, setScrollableHeight, deepStyleMerge } from './helpers'
 import { gridLayouts } from './components/core/grid'
 import { updateHeightOfVideos } from './components/rich-text/RichText';
 
+type KeyValue<T> = import('../types/basic-types').KeyValue<T>;
+type 
 /**
  * Refactoring:
  * use IDs to get a hold of html elements
@@ -44,18 +46,37 @@ import { updateHeightOfVideos } from './components/rich-text/RichText';
 // The use of this function is messy and I would like this logic to be handled by css. (use flex-basis? )
 // # REFACTOR: do in css
 
-export interface AppProps {
+export type Message = {
+    text: string,
+    type: "error" | "success"
+}
+
+export type User = import('../server/models/user_model').IUser;
+export type Page = import('../server/models/page_model').IPage;
+export type Template = import('../server/models/template_model').ITemplate;
+
+export type AppState = {
+    styleSheetRef: React.RefObject<StyleSheet>,
+    scrollableHeight: number,
+    sideNavigationStyle: KeyValue<string>,
+    CSSMStyle: KeyValue<string>,
+    mainContentStyle: KeyValue<string>,
+    gridLayouts: import('./components/core/grid').GridLayouts,
+    defaultGridLayout: import('./components/core/grid').Grid,
+    defaultSectionPadding: number,
+    messages: Message[],
+    user: User,
+    pages: Page[],
+    activePage: number,
+    templates: Template[],
+    globalContextObj: IGlobalContext,
 
 }
 
-export interface AppState {
-
-}
-
-export interface GlobalContext {
+export type IGlobalContext = {
     cssDocument: CSSDocument[],
     pathPrefix: string,
-    toggleEdit: boolean,
+    toggleEdit: (event: React.SyntheticEvent & {target: any}) => void,
     editing: boolean,
     setActiveRichTextEditor: Function,
     activeRichTextEditor: string,
@@ -73,7 +94,60 @@ export interface GlobalContext {
     flashMessage: Function
 }
 
-class App extends React.Component<AppProps, AppState> {
+class App extends React.Component<null, AppState> {
+    state = {
+        styleSheetRef: React.createRef(),
+        scrollableHeight: 0,
+        sideNavigationStyle: {
+            width: "0px"
+        },
+        CSSMStyle: {
+            width: "0px",
+        },
+        mainContentStyle: {
+            marginLeft: "0px",
+            marginRight: "0px",
+        },
+
+        gridLayouts: gridLayouts,
+        defaultGridLayout: 'oneColumn',
+        defaultSectionPadding: '0px',
+        // Application State
+        messages: [],
+
+        user: {},
+
+        pages: [],
+        activePage: "",
+        templates: [],
+
+        // Context Objects
+        globalContextObj: {
+            cssDocument: [],
+            pathPrefix: '',
+            toggleEdit: this.toggleEdit,
+            editing: false, // when active, this holds the page index of the active page (not sure if this is robust)
+            setActiveRichTextEditor: this.setActiveRichTextEditor,
+            activeRichTextEditor: '', 
+            
+            updateSectionInFocus: this.updateSectionInFocus, 
+            sectionInFocus: '',
+            sectionInFocusIndex: -1,
+            
+            updateGridSectionInFocus: this.updateGridSectionInFocus,
+            gridSectionInFocus: '',
+            gridSectionInFocusIndex: -1,
+
+            updateComponentInFocus: this.updateComponentInFocus,
+            componentInFocus: '',
+            componentInFocusIndex: -1, 
+
+            enableSpacing: false,
+
+            authenticated: false,
+            flashMessage: this.flashMessage,
+        }
+    
     constructor(props: AppProps) {
         super(props)
 
@@ -139,59 +213,7 @@ class App extends React.Component<AppProps, AppState> {
         this.setAuthenticated = this.setAuthenticated.bind(this)
 
 
-        this.state = {
-            styleSheetRef: React.createRef(),
-            scrollableHeight: 0,
-            sideNavigationStyle: {
-                width: "0px"
-            },
-            CSSMStyle: {
-                width: "0px",
-            },
-            mainContentStyle: {
-                marginLeft: "0px",
-                marginRight: "0px",
-            },
-
-            gridLayouts: gridLayouts,
-            defaultGridLayout: 'oneColumn',
-            defaultSectionPadding: '0px',
-            // Application State
-            messages: [],
-
-            user: {},
-
-            pages: [],
-            activePage: "",
-            templates: [],
-
-            // Context Objects
-            globalContextObj: {
-                cssDocument: [],
-                pathPrefix: '',
-                toggleEdit: this.toggleEdit,
-                editing: false, // when active, this holds the page index of the active page (not sure if this is robust)
-                setActiveRichTextEditor: this.setActiveRichTextEditor,
-                activeRichTextEditor: '', 
-                
-                updateSectionInFocus: this.updateSectionInFocus, 
-                sectionInFocus: '',
-                sectionInFocusIndex: -1,
-                
-                updateGridSectionInFocus: this.updateGridSectionInFocus,
-                gridSectionInFocus: '',
-                gridSectionInFocusIndex: -1,
-
-                updateComponentInFocus: this.updateComponentInFocus,
-                componentInFocus: '',
-                componentInFocusIndex: -1, 
-
-                enableSpacing: false,
-
-                authenticated: false,
-
-                flashMessage: this.flashMessage,
-            }
+        this.
         }
     }
 
@@ -281,9 +303,9 @@ class App extends React.Component<AppProps, AppState> {
 
 
     // ________________Global context related_____________________
-    toggleEdit(e) {
+    toggleEdit(e: React.SyntheticEvent & {target: any}) {
         let value = e.target.value ? e.target.value : false // e.target.value is a string
-        this.setState((state, props) => {
+        this.setState<any>((state: AppState): Partial<AppState> => {
             let globalContextObj = state.globalContextObj
             globalContextObj.editing = value
             return {

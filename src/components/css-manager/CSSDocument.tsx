@@ -1,42 +1,49 @@
 import React from 'react';
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 import { ICSSDocument } from './CSSManager';
+import { Id, KeyValue } from '../../../types/basic-types';
 
 export interface CSSDocumentProps {
-  onDragEnd: Function,
-  cssDocument: ICSSDocument,
-
+  onDragEnd: (result: any) => void,
+  cssDocument: ICSSDocument, 
+  mediaQueries: KeyValue<string>,
+  createItem: () => void,
+  deleteItem: (id: Id) => void, 
+  handleScopeChange: (event: React.SyntheticEvent & {target: HTMLInputElement}, editingId: Id) => void,
+  handleQueryChange: (event: React.SyntheticEvent & {target: HTMLInputElement}, editingId: Id) => void,
+  handleSelectorChange: (event: React.SyntheticEvent & {target: HTMLInputElement}, editingId: Id) => void,
+  handleAttributeInputChange: (event: React.SyntheticEvent & {target: HTMLInputElement}, index: number, editingId: Id) => void,
+  addAttribute: (attributeIndex: number, editingId: Id) => void,
+  deleteAttribute: (attributeIndex: number, editingId: Id) => void,
 }
 
 const grid = 8;
 
-const getItemStyle = (isDragging: boolean, draggableStyle: ) => ({
+const getItemStyle = (isDragging: boolean, draggableStyle: KeyValue<string>): KeyValue<string> => ({
   // some basic styles to make the items look a bit nicer
   userSelect: "none",
-  padding: grid * 1,
+  padding: `${grid}px`,
   margin: `0 0 ${grid}px 0`,
-
   // change background colour if dragging
   background: isDragging ? "lightgreen" : "grey",
-
   // styles we need to apply on draggables
   ...draggableStyle
 });
 
-const getListStyle = isDraggingOver => ({
+const getListStyle = (isDraggingOver: boolean): KeyValue<string> => ({
   background: isDraggingOver ? "lightblue" : "lightgrey",
-  padding: grid,
-  width: 280
+  padding: `${grid}px`,
+  width: `${280}px`
 });
 
 
-class CSSDocument extends React.Component<ICSSDocument> {
+class CSSDocument extends React.Component<CSSDocumentProps, any> {
   render() {
     return (
       <div>
         <DragDropContext onDragEnd={this.props.onDragEnd}>
           <Droppable droppableId="droppable">
-            {(provided, snapshot) => (
+            {(provided: any, snapshot: any) => (
               <div
                 {...provided.droppableProps}
                 ref={provided.innerRef}
@@ -44,7 +51,7 @@ class CSSDocument extends React.Component<ICSSDocument> {
               >
                 {this.props.cssDocument.items.map((item, index) => (
                   <Draggable key={item.id} draggableId={item.id} index={index}>
-                    {(provided, snapshot) => (
+                    {(provided: any, snapshot: any) => (
                       <div
                         ref={provided.innerRef}
                         {...provided.draggableProps}

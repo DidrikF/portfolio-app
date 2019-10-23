@@ -1,5 +1,21 @@
+export interface GridSection {
+    className: string,
+    coordinates: [number, number]
+}
 
-export const gridLayouts = {
+export interface Grid {
+    className: string,
+    numColumns: number,
+    layoutName: string,
+    gridSections: GridSection[]
+}
+
+
+export interface GridLayouts {
+    [key: string]: Grid
+}
+
+export const gridLayouts: GridLayouts = {
     Grid_1_1: {
         className: "Grid_1_1",
         numColumns: 1,
