@@ -8,10 +8,11 @@
  * Am I loosing some flexibility by coupling the client and server in this way?
  */
 
+export type PageType = "project" | "page";
 
 export type Page = {
     id: string,
-    type: string,
+    type: PageType,
     path: string,
     pathTitle: string,
     title: string,
@@ -22,7 +23,6 @@ export type Page = {
     show: boolean,
 
 }
-
 
 export type Section = {
     id: string,
@@ -51,7 +51,6 @@ export type ComponentState = {
     state: any,
 }
 
-
 export type User = {
 	email: string,
 	password: string,
@@ -61,10 +60,14 @@ export type User = {
 	image?: string
 }
 
-
-export type Template = {
+export type Template<T extends (Page | Section | GridSection | ComponentState)>  = {
   owner: import('./basic-types').Email,
   title: string,
   type: string,
-  template: Page | Section | GridSection | ComponentState,
+  template: T,
 }
+
+export type PageTemplate = Template<Page>
+export type SectionTemplate = Template<Section>;
+export type GridSectionTemplate = Template<GridSection>
+export type ComponentTemplate = Template<ComponentState>;

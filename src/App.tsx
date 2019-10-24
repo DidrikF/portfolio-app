@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { Key } from 'react'
 import axios from 'axios'
 import update from 'immutability-helper';
 import { Route, HashRouter } from "react-router-dom"; 
@@ -35,9 +35,11 @@ type PageObj = import('../types/platform_types').Page;
 type SectionObj = import('../types/platform_types').Section;
 type GridSectionObj = import('../types/platform_types').GridSection;
 type ComponentState = import('../types/platform_types').ComponentState;
-type TemplateObj = import('../types/platform_types').Template;
+type TemplateObj = import('../types/platform_types').Template<any>;
 type UserObj = Partial<import('../types/platform_types').User>;
-
+import { Id } from '../types/basic-types';
+import { PageType, SectionTemplate, ComponentTemplate, PageTemplate } from '../types/platform_types';
+import { Grid } from './components/core/grid';
 /**
  * Refactoring:
  * use IDs to get a hold of html elements
@@ -81,7 +83,7 @@ export type IGlobalContext = {
     cssDocument: CSSDocument[],
     pathPrefix: string,
     toggleEdit: (event: React.SyntheticEvent & {target: any}) => void,
-    editing: boolean,
+    editing: number,
     setActiveRichTextEditor: Function,
     activeRichTextEditor: string,
     updateSectionInFocus: Function
@@ -98,18 +100,6 @@ export type IGlobalContext = {
     flashMessage: (message: Message, duration: number) => void
 }
 
-// OBS: does not look right
-function setScrollableHeight() {
-    const userInfoElement = document.getElementsByClassName("SN-UserInfo")[0]
-    const accountInfoElement = document.getElementById("SN__account-info")
-    const documentHeight = document.documentElement.clientHeight
-    const scrollableHeight = documentHeight - userInfoElement.offsetHeight - accountInfoElement.offsetHeight
-
-    this.setState({ // can I typehint this
-        scrollableHeight: scrollableHeight
-    })
-}
-
 class App extends React.Component<null, AppState> {
     state: AppState = {
         styleSheetRef: React.createRef(),
@@ -124,25 +114,20 @@ class App extends React.Component<null, AppState> {
             marginLeft: "0px",
             marginRight: "0px",
         },
-
         gridLayouts: gridLayouts,
         defaultGridLayout: 'oneColumn',
         defaultSectionPadding: '0px',
-        // Application State
         messages: [],
-
         user: {},
-
         pages: [],
         activePage: "",
         templates: [],
 
-        // Context Objects
         globalContextObj: {
             cssDocument: [],
             pathPrefix: '',
             toggleEdit: this.toggleEdit,
-            editing: false, // when active, this holds the page index of the active page (not sure if this is robust)
+            editing: -1,
             setActiveRichTextEditor: this.setActiveRichTextEditor,
             activeRichTextEditor: '', 
             
@@ -164,77 +149,9 @@ class App extends React.Component<null, AppState> {
             flashMessage: this.flashMessage,
         }
     }
-    
-    constructor(props: AppProps) {
-        super(props)
 
-        window.addEventListener("resize", updateHeightOfVideos) // #REFACTOR: solve in CSS
-        window.addEventListener("resize", setScrollableHeight.bind(this))
-        
-        window.addEventListener("keyup", (e) => {
-            if (e.key === "Escape") {
-                this.clearFocus();
-            }
-        })
-
-        /* use arrow functions instead?
-        // #ADD: clear focus on click outside active element, but only in the "editable" area.
-        this.updateApplicationStyles = this.updateApplicationStyles.bind(this)
-
-        this.showSideNavigation = this.showSideNavigation.bind(this)
-        this.closeSideNavigation = this.closeSideNavigation.bind(this)
-        this.showCSSM = this.showCSSM.bind(this)
-        this.closeCSSM = this.closeCSSM.bind(this)
-
-        this.flashMessage = this.flashMessage.bind(this)
-
-        this.createPage = this.createPage.bind(this)
-        this.deletePage = this.deletePage.bind(this)
-        this.updatePageState = this.updatePageState.bind(this)
-        this.applyPageStyles = this.applyPageStyles.bind(this)
-        
-        this.clearFocus = this.clearFocus.bind(this)
-        this.toggleEdit = this.toggleEdit.bind(this)
-        this.toggleSpacing = this.toggleSpacing.bind(this)
-        this.setActiveRichTextEditor = this.setActiveRichTextEditor.bind(this)
-        this.updateComponentInFocus = this.updateComponentInFocus.bind(this)
-        this.updateSectionInFocus = this.updateSectionInFocus.bind(this)
-        this.updateGridSectionInFocus = this.updateGridSectionInFocus.bind(this) 
-        // this.updateProjectInFocus = this.updateProjectInFocus.bind(this)
-
-        // Update Section Related
-        this.addSection = this.addSection.bind(this)
-        this.addComponent = this.addComponent.bind(this)
-        // this.makeGridSections = this.makeGridSections.bind(this) // may not need 
-        this.updateSectionLayout = this.updateSectionLayout.bind(this)
-        this.updateSectionWidths = this.updateSectionWidths.bind(this)
-
-        // Update Component Related
-        this.updateSectionState = this.updateSectionState.bind(this)
-        this.applySectionStyles = this.applySectionStyles.bind(this)
-        this.updateGridSectionState = this.updateGridSectionState.bind(this)
-        this.applyGridSectionStyles = this.applyGridSectionStyles.bind(this)
-        this.updateComponentState = this.updateComponentState.bind(this)
-        this.applyComponentStyles = this.applyComponentStyles.bind(this)
-
-        this.deleteObject = this.deleteObject.bind(this)
-        this.moveObject = this.moveObject.bind(this)
-
-        this.saveActivePage = this.saveActivePage.bind(this)
-
-        this.setPageStateFromTemplate = this.setPageStateFromTemplate.bind(this)
-        this.createTemplate = this.createTemplate.bind(this)
-        this.deleteTemplate = this.deleteTemplate.bind(this)
-
-        this.loadProtectedData = this.loadProtectedData.bind(this);
-
-        this.setAuthenticated = this.setAuthenticated.bind(this)
-        */
-
-    }
-
-    updateApplicationStyles = (cssDocument: CSSDocument) => {
-        this.setState<any>((state) => {
+    updateApplicationStyles = (cssDocument: CSSDocument[]) => {
+        this.setState<any>((state: AppState): Partial<AppState> => {
             state.globalContextObj.cssDocument = cssDocument;
             return {
                 globalContextObj: state.globalContextObj,
@@ -270,7 +187,7 @@ class App extends React.Component<null, AppState> {
     }
 
     showCSSM() {
-        this.setState(state => {
+        this.setState<any>((state: AppState): Partial<AppState> => {
             return {
                 CSSMStyle: {
                     width: "300px"
@@ -297,8 +214,8 @@ class App extends React.Component<null, AppState> {
         })
     }
 
-    flashMessage(message, duration) {
-        this.setState((state, props) => {
+    flashMessage(message: Message, duration: number) {
+        this.setState((state) => {
             state.messages.push(message)
             return {
                 messages: state.messages
@@ -306,7 +223,7 @@ class App extends React.Component<null, AppState> {
         })
 
         setTimeout(() => {
-            this.setState((state, props) => {
+            this.setState((state) => {
                 const indexToRemove = state.messages.findIndex(msg => msg === message)
                 state.messages.splice(indexToRemove, 1)
                 return {
@@ -320,7 +237,7 @@ class App extends React.Component<null, AppState> {
 
     // ________________Global context related_____________________
     toggleEdit(e: React.SyntheticEvent & {target: any}) {
-        let value = e.target.value ? e.target.value : false // e.target.value is a string
+        let value: number = e.target.value ? parseInt(e.target.value, 10) : -1 // e.target.value is a string
         this.setState<any>((state: AppState): Partial<AppState> => {
             let globalContextObj = state.globalContextObj
             globalContextObj.editing = value
@@ -331,8 +248,8 @@ class App extends React.Component<null, AppState> {
     }
 
 
-    setActiveRichTextEditor(id) {
-        this.setState((state, props) => {
+    setActiveRichTextEditor(id: Id) {
+        this.setState((state) => {
             let globalContextObj = state.globalContextObj
             globalContextObj.activeRichTextEditor = id
             return {
@@ -342,9 +259,9 @@ class App extends React.Component<null, AppState> {
     }
 
     // #REFACTOR: merge into one function (control only the most specific element selected and deduce its "parents", but not requring walking the DOM).
-    updateSectionInFocus(sectionId, sectionIndex) {
-        if (!this.state.globalContextObj.editing) return
-        this.setState((state, props) => {
+    updateSectionInFocus(sectionId: Id, sectionIndex: number) {
+        if (this.state.globalContextObj.editing <= -1) return
+        this.setState((state) => {
             let globalContextObj = state.globalContextObj
             if (sectionIndex !== globalContextObj.sectionInFocusIndex) {
                 // reset ...
@@ -358,9 +275,9 @@ class App extends React.Component<null, AppState> {
             }
         })
     }
-    updateGridSectionInFocus(gridSectionId, gridSectionIndex) {
-        if (!this.state.globalContextObj.editing) return
-        this.setState((state, props) => {
+    updateGridSectionInFocus(gridSectionId: Id, gridSectionIndex: number) {
+        if (this.state.globalContextObj.editing <= -1) return
+        this.setState((state) => {
             let globalContextObj = state.globalContextObj
             globalContextObj.gridSectionInFocus = gridSectionId 
             globalContextObj.gridSectionInFocusIndex = gridSectionIndex
@@ -370,9 +287,9 @@ class App extends React.Component<null, AppState> {
             }
         })
     }
-    updateComponentInFocus(componentId, componentStateIndex) {
-        if (!this.state.globalContextObj.editing) return
-        this.setState((state, props) => {
+    updateComponentInFocus(componentId: Id, componentStateIndex: number) {
+        if (this.state.globalContextObj.editing <= -1) return
+        this.setState((state) => {
             let globalContextObj = state.globalContextObj
             globalContextObj.componentInFocus = componentId
             globalContextObj.componentInFocusIndex = componentStateIndex
@@ -381,17 +298,17 @@ class App extends React.Component<null, AppState> {
             }
         })
     }
-    clearFocus() {
-        this.setState((state, props) => {
+    clearFocus(event?: React.KeyboardEvent<any>) {
+        if (event && event.key !== "Escape") return;
+
+        this.setState((state) => {
             let globalContextObj = state.globalContextObj 
             globalContextObj.componentInFocus = ''
             globalContextObj.gridSectionInFocus = ''
             globalContextObj.sectionInFocus = ''
-            globalContextObj.projectInFocus = ''
             globalContextObj.sectionInFocusIndex = -1
             globalContextObj.gridSectionInFocusIndex = -1
             globalContextObj.componentInFocusIndex = -1
-            globalContextObj.projectInFocusIndex = -1
             return {
                 globalContextObj
             }
@@ -399,7 +316,7 @@ class App extends React.Component<null, AppState> {
     }
 
     toggleSpacing() {
-        this.setState((state, props) => {
+        this.setState((state) => {
             let globalContextObj = state.globalContextObj 
             globalContextObj.enableSpacing = !globalContextObj.enableSpacing
             return {
@@ -409,8 +326,8 @@ class App extends React.Component<null, AppState> {
     }
 
     //___________________Navigation and Editor Panel Related________________________
-    setAuthenticated(value) {
-        this.setState((state, props) => {
+    setAuthenticated(value: boolean) {
+        this.setState((state) => {
             const globalContextObj = state.globalContextObj
             globalContextObj["authenticated"] = value
 
@@ -420,8 +337,8 @@ class App extends React.Component<null, AppState> {
                 }
             } else {
                 this.clearFocus()
-                globalContextObj["editing"] = false
-                globalContextObj["enableSpacing"] = false
+                globalContextObj["editing"] = -1;
+                globalContextObj["enableSpacing"] = false;
                 return {
                     globalContextObj: globalContextObj
                 }
@@ -429,8 +346,7 @@ class App extends React.Component<null, AppState> {
         })
     }
 
-    createPage(type, pageTitle) {
-        console.log(axios.defaults)
+    createPage(type: PageType, pageTitle: string) {
         let path;
         let pathTitle = pageTitle.toLowerCase().replace(" ", "-")
         
@@ -456,23 +372,23 @@ class App extends React.Component<null, AppState> {
             show: true,
         }
 
-        axios.post("/pages", page).then(response => {
-            this.setState((state, props) => {
+        axios.post("/pages", page).then((response) => {
+            this.setState((state) => {
                 state.pages.push(response.data)
                 return {
                     pages: state.pages
                 }
-            }).catch(e => {
-                this.flashMessage({text: "Failed to create page, it will not be possible to save updates.", type: "error"}, 3)
             })
+        }).catch(() => {
+            this.flashMessage({text: "Failed to create page, it will not be possible to save updates.", type: "error"}, 3)
         })
     }
 
-    updatePageState(pageUpdate, pageIndex) {
-        if (!this.state.globalContextObj.editing) return
+    updatePageState(pageUpdate: Partial<PageObj>, pageIndex: number) {
+        if (this.state.globalContextObj.editing  <= -1) return
 
-        this.setState((state, props) => {
-            let page = state.pages[pageIndex]
+        this.setState((state) => {
+            let page = state.pages[pageIndex] as any
             state.pages[pageIndex]= deepStyleMerge(page, pageUpdate)
             return {
                 pages: state.pages
@@ -480,18 +396,18 @@ class App extends React.Component<null, AppState> {
         })
     }
 
-    applyPageStyles(pageIndex) {
+    applyPageStyles(pageIndex: number) {
         const page = this.state.pages[pageIndex]
         try {
-            const styleString = page.styleInput
+            const styleString = page.styleInput || "";
             if (styleString === "") {
                 this.updatePageState({
                     style: {},
                 }, pageIndex)
                 return
             }
-            const styleObject = JSON.parse(styleString)
-            const pageUpdate = {
+            const styleObject: KeyValue<string> = JSON.parse(styleString)
+            const pageUpdate: Partial<PageObj> = {
                 style: styleObject
             }
             this.updatePageState(pageUpdate, pageIndex)
@@ -501,23 +417,22 @@ class App extends React.Component<null, AppState> {
                 text: "Styles are not expressed in valid JSON. Error: \n" + error,
                 type: "error",
             }, 3);
-            console.log("Invalid styles, not able to parse as JSON. Error: ", error);
         }
     }
 
-    deletePage(pageIndex) {
+    deletePage(pageIndex: number) {
         const pageToDelete = this.state.pages[pageIndex]
 
         if(!window.confirm(`Are you sure you want to delete page: ${pageToDelete.title}?`)) return
 
-        axios.delete(`/pages/${pageToDelete.pathTitle}`).then(response => {
-            this.setState((state, props) => {
+        axios.delete(`/pages/${pageToDelete.pathTitle}`).then(() => {
+            this.setState((state) => {
                 state.pages.splice(pageIndex, 1)
                 return {
                     pages: state.pages
                 }
             })
-        }).catch(error => {
+        }).catch(() => {
             this.flashMessage({
                 text: "Failed to delete page.",
                 type: "error",
@@ -525,9 +440,9 @@ class App extends React.Component<null, AppState> {
         })
     }
 
-    makeGridSections(gridSectionTemplate) {
-        return gridSectionTemplate.map(gridSection => {
-            const newGridSection = {};
+    makeGridSections(gridSectionTemplate: GridSectionObj[]): GridSectionObj[] {
+        return gridSectionTemplate.map((gridSection: GridSectionObj): any => {
+            const newGridSection: Partial<GridSectionObj> = {};
             Object.assign(newGridSection, gridSection);
             newGridSection["id"] = getId()
             newGridSection["style"] = {}
@@ -537,18 +452,18 @@ class App extends React.Component<null, AppState> {
         })
     }
 
-    makeSection(template) {
-        const section = {};
-        Object.assign(section, template);
+    makeSection(sectionTemplate: SectionObj | Grid): SectionObj {
+        const section: Partial<SectionObj> = {};
+        Object.assign(section, sectionTemplate);
         section["id"] = getId();
         section["style"] = {};
         section["styleInput"] = "";
-        section["gridSections"] = this.makeGridSections(section["gridSections"]);
-        return section;
+        section["gridSections"] = this.makeGridSections(section["gridSections"] as GridSectionObj[]);
+        return section as SectionObj;
     }
 
-    makeSectionFromUserTemplate(userTemplate) {
-        const section = userTemplate.template;
+    makeSectionFromUserTemplate(sectionTemplate: SectionTemplate) {
+        const section = sectionTemplate.template;
         section["id"] = getId();
         section["styleInput"] = "";
         section["gridSections"] = section["gridSections"].map(gridSection => {
@@ -564,16 +479,15 @@ class App extends React.Component<null, AppState> {
         return section;
     }
 
-    addSection(template) {
-        let section;
+    addSection(template: SectionTemplate) {
+        let section: SectionObj;
         if (template && template.template) {
             section = this.makeSectionFromUserTemplate(template);
         } else if (!template) {
-            template = gridLayouts["Grid_1_1"]
-            section = this.makeSection(template)
+            section = this.makeSection(gridLayouts["Grid_1_1"])
         }
         const sectionInFocusIndex = (this.state.globalContextObj.sectionInFocusIndex >= 0) ? this.state.globalContextObj.sectionInFocusIndex : 0
-        this.setState((state, props) => {
+        this.setState((state) => {
             state.pages[state.globalContextObj.editing].sections.splice(sectionInFocusIndex+1, 0, section)
             return {
                 pages: state.pages
@@ -582,7 +496,7 @@ class App extends React.Component<null, AppState> {
 
     }
     
-    updateSectionLayout(e) {
+    updateSectionLayout(e: React.SyntheticEvent & {target: any}) {
         if (this.state.globalContextObj.sectionInFocusIndex < 0) return
         const layoutName = e.target.value
         if (!window.confirm(`Are you sure you want to change layout to "${layoutName}"? \nThe current state of the section will be lost.`)) return
@@ -592,10 +506,12 @@ class App extends React.Component<null, AppState> {
             return gridLayout.layoutName === layoutName
         })
 
+        if (!sectionTemplateName) return;
+
         const sectionTemplate = this.state.gridLayouts[sectionTemplateName]
         const section = this.makeSection(sectionTemplate)
 
-        this.setState((state, props) => {
+        this.setState((state) => {
             state.pages[state.globalContextObj.editing].sections.splice(this.state.globalContextObj.sectionInFocusIndex, 1, section)
             return {
                 pages: state.pages
@@ -603,58 +519,19 @@ class App extends React.Component<null, AppState> {
         })
     }
 
-    // #REFACTOR: this may have been fixed allready, if so remove, if not, solve with css
-    updateSectionWidths(sectionUpdate, sectionIndex) {
-        const activePage = this.getActivePageIndexFromPath(window.location.hash.replace("#", ""))
-        // console.log("active page: ", this.getActivePageIndexFromPath(window.location.hash.replace("#", "")))
-        if (!activePage) return
-        
-        this.setState((state, props) => {
-            
-            for (let key in sectionUpdate) {
-                if ((key === 'innerWidth') || (key === 'columnWidth')) {
-                    // loop over grid sections and update the values
-                    // console.log("Pages: ", state.pages[activePage])
-                    // console.log("SectionUpdate: ", sectionUpdate)
-                    // console.log("sectionIndex: ", sectionIndex)
-
-                    let gridSections = state.pages[activePage].sections[sectionIndex].gridSections // need to reference the active page, not the one being edited.
-                    state.pages[activePage].sections[sectionIndex].gridSections = gridSections.map(gridSection => {
-                        if (gridSection.coordinates[1] === 1) {
-                            gridSection = update(gridSection, {style: {width: {$set: sectionUpdate['innerWidth']}}})
-
-                        } else if (gridSection.coordinates[1] === 2) { // only the second "row" has dynamic width
-                            gridSection = update(gridSection, {style: {width: {$set: sectionUpdate['columnWidth']}}})
-                        } 
-                        return gridSection
-                    })
-                    continue
-                }
-                state.pages[activePage].sections[sectionIndex][key] = sectionUpdate[key] // replaced be merge for deep assignment
-            }
-
-            return {
-                pages: state.pages
-            }
-        })
-    }
-     
-
-    updateSectionState(sectionUpdate, sectionIndex) {
+    updateSectionState(sectionUpdate: Partial<SectionObj>, sectionIndex: number) {
         if (!this.state.globalContextObj.editing) return
 
-        this.setState((state, props) => {
-
+        this.setState((state) => {
             let section = state.pages[state.globalContextObj.editing].sections[sectionIndex]
-            
             state.pages[state.globalContextObj.editing].sections[sectionIndex] = deepStyleMerge(section, sectionUpdate)
             return {
                 pages: state.pages
             }
         })
     }
-    // #REFACTOR: can these methods style update methods be merged?
-    applySectionStyles(sectionIndex) {
+    // #REFACTOR: can these methods style update methods be merged? I want to pull this into redux anyway...
+    applySectionStyles(sectionIndex: number) {
         const section = this.state.pages[this.state.globalContextObj.editing].sections[sectionIndex]
         try {
             const styleString = section.styleInput
@@ -664,20 +541,22 @@ class App extends React.Component<null, AppState> {
                 }, sectionIndex)
                 return
             }
-            const styleObject = JSON.parse(styleString)
-            const sectionUpdate = {
-                style: styleObject
+            if (styleString) {
+                const styleObject = JSON.parse(styleString)
+                const sectionUpdate = {
+                    style: styleObject
+                }
+                this.updateSectionState(sectionUpdate, sectionIndex)
             }
-            this.updateSectionState(sectionUpdate, sectionIndex)
         } catch (error) {
             console.log("Invalid styles, not able to parse as JSON. Error: ", error)
         }
     }
 
-    updateGridSectionState(gridSectionUpdate, sectionIndex, gridSectionIndex) {
+    updateGridSectionState(gridSectionUpdate: Partial<GridSectionObj>, sectionIndex: number, gridSectionIndex: number) {
         if (!this.state.globalContextObj.editing) return
 
-        this.setState((state, props) => {
+        this.setState((state) => {
             let gridSection = state.pages[state.globalContextObj.editing].sections[sectionIndex].gridSections[gridSectionIndex]
             state.pages[state.globalContextObj.editing].sections[sectionIndex].gridSections[gridSectionIndex] = deepStyleMerge(gridSection, gridSectionUpdate)
             return {
@@ -687,7 +566,7 @@ class App extends React.Component<null, AppState> {
     }
 
     // #REFACTOR: can these methods style update methods be merged?    
-    applyGridSectionStyles(sectionIndex, gridSectionIndex) {
+    applyGridSectionStyles(sectionIndex: number, gridSectionIndex: number) {
         const gridSection = this.state.pages[this.state.globalContextObj.editing].sections[sectionIndex].gridSections[gridSectionIndex]
         console.log("applyGridSectionStyles: ", gridSection, sectionIndex, gridSectionIndex)
         try {
@@ -698,11 +577,13 @@ class App extends React.Component<null, AppState> {
                 }, sectionIndex, gridSectionIndex)
                 return
             }
-            const styleObject = JSON.parse(styleString)
-            const gridSectionUpdate = {
-                style: styleObject
+            if (styleString) {
+                const styleObject = JSON.parse(styleString)
+                const gridSectionUpdate = {
+                    style: styleObject
+                }
+                this.updateGridSectionState(gridSectionUpdate, sectionIndex, gridSectionIndex)
             }
-            this.updateGridSectionState(gridSectionUpdate, sectionIndex, gridSectionIndex)
             
         } catch (error) {
             console.log("Invalid styles, not able to parse as JSON. Error: ", error)
@@ -710,8 +591,8 @@ class App extends React.Component<null, AppState> {
      }
  
     // #REFACTOR: use a switch statement instead... Extract code to make different components.
-    addComponent(componentType, template) {
-        this.setState((state, props) => {
+    addComponent(componentType: string, template: ComponentTemplate) {
+        this.setState(state => {
             let { sectionInFocusIndex, gridSectionInFocusIndex, componentInFocusIndex} = this.state.globalContextObj
             
             if ((sectionInFocusIndex === -1) || (gridSectionInFocusIndex === -1)) {
@@ -752,10 +633,10 @@ class App extends React.Component<null, AppState> {
     }
 
     // #REFACTOR: it would be better if I could encapsulate the focus and resolution of the focused "object" somehow. Now I do complicated lookups all over the place with lots of state involved.
-    updateComponentState(componentUpdate, sectionIndex, gridSectionIndex, componentStateIndex) {
+    updateComponentState(componentUpdate: Partial<ComponentState>, sectionIndex: number, gridSectionIndex: number, componentStateIndex: number) {
         if (!this.state.globalContextObj.editing) return
 
-        this.setState((state, props) => {
+        this.setState((state) => {
             let component = state.pages[state.globalContextObj.editing].sections[sectionIndex].gridSections[gridSectionIndex].componentStates[componentStateIndex]
             state.pages[state.globalContextObj.editing].sections[sectionIndex].gridSections[gridSectionIndex].componentStates[componentStateIndex] = deepStyleMerge(component, componentUpdate)
             return {
@@ -765,7 +646,7 @@ class App extends React.Component<null, AppState> {
     }
 
     // #REFACTOR: can these methods style update methods be merged?    
-    applyComponentStyles(sectionIndex, gridSectionIndex, componentStateIndex) {
+    applyComponentStyles(sectionIndex: number, gridSectionIndex: number, componentStateIndex: number) {
         const component = this.state.pages[this.state.globalContextObj.editing].sections[sectionIndex].gridSections[gridSectionIndex].componentStates[componentStateIndex]
 
         try {
@@ -776,12 +657,13 @@ class App extends React.Component<null, AppState> {
                 }, sectionIndex, gridSectionIndex, componentStateIndex)
                 return
             }
-            const styleObject = JSON.parse(styleString)
-            const componentUpdate = {
-                style: styleObject
+            if (styleString) {
+                const styleObject = JSON.parse(styleString)
+                const componentUpdate = {
+                    style: styleObject
+                }
+                this.updateComponentState(componentUpdate, sectionIndex, gridSectionIndex, componentStateIndex)
             }
-            this.updateComponentState(componentUpdate, sectionIndex, gridSectionIndex, componentStateIndex)
-            
         } catch (error) {
             console.log("Invalid styles, not able to parse as JSON. Error: ", error)
         }
@@ -792,7 +674,7 @@ class App extends React.Component<null, AppState> {
         const { sectionInFocus, componentInFocus } = this.state.globalContextObj
 
         const { sectionInFocusIndex, gridSectionInFocusIndex, componentInFocusIndex } = this.state.globalContextObj
-        this.setState((state, props) => {
+        this.setState<any>((state: AppState): Partial<AppState> | undefined => {
             if (componentInFocus !== "") { // delete component
                 const componentState = state.pages[state.globalContextObj.editing].sections[sectionInFocusIndex].gridSections[gridSectionInFocusIndex].componentStates[componentInFocusIndex]
                 if (window.confirm('Are you sure you want to delete component (' + componentState.id + ') of type: ' + componentState.type + '?')) {
@@ -815,18 +697,19 @@ class App extends React.Component<null, AppState> {
                     }
                 }
             }
+            return;
         })
     }
     
-    moveObject(places) {
+    moveObject(places: number) {
         const { sectionInFocus, componentInFocus } = this.state.globalContextObj
         const { sectionInFocusIndex, gridSectionInFocusIndex, componentInFocusIndex } = this.state.globalContextObj
 
-        this.setState((state, props) => {
+        this.setState<any>((state: AppState): Partial<AppState> | undefined => {
             if (componentInFocus !== "") {
                 let componentStates = state.pages[state.globalContextObj.editing].sections[sectionInFocusIndex].gridSections[gridSectionInFocusIndex].componentStates
                 let newIndex = (componentInFocusIndex+places)%componentStates.length
-                state.pages[state.globalContextObj.editing].sections[sectionInFocusIndex].gridSections[gridSectionInFocusIndex].componentStates = arrayMove(
+                state.pages[state.globalContextObj.editing].sections[sectionInFocusIndex].gridSections[gridSectionInFocusIndex].componentStates = arrayMove.default(
                     componentStates, 
                     componentInFocusIndex, 
                     newIndex
@@ -839,16 +722,17 @@ class App extends React.Component<null, AppState> {
                 }              
             } else if (sectionInFocus !== "") {
                 let newIndex = (sectionInFocusIndex+places)%state.pages[state.globalContextObj.editing].sections.length
-                state.pages[state.globalContextObj.editing].sections = arrayMove(state.pages[state.globalContextObj.editing].sections, sectionInFocusIndex, newIndex)
+                state.pages[state.globalContextObj.editing].sections = arrayMove.default(state.pages[state.globalContextObj.editing].sections, sectionInFocusIndex, newIndex)
                 this.state.globalContextObj.updateSectionInFocus(sectionInFocus, newIndex)
                 return {
                     pages: state.pages
                 }
             }
+            return;
         })
     }
     
-    getActivePageIndexFromPath(path) { // This is unastable in some situations, dont know why.
+    getActivePageIndexFromPath(path: string): number | boolean { // This is unastable in some situations, dont know why.
         for (let i = 0; i < this.state.pages.length; i++) {
             if (this.state.pages[i].path === path) {
                 return i
@@ -858,10 +742,10 @@ class App extends React.Component<null, AppState> {
     }
 
     //__________________ Template Related _____________________
-    setPageStateFromTemplate(template) {
-        if (!this.state.globalContextObj.editing) return
+    setPageStateFromTemplate(template: PageTemplate) {
+        if (this.state.globalContextObj.editing <= -1) return
         if (window.confirm(`Are you sure you want to apply "${template.title}" as a template? The current state of the page will be lost.`)) {
-            this.setState((state, props) => {
+            this.setState((state) => {
                 state.pages[state.globalContextObj.editing]["sections"] = template.template.sections || []
                 state.pages[state.globalContextObj.editing]["style"] = template.template.style || {}
                 state.pages[state.globalContextObj.editing]["className"] = template.template.className || ""
@@ -872,11 +756,11 @@ class App extends React.Component<null, AppState> {
         }
     }
 
-    createTemplate(type, title) {
+    createTemplate(type: string, title: string) {
         // get the state of the selected entity by using the ...InFocusIndex and type
         if (!this.state.globalContextObj.editing) return
         
-        let entity; 
+        let entity: any; 
 
         if (type === "page") {
             entity = this.state.pages[this.state.globalContextObj.editing]
@@ -913,7 +797,6 @@ class App extends React.Component<null, AppState> {
             title: title,
             template: entity,
         }
-        console.log("posting to /templates", template)
 
         axios.post("/templates", template).then(response => {
             this.setState((state, props) => {
@@ -922,12 +805,12 @@ class App extends React.Component<null, AppState> {
                     templates: state.templates,
                 }
             })
-        }).catch(error => {
+        }).catch(() => {
             this.flashMessage({text: "Failed to create template. ", type: "error"}, 3)
         })
     }
     
-    deleteTemplate(templateIndex) {
+    deleteTemplate(templateIndex: number) {
         const templateToDelete = this.state.templates[templateIndex]
         axios.delete(`/templates/${templateToDelete._id}`).then(response => {
             this.setState((state, props) => {
@@ -936,7 +819,7 @@ class App extends React.Component<null, AppState> {
                     templates: state.templates,
                 }
             })
-        }).catch(error => {
+        }).catch(() => {
             this.flashMessage({text: "Failed to delete template", type: "error"}, 3)
         })
     }
@@ -948,33 +831,7 @@ class App extends React.Component<null, AppState> {
             this.setState({
                 pages: response.data || [],
             })
-        }).catch(error => {
-            this.setState({ // remove later (This is for "offline" development)
-                pages: [
-                    {
-                        id: 1,
-                        type: "page",
-                        path: '/test-page',
-                        pathTitle: "test-page", 
-                        title: "Test Page",
-                        style: {},
-                        className: "",
-                        sections: [],
-                        show: true,
-                    },
-                    {
-                        id: 2,
-                        type: "project",
-                        path: "/projects/test-project",
-                        pathTitle: "test-project",
-                        title: 'Test Project',
-                        style: {},
-                        className: "",
-                        sections: [],
-                        show: true,
-                    }
-                ]
-            })
+        }).catch(() => {
             this.flashMessage({text: "Failed to get pages, please reload the app.", type: "error"}, 3)
         })
     }
@@ -985,7 +842,7 @@ class App extends React.Component<null, AppState> {
             this.setState({
                 user: response.data
             })
-        }).catch(error => {
+        }).catch(() => {
             this.setState({ // #OBS Remove this test code.
                 user: {
                     image: "/images/profile_picture_color.jpg",
@@ -1003,7 +860,7 @@ class App extends React.Component<null, AppState> {
             this.setState({
                 templates: response.data 
             })
-        }).catch(error => {
+        }).catch(() => {
             this.flashMessage({ text: "Failed to load template data", type: "error"}, 3)
         })
     }
@@ -1012,18 +869,15 @@ class App extends React.Component<null, AppState> {
         axios.get("/cssdocuments").then(response => {
             const combinedCssDocument = combineCssDocuments(response.data);
             const css = cssDocumentToString(combinedCssDocument);
-            console.log(css);
-            this.state.styleSheetRef.current.innerHTML = css;
-          }).catch(e => {
+            (this.state.styleSheetRef as any).current.innerHTML = css;
+        }).catch(() => {
             this.context.flashMessage({text: "Failed to get css documents, please try to reload the page.", type: "error"}, 3);
-          })
+        })
     }
 
     loadProtectedData() {
         this.loadTemplates()
-        // Add more as needed
     }
-
 
     //_______________ Data saving/updating/deleting code _________________________
     saveActivePage() {
@@ -1037,14 +891,29 @@ class App extends React.Component<null, AppState> {
         })
     }
 
+    // OBS: does not look right
+    setScrollableHeight = () => {
+        const userInfoElement: HTMLElement = document.getElementsByClassName("SN-UserInfo")[0]
+        const accountInfoElement: HTMLElement = document.getElementById("SN__account-info")
+        const documentHeight = document.documentElement.clientHeight
+        const scrollableHeight = documentHeight - userInfoElement.offsetHeight - accountInfoElement.offsetHeight
+
+        this.setState({ // can I typehint this
+            scrollableHeight: scrollableHeight
+        })
+    }
+    
     // #REFACTOR: more data loading here?
     componentDidMount() {
         this.loadCssDocuments();
         this.loadPages();
         this.loadUser();
-
-
-        setScrollableHeight.bind(this)()
+        
+        this.setScrollableHeight();
+        window.addEventListener("resize", updateHeightOfVideos) // #REFACTOR: solve in CSS
+        window.addEventListener("resize", this.setScrollableHeight)
+        
+        window.addEventListener("keyup", )
 
         localforage.getItem("token").then(token => {
             console.log("token from local storrage: ", token)
@@ -1074,6 +943,12 @@ class App extends React.Component<null, AppState> {
             console.log("Not a token in local storage! ")
         })
 
+    }
+
+    componentWillUnmount() {
+        window.removeEventListener("resize", updateHeightOfVideos);
+        window.removeEventListener("resize", this.setScrollableHeight)
+        window.removeEventListener("keyup", )
     }
 
     // #REFACTOR: remove once the toolbar issue and is solved in css 
@@ -1180,7 +1055,6 @@ class App extends React.Component<null, AppState> {
                                             updatePageState={this.updatePageState}
                                             applyPageStyles={this.applyPageStyles}
                                             updateSectionLayout={this.updateSectionLayout}
-                                            updateSectionWidths={this.updateSectionWidths}
                                             updateSectionState={this.updateSectionState}
                                             applySectionStyles={this.applySectionStyles}
                                             updateGridSectionState={this.updateGridSectionState}

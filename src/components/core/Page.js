@@ -196,7 +196,6 @@ class Page extends React.Component {
                             applySectionStyles={this.props.applySectionStyles}
                             updateSectionLayout={this.props.updateSectionLayout}
                             updateGridSectionState={this.props.updateGridSectionState}
-                            updateSectionWidths={this.props.updateSectionWidths}
                             applyGridSectionStyles={this.props.applyGridSectionStyles}
 
                             moveObject={this.props.moveObject} // #OBS remove i think
