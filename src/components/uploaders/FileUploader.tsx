@@ -1,65 +1,41 @@
 import React from 'react';
 import Dropzone from 'react-dropzone';
 import axios from 'axios';
+import { updateWidth, setPageHeight, setServerImageContainerWidth } from './helpers';
+import { FileMetadata } from '../../../types/platform_types';
+import { Message } from '../../App';
 
-
-function updateWidth() {
-    const width = (parseInt(window.innerWidth, 10) - 302) * 0.9
-
-    this.setState({
-        pageWidth: width
-    })
+export type FileUploaderProps = {
+    flashMessage: (message: Message, duration: number) => void,
 }
 
-function setPageHeight() {
-    this.setState({
-        pageHeight: document.documentElement.clientHeight
-    })
+export type FileUploaderState = {
+    serverFiles: FileMetadata[];
+    clientFiles: FileMetadata[];
+    pageWidth: string;
+    pageHeight: string;
+    serverImageContainerWidth: string;
+    fileBeingViewed: FileMetadata | null;
+    imageBeingCropped: FileMetadata | null;
 }
 
-function setServerImageContainerWidth() {
-    const containerWidth = parseInt(document.getElementsByClassName("FU__server-images")[0].offsetWidth, 10)
-    this.setState({
-        serverImageContainerWidth: containerWidth
-    })
-}
-
-
-class FileUploader extends React.Component {
-    constructor(props) {
-        super(props)
-
-        this.updateWidth = updateWidth.bind(this)
-        this.setPageHeight = setPageHeight.bind(this)
-        this.setServerImageContainerWidth = setServerImageContainerWidth.bind(this)
-
-        this.state = {
-            serverFiles: [],
-            clientFiles: [],
-            pageWidth: "",
-            pageHeight: "",
-            serverImageContainerWidth: "",
-            fileBeingViewed: null,
-        }
-
-        this.onDropHandler = this.onDropHandler.bind(this)
-        this.viewFile = this.viewFile.bind(this)
-        this.deleteFile = this.deleteFile.bind(this)
-
-        this.uploadFiles = this.uploadFiles.bind(this)
-        
-        this.handleInputChange = this.handleInputChange.bind(this)
-        
-        this.handleFileNameChange = this.handleFileNameChange.bind(this)
-        this.getServerFiles = this.getServerFiles.bind(this)
-
+class FileUploader extends React.Component<FileUploaderProps, FileUploaderState> {
+    state = {
+        serverFiles: [],
+        clientFiles: [],
+        pageWidth: "",
+        pageHeight: "",
+        serverImageContainerWidth: "",
+        fileBeingViewed: null,
+        imageBeingCropped: null,
     }
-
-
-    viewFile(file) {
-        // if file is viewable, show it in the appropriate way.
-
-        if (file === false || (this.state.fileBeingViewed && (file.path === this.state.fileBeingViewed.path))) {
+    updateWidth = updateWidth.bind(this)
+    setPageHeight = setPageHeight.bind(this)
+    setServerImageContainerWidth = setServerImageContainerWidth.bind(this)
+    
+    viewFile = (file: FileMetadata) => {
+        // @ts-ignore
+        if (this.state.fileBeingViewed && (file.path === this.state.fileBeingViewed.path)) {
             this.setState({
                 fileBeingViewed: null,
             })
@@ -76,24 +52,23 @@ class FileUploader extends React.Component {
 
     }
 
-    deleteFile(file) {
-        // delete single file from the server with the given url
-        axios.delete(`/files/${file.name}`).then(response => {
-            this.setState((state, props) => {
+    deleteFile = (file: FileMetadata) => {
+        axios.delete(`/files/${file.name}`).then(() => {
+            this.setState((state) => {
                 state.serverFiles.splice(state.serverFiles.indexOf(file), 1)
                 return {
                     serverFiles: state.serverFiles
                 }
             })
-        }).catch(error => {
+        }).catch(() => {
             this.props.flashMessage({text: "Filed to delete file.", type: "error"}, 3)
         })
     }
 
-    uploadFiles() {
+    uploadFiles = () => {
         if (this.state.clientFiles.length < 1) return 
 
-        for (let file of this.state.clientFiles) {
+        for (let file of this.state.clientFiles as FileMetadata[]) { // THis is dumb!
             var validFilename = /^[a-z0-9_.@()-]+\.[a-z]+$/i.test(file.name);
             console.log("validFileName: ", validFilename)
             if (!validFilename) {
@@ -104,15 +79,12 @@ class FileUploader extends React.Component {
 
         const form = new FormData()
         
-        Promise.all(this.state.clientFiles.map(async file => {
+        Promise.all(this.state.clientFiles.map(async (file: FileMetadata) => {
             let blob = await fetch(file.path).then(response => response.blob())
             form.append(file.name, blob)
-            
-        })).then(files => {
-            for (var pair of form.entries()) {
-            }
-            axios.post("/files", form).then(response => {
-                this.setState((state, props) => {
+        })).then(() => {
+            axios.post("/files", form).then(() => {
+                this.setState((state) => {
                     state.clientFiles.forEach(file => {
                         URL.revokeObjectURL(file.path)
                     })
@@ -121,7 +93,7 @@ class FileUploader extends React.Component {
                     }
                 })
                 this.getServerFiles()
-            }).catch(error => {
+            }).catch(() => {
                 this.props.flashMessage({text: "Upload failed, try again.", type: "error"} , 3)
             })
         }).catch(error => {
@@ -129,23 +101,14 @@ class FileUploader extends React.Component {
         })
     }
 
-    handleInputChange(e) {
-        const value = e.target.value
-        const name = e.target.name
-        this.setState({
-            [name]: value,
-        })
-    }
-
-
-    handleFileNameChange(e) {
-        e.persist()
-        this.setState((state, props) => {
+    handleFileNameChange = (event: React.SyntheticEvent & {target: any}) => {
+        event.persist()
+        this.setState((state) => {
             const indexToUpdate = state.clientFiles.findIndex(file => {
-                return file.path === e.target.name
+                return file.path === event.target.name
             })
             const file = state.clientFiles[indexToUpdate]
-            file["name"] = e.target.value
+            file["name"] = event.target.value
             state.clientFiles.splice(indexToUpdate, 1, file)
             return {
                 clientFiles: state.clientFiles,
@@ -154,9 +117,9 @@ class FileUploader extends React.Component {
     }
 
 
-    removeClientFile(file) {
+    removeClientFile = (file: FileMetadata) => {
         URL.revokeObjectURL(file.path)
-        this.setState((state, props) => {
+        this.setState<any>((state: FileUploaderState): Partial<FileUploaderState> | undefined => {
             const rmIndex = state.clientFiles.indexOf(file)
             state.clientFiles.splice(rmIndex, 1)
             
@@ -164,7 +127,6 @@ class FileUploader extends React.Component {
                 return {
                     clientFiles: state.clientFiles,
                     imageBeingCropped: null,
-                    cropDataUrl: null,
                 }
             } else {
                 return {
@@ -174,7 +136,7 @@ class FileUploader extends React.Component {
         })
     }
 
-    getServerFiles() {
+    getServerFiles = () => {
         axios.get("/files").then(response => {
             this.setState({
                 serverFiles: response.data.files ? response.data.files : [],
@@ -184,10 +146,8 @@ class FileUploader extends React.Component {
         })
     }
 
-    onDropHandler(acceptedFiles) {
-        console.log("acceptedFiles: ", acceptedFiles)
-
-        this.setState((state, props) => {
+    onDropHandler = (acceptedFiles: File[]) => {
+        this.setState((state) => {
             const clientFiles = state.clientFiles
             acceptedFiles.forEach(file => {
                 const url = URL.createObjectURL(file) // i assume i can get a hold of the files easily from the object urls...
@@ -197,30 +157,24 @@ class FileUploader extends React.Component {
                     type: file.type,
                 }
                 clientFiles.push(fileObj)
-
             })
-
             return {
                 clientFiles: clientFiles
             }
         })
     }
 
-    componentDidMount() {
-
+    componentDidMount = () => {
         window.addEventListener("resize", this.updateWidth)
         window.addEventListener("resize", this.setPageHeight)
-        // window.addEventListener("resize", this.setServerImageContainerWidth)
         this.updateWidth()
         this.setPageHeight()
-        // this.setServerImageContainerWidth()
         this.getServerFiles()
     }
 
-    componentWillUnmount() {
+    componentWillUnmount = () => {
         window.removeEventListener("resize", this.updateWidth)
         window.removeEventListener("resize", this.setPageHeight)
-
     }
     
     render() {
@@ -234,7 +188,7 @@ class FileUploader extends React.Component {
                 </div>
                 <div className="FU__server-files">
                     {
-                        this.state.serverFiles.map(file => {
+                        this.state.serverFiles.map((file: FileMetadata) => {
                             let fileIcon
                             if (file.type === "pdf") {
                                 fileIcon = <i className="far fa-file-pdf"></i>
@@ -257,8 +211,8 @@ class FileUploader extends React.Component {
                                     <div className="FU__file">
                                         { fileIcon }
                                         <span className="FU__file-name">{file.name}</span>
-                                        <button className="FU__file-button FU__file-button--delete" onClick={(e) => { this.deleteFile(file); }}><i className="material-icons">clear</i></button>
-                                        <button className="FU__file-button FU__file-button--view" onClick={(e) => { this.viewFile(file)}}><i className="material-icons">visibility</i></button>
+                                        <button className="FU__file-button FU__file-button--delete" onClick={() => { this.deleteFile(file); }}><i className="material-icons">clear</i></button>
+                                        <button className="FU__file-button FU__file-button--view" onClick={() => { this.viewFile(file)}}><i className="material-icons">visibility</i></button>
                                         <a className="FU__file-button FU__file-button--download" href={file.path} download><i className="material-icons">cloud_download</i></a>                                    
                                     </div>
                                 </div>
@@ -288,7 +242,7 @@ class FileUploader extends React.Component {
 
                     <div className="FU__file-drop-view">
                         {
-                            this.state.clientFiles.map(file => {
+                            this.state.clientFiles.map((file: FileMetadata) => {
                                 return (
                                     <div key={file.path} className="FU__file-container">
                                         <div className="FU__file">
@@ -306,9 +260,23 @@ class FileUploader extends React.Component {
                 </div>
 
                 { this.state.fileBeingViewed &&
-                    <iframe src={this.state.fileBeingViewed.path} width="90%" height="100%" className="FU__pdf-preview">
+                    <iframe 
+                        src={
+                            // @ts-ignore
+                            this.state.fileBeingViewed.path
+                        } 
+                        width="90%" 
+                        height="100%" 
+                        className="FU__pdf-preview"
+                    >
                         This browser does not support PDFs. Please download the PDF to view it: 
-                    <a href={this.state.fileBeingViewed.path}>Download PDF</a></iframe>
+                        <a href={
+                            // @ts-ignore
+                            this.state.fileBeingViewed.path
+                        }>
+                            Download PDF
+                        </a>
+                    </iframe>
                 }
 
             </div>

@@ -1,6 +1,6 @@
 import * as mongoose from 'mongoose';
 
-type TemplateDocument = import('../../types/platform_types').Template & mongoose.Document;
+type TemplateDocument = import('../../types/platform_types').Template<any> & mongoose.Document;
 
 var TemplateSchema: mongoose.Schema = new mongoose.Schema({
   owner: {
@@ -16,10 +16,8 @@ var TemplateSchema: mongoose.Schema = new mongoose.Schema({
 		required: [true, "Type is required"],
   },
   template: {
-    type: Object, // page, section, gridSection, component
+    type: Object,
   }
 });
 
-
 export const Template = mongoose.model<TemplateDocument>('Template', TemplateSchema);
-

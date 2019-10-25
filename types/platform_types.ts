@@ -11,63 +11,77 @@
 export type PageType = "project" | "page";
 
 export type Page = {
-    id: string,
-    type: PageType,
-    path: string,
-    pathTitle: string,
-    title: string,
-    style?: {[key: string]: string},
-    className?: string,
-    styleInput?: string,
+    id: string;
+    type: PageType;
+    path: string;
+    pathTitle: string;
+    title: string;
+    style?: {[key: string]: string};
+    className?: string;
+    styleInput?: string;
     sections: Section[]
-    show: boolean,
+    show: boolean;
 
 }
 
 export type Section = {
-    id: string,
-    style?: {[key: string]: string},
-    className?: string,
-    styleInput?: string,
-    layoutName: "One column" | "Two columns" | "Three columns", 
-    gridSections: GridSection[],
+    id: string;
+    style?: {[key: string]: string};
+    className?: string;
+    styleInput?: string;
+    layoutName: "One column" | "Two columns" | "Three columns"; 
+    gridSections: GridSection[];
 }
 
 export type GridSection = {
-    id: string,
-    style?: {[key: string]: string},
-    className?: string,
-    styleInput?: string,
-    coordinates: [number, number],
-    componentStates: ComponentState[],
+    id: string;
+    style?: {[key: string]: string};
+    className?: string;
+    styleInput?: string;
+    coordinates: [number; number];
+    componentStates: ComponentState[];
 } 
 
 export type ComponentState = {
-    id: string,
-    style?: {[key: string]: string},
-    styleInput?: string,
-    className?: string,
-    type: "rich text" | "project card" | "image", // options of strings
-    state: any,
+    id: string;
+    style?: {[key: string]: string};
+    styleInput?: string;
+    className?: string;
+    type: "rich text" | "project card" | "image"; // options of strings
+    state: any;
 }
 
 export type User = {
-	email: string,
-	password: string,
-	firstName: string,
-	lastName: string,
-	description?: string,
+	email: string;
+	password: string;
+	firstName: string;
+	lastName: string;
+	description?: string;
 	image?: string
 }
 
 export type Template<T extends (Page | Section | GridSection | ComponentState)>  = {
-  owner: import('./basic-types').Email,
-  title: string,
-  type: string,
-  template: T,
+  owner: import('./basic-types').Email;
+  title: string;
+  type: string;
+  template: T;
 }
 
 export type PageTemplate = Template<Page>
 export type SectionTemplate = Template<Section>;
 export type GridSectionTemplate = Template<GridSection>
 export type ComponentTemplate = Template<ComponentState>;
+
+export type FileMetadata = {
+    type: string;
+    name: string;
+    path: string;
+}
+
+export type ImageMetadata {
+    type: string;
+    name: string;
+    path: string;
+    width: number;
+    height: number;
+}

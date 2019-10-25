@@ -1,8 +1,15 @@
-import React, { useState } from 'react';
+import React from 'react';
 
-export function UserInfo(user) {
+
+export type UserInfoProps = {
+    user: Partial<import("../../../types/platform_types").User>,
+    id: string
+}
+
+export function UserInfo(props: UserInfoProps) {
+    const { user, id } = props;
     return (
-        <div className="SN-UserInfo">
+        <div id={id}>
             <img className="SN-UserInfo__image" src={user.image} alt="Profile"/>
             <div className="SN-UserInfo__container">
                 <div className="SN-UserInfo__username">{user.firstName}<span> {user.lastName}</span></div>
@@ -11,4 +18,3 @@ export function UserInfo(user) {
         </div>
     )
 }
-
