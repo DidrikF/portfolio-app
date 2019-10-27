@@ -55,15 +55,8 @@ export type ReactQuillv2Props = {
 	miniToolbarHandlers?: any; // Need to write type;
 	editorHandlers?: any; // need to write type;
 	className?: string;
-	sectionId?: Id, 
-	sectionIndex?: number,
-	gridSectionIndex?: number,
-	componentStateIndex?: number,
 	/*
 		
-		//placeholder: PropTypes.string,
-		//tabIndex: PropTypes.number,
-		//bounds: PropTypes.oneOfType([PropTypes.string, PropTypes.element]),
 		onChange: PropTypes.func,
 		//onChangeSelection: PropTypes.func,
 		onFocus: PropTypes.func,
@@ -90,12 +83,12 @@ export default class ReactQuillv2 extends React.Component<ReactQuillv2Props, Rea
 	onKeyPress: Function | null;
 	onKeyDown: Function | null;
 	onKeyUp: Function | null;
-	bounds: any; // dont know
-	formats: any;
-	placeholder: string | null;
+
+	formats: any; // whitelist of formats to allow in the editor, default is all
+	placeholder: string | null; // 
+	
 	scrollingContainer: HTMLElement | null; 
 	readOnly: boolean;
-	tabIndex: number | null;
 	theme: string;
 	modules: any;
 	handleTextChange: TextChangeHandler;
@@ -103,9 +96,10 @@ export default class ReactQuillv2 extends React.Component<ReactQuillv2Props, Rea
 	handleEditorChange: EditorChangeHandler;
 	editor: IQuill | null;
 	lastDeltaChangeSet: any;
-	editingArea: string | null;
-	quillDelta: Delta | null;
-	quillSelection: RangeStatic | null;
+	editingArea: React.Component | null;
+
+	quillDelta: Delta | null; // Used to save state between full re-render
+	quillSelection: RangeStatic | null; // Used to save state between full re-render
 
 	
 	/*
@@ -116,7 +110,6 @@ export default class ReactQuillv2 extends React.Component<ReactQuillv2Props, Rea
 		'id',
 		'className',
 		'style',
-		'tabIndex',
 		'onFocus',
 		'onBlur',
 		// 'onChange', //'updateComponentState',
@@ -125,11 +118,6 @@ export default class ReactQuillv2 extends React.Component<ReactQuillv2Props, Rea
 		// 'onKeyDown',
 		// 'onKeyUp',
 
-		// New props (update one time too many rather than one time too few)
-		'sectionId',
-		'sectionIndex',
-		'gridSectionIndex',
-		'componentStateIndex',
 		// 'componentState', // value // by not updating because of a value change, the component avoids updating the dom twice
 		// (once by quill and then again by react causing quill to have to re-build and re-render (this logic is probably not even here.)) 
 	];
@@ -139,7 +127,6 @@ export default class ReactQuillv2 extends React.Component<ReactQuillv2Props, Rea
 	*/
 	static dirtyProps: Partial<ReactQuillv2Props> = [
 		'formats',
-		'bounds',
 		'children', // WIll I use this? 
 		'editorHandlers',
 		'miniToolbarHandlers',
@@ -163,12 +150,10 @@ export default class ReactQuillv2 extends React.Component<ReactQuillv2Props, Rea
 		this.onKeyPress = null
 		this.onKeyDown = null
 		this.onKeyUp = null
-		this.bounds = null // allwas null atm
 		this.formats = null // is this used for toolbar config? // if so, I need to update it!
 		this.placeholder = null
 		this.scrollingContainer = null
 		this.readOnly = false
-		this.tabIndex = null
 		this.theme = "snow"
 		this.handleTextChange = () => {};
 		this.handleSelectionChange = () => {};
@@ -220,7 +205,7 @@ export default class ReactQuillv2 extends React.Component<ReactQuillv2Props, Rea
 	Creates an editor on the given element. The editor will
 	be passed the configuration, have its events bound,
 	*/
-	createEditor = (el: HTMLElement, config: QuillOptionsStatic & {tabIndex: any}) => {
+	createEditor = (el: HTMLElement, config: QuillOptionsStatic) => {
 		var editor = new Quill(el, config) as IQuill;
 		const flashMessage = this.props.flashMessage;
 
@@ -265,9 +250,6 @@ export default class ReactQuillv2 extends React.Component<ReactQuillv2Props, Rea
 			// I want to be able to add my own custom videos...
 		});
 
-		if (config.tabIndex !== undefined) {
-			this.setEditorTabIndex(editor, config.tabIndex);
-		}
 		this.hookEditor(editor);
 		return editor;
 	}
@@ -351,12 +333,6 @@ export default class ReactQuillv2 extends React.Component<ReactQuillv2Props, Rea
 			range.length = Math.max(0, Math.min(range.length, (length-1) - range.index));
 		}
 		editor.setSelection(range);
-	}
-
-	setEditorTabIndex(editor: {editor?: IQuill}, tabIndex: number) { // Why editor.editor?
-		if (editor.editor && editor.editor.scroll && editor.editor.scroll.domNode) {
-			(editor.editor.scroll.domNode as any).tabIndex = tabIndex;
-		}
 	}
 
 	/*
@@ -551,13 +527,11 @@ export default class ReactQuillv2 extends React.Component<ReactQuillv2Props, Rea
 	
 	getEditorConfig(): any {
 		return {
-			bounds:       this.bounds,
 			formats:      this.formats,
 			modules:      this.modules,
 			placeholder:  this.placeholder,
 			readOnly:     this.readOnly,
       		scrollingContainer: this.scrollingContainer,
-			tabIndex:     this.tabIndex,
 			theme:        this.theme,
 		};
 	}
@@ -610,31 +584,6 @@ export default class ReactQuillv2 extends React.Component<ReactQuillv2Props, Rea
 			generation: this.state.generation + 1,
 		});
 	}
-
-	/*
-	Renders an editor area, unless it has been provided one to clone.
-	*/
-	renderEditingArea() {
-		// var self = this;
-		var children = this.children;
-		var preserveWhitespace = this.preserveWhitespace;
-
-		var properties = {
-			key: this.state.generation,
-			tabIndex: this.tabIndex,
-			ref: (element) => { this.editingArea = element },
-		};
-
-		var customElement = React.Children.count(children)
-			? React.Children.only(children)
-			: null;
-		var defaultElement = preserveWhitespace ? DOM.pre : DOM.div;
-		var editingArea = customElement
-			? React.cloneElement(customElement, properties)
-			: defaultElement(properties);
-
-		return editingArea;
-    }
 
 	onEditorChangeText(value, delta, source, editor) {
 		var currentContents = this.getEditorContents(); // the component state
@@ -711,10 +660,8 @@ export default class ReactQuillv2 extends React.Component<ReactQuillv2Props, Rea
 				onKeyPress: this.onKeyPress,
 				onKeyDown: this.onKeyDown,
 				onKeyUp: this.onKeyUp },
-				this.renderEditingArea()
+				<div key={this.state.generation} ref={(element: HTMLDivElement) => { this.editingArea = element }} />
 			)
 		)
 	}
 }  
-
-
