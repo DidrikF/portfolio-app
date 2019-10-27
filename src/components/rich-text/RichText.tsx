@@ -11,72 +11,81 @@ import Quill from 'quill'
 
 import ReactQuillv2 from './react-quill/ReactQuillv2';
 import ReactQuillv2Toolbar from './react-quill/ReactQuillv2Toolbar';
+import { ComponentState } from '../../../types/platform_types';
+import { Id } from '../../../types/basic-types';
+import { IGlobalContext } from '../../App';
 
+export type RichTextProps = {
+    updateComponentState: (componentUpdate: Partial<ComponentState>, sectionIndex: number, gridSectionIndex: number, componentStateIndex: number) => void;
+    sectionIndex: number;
+    gridSectionIndex: number;
+    componentStateIndex: number;
+    id: Id;
+    applyComponentStyles: (sectionIndex: number, gridSectionIndex: number, componentStateIndex: number) => void;
+    componentState: ComponentState;
+    sectionId: Id;
+    miniToolbarHandlers: any; 
+}
 
 // Is it possible to refactor this away?
 export function updateHeightOfVideos() {
-    let videos = document.querySelectorAll("iframe.ql-video")
+    let videos = Array.from(document.querySelectorAll("iframe.ql-video")) as HTMLElement[];
     if (videos.length > 0) {
-        for(let video of videos) {
+        videos.forEach((video) => {
             let videoWidth = video.offsetWidth;
             let videoHeight = videoWidth * (9/16);
             video.style.height = videoHeight + "px";
-        }
-    }
+        });
+    }   
 }
 
-class RichText extends React.Component {
-    constructor(props) {
-        super(props)
-        this.state = {
-
+class RichText extends React.Component<RichTextProps> {
+    editorHandlers = [
+        (quill: Quill) => {
+            quill.once((Quill as any).events.EDITOR_CHANGE, updateHeightOfVideos);
         }
+    ]
 
-        this.editorHandlers = [
-            (quill) => {
-                quill.once(Quill.events.EDITOR_CHANGE, updateHeightOfVideos);
-            }
-        ]
+    constructor(props: RichTextProps) {
+        super(props)
 
-        this.updateComponentState = this.updateComponentState.bind(this);
         this.updateFocus = this.updateFocus.bind(this);
+        this.updateComponentState = this.updateComponentState.bind(this);
         this.handleComponentInputChange = this.handleComponentInputChange.bind(this);
         this.applyComponentStyles = this.applyComponentStyles.bind(this);
         this.updateSelectedClasses = this.updateSelectedClasses.bind(this);
     }
 
-    updateFocus(e) {
-        // e.stopPropagation()
+    updateFocus(event: React.SyntheticEvent) {
         this.context.updateComponentInFocus(this.props.id, this.props.componentStateIndex)
         this.context.setActiveRichTextEditor(this.props.id)
     }
 
     // Passed to quill
-    updateComponentState(newState) {
+    updateComponentState(newState: Partial<ComponentState>) {
         const componentUpdate  = {
             state: newState
         }
         this.props.updateComponentState(componentUpdate, this.props.sectionIndex, this.props.gridSectionIndex, this.props.componentStateIndex)
     }
     
-    handleComponentInputChange(e) {
-        const value = e.target.value
-        const name = e.target.name
+    handleComponentInputChange(event: React.SyntheticEvent<HTMLTextAreaElement, Event> & {target: any}) {
+        const value = event.target.value
+        const name = event.target.name
         const componentUpdate = {
             [name]: value,
         }
-
         this.props.updateComponentState(componentUpdate, this.props.sectionIndex, this.props.gridSectionIndex, this.props.componentStateIndex)
     }
 
-    applyComponentStyles(e) {
+    applyComponentStyles(event: React.SyntheticEvent) {
         this.props.applyComponentStyles(this.props.sectionIndex, this.props.gridSectionIndex, this.props.componentStateIndex)
     }
     
-    updateSelectedClasses(classes) {
+    updateSelectedClasses(classes: string) {
         const componentUpdate = {
             className: classes,
-        }
+        } as Partial<ComponentState>
         this.props.updateComponentState(componentUpdate, this.props.sectionIndex, this.props.gridSectionIndex, this.props.componentStateIndex);
     }
 
@@ -163,6 +172,6 @@ class RichText extends React.Component {
 }
 
 
-RichText.contextType = GlobalContext
+RichText.contextType = GlobalContext;
 
 export default RichText;
