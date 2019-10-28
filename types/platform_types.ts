@@ -38,7 +38,7 @@ export type GridSection = {
     style?: {[key: string]: string};
     className?: string;
     styleInput?: string;
-    coordinates: [number; number];
+    coordinates: [number, number];
     componentStates: ComponentState[];
 } 
 
@@ -61,10 +61,11 @@ export type User = {
 }
 
 export type Template<T extends (Page | Section | GridSection | ComponentState)>  = {
-  owner: import('./basic-types').Email;
-  title: string;
-  type: string;
-  template: T;
+    _id?: string;
+    owner: import('./basic-types').Email;
+    title: string;
+    type: string;
+    template: T;
 }
 
 export type PageTemplate = Template<Page>
@@ -78,7 +79,7 @@ export type FileMetadata = {
     path: string;
 }
 
-export type ImageMetadata {
+export type ImageMetadata = {
     type: string;
     name: string;
     path: string;

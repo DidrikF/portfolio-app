@@ -3,10 +3,12 @@ import ReactDOM from 'react-dom'
 import { find, some, isEqual } from 'lodash'
 import PropTypes  from 'prop-types'
 import DOM from 'react-dom-factories'
+// @ts-ignore
 import Delta from 'quill-delta';
 import axios from "axios"
 
-import Quill, { QuillOptionsStatic, RangeStatic, Sources, SelectionChangeHandler, TextChangeHandler, EditorChangeHandler } from 'quill'; // Is this the import I want, dont I want to use my local copy?
+import { QuillOptionsStatic, RangeStatic, Sources, SelectionChangeHandler, TextChangeHandler, EditorChangeHandler } from 'quill'; // Is this the import I want, dont I want to use my local copy?
+import Quill from './quill/quill';
 import { Id } from '../../../../types/basic-types';
 import { ImageMetadata } from '../../../../types/platform_types';
 import { Message } from '../../../App';
@@ -14,6 +16,7 @@ import { KeyValue } from '../../../../types/basic-types';
 
 type IQuill = Quill & {
 	events: any;
+	getHTML: () => string;
 }
 
 /**
@@ -55,23 +58,20 @@ export type ReactQuillv2Props = {
 	miniToolbarHandlers?: any; // Need to write type;
 	editorHandlers?: any; // need to write type;
 	className?: string;
-	/*
-		
-		onChange: PropTypes.func,
-		//onChangeSelection: PropTypes.func,
-		onFocus: PropTypes.func,
-		onBlur: PropTypes.func,
-		//onKeyPress: PropTypes.func,
-		//onKeyDown: PropTypes.func,
-		//onKeyUp: PropTypes.func,
-		//preserveWhitespace: PropTypes.bool,
-	*/
+	onChange?: Function;
+	onFocus?: Function;
+	onBlur?: Function;
+	onChangeSelection?: Function;	
+	onKeyPress?: (event: React.KeyboardEvent<HTMLDivElement>) => void,
+	onKeyDown?: (event: React.KeyboardEvent<HTMLDivElement>) => void,
+	onKeyUp?: (event: React.KeyboardEvent<HTMLDivElement>) => void,
 }
 
 export type ReactQuillv2State = {
-	value: string;
+	value: string | Delta;
 	generation: number;
 	lastRange: RangeStatic | null;
+	selection: RangeStatic | null;
 }
 
 
@@ -80,9 +80,6 @@ export default class ReactQuillv2 extends React.Component<ReactQuillv2Props, Rea
 	defaultValue: string;
 	style: KeyValue<string>;
 	className: string;
-	onKeyPress: Function | null;
-	onKeyDown: Function | null;
-	onKeyUp: Function | null;
 
 	formats: any; // whitelist of formats to allow in the editor, default is all
 	placeholder: string | null; // 
@@ -94,29 +91,28 @@ export default class ReactQuillv2 extends React.Component<ReactQuillv2Props, Rea
 	handleTextChange: TextChangeHandler;
 	handleSelectionChange: SelectionChangeHandler;
 	handleEditorChange: EditorChangeHandler;
+	onChangeSelection: Function;
 	editor: IQuill | null;
 	lastDeltaChangeSet: any;
-	editingArea: React.Component | null;
+	editingArea: HTMLElement | null;
 
 	quillDelta: Delta | null; // Used to save state between full re-render
 	quillSelection: RangeStatic | null; // Used to save state between full re-render
-
 	
 	/*
 	Changing one of these props should cause a regular update.
 	*/
-	static cleanProps: keyof Partial<ReactQuillv2Props> = [
+	static cleanProps: (keyof Partial<ReactQuillv2Props>)[] = [
 		'enable',
 		'id',
 		'className',
-		'style',
+		'onChange', //'updateComponentState',
 		'onFocus',
 		'onBlur',
-		// 'onChange', //'updateComponentState',
-		// 'onChangeSelection',
-		// 'onKeyPress',
-		// 'onKeyDown',
-		// 'onKeyUp',
+		'onChangeSelection',
+		'onKeyPress',
+		'onKeyDown',
+		'onKeyUp',
 
 		// 'componentState', // value // by not updating because of a value change, the component avoids updating the dom twice
 		// (once by quill and then again by react causing quill to have to re-build and re-render (this logic is probably not even here.)) 
@@ -125,9 +121,7 @@ export default class ReactQuillv2 extends React.Component<ReactQuillv2Props, Rea
 	/*
 	Changing one of these props should cause a full re-render.
 	*/
-	static dirtyProps: Partial<ReactQuillv2Props> = [
-		'formats',
-		'children', // WIll I use this? 
+	static dirtyProps: (keyof Partial<ReactQuillv2Props>)[] = [
 		'editorHandlers',
 		'miniToolbarHandlers',
 	]
@@ -147,9 +141,6 @@ export default class ReactQuillv2 extends React.Component<ReactQuillv2Props, Rea
 		this.defaultValue = "<p>the default value</p>"
 		this.style = {}
 		this.className = ""
-		this.onKeyPress = null
-		this.onKeyDown = null
-		this.onKeyUp = null
 		this.formats = null // is this used for toolbar config? // if so, I need to update it!
 		this.placeholder = null
 		this.scrollingContainer = null
@@ -158,6 +149,7 @@ export default class ReactQuillv2 extends React.Component<ReactQuillv2Props, Rea
 		this.handleTextChange = () => {};
 		this.handleSelectionChange = () => {};
 		this.handleEditorChange = () => {};
+		this.onChangeSelection = () => {};
 		this.editor = null;
 		this.editingArea = null; // selector for the element?
 		this.quillDelta = null;
@@ -169,6 +161,7 @@ export default class ReactQuillv2 extends React.Component<ReactQuillv2Props, Rea
 				? this.props.value
 				: this.defaultValue,
 			lastRange: null,
+			selection: null
 		}
 
         this.modules = {
@@ -192,9 +185,6 @@ export default class ReactQuillv2 extends React.Component<ReactQuillv2Props, Rea
             },
             syntax: true
         }
-
-		// Method this binding
-		this.renderEditingArea = this.renderEditingArea.bind(this)
 
 		// Editing Methods this binding 
 		this.toggleBold = this.toggleBold.bind(this)
@@ -228,7 +218,7 @@ export default class ReactQuillv2 extends React.Component<ReactQuillv2Props, Rea
 					
 					img.addEventListener("click", () => {
 						if (page) page.removeChild(imagePreviewContainer)
-						let range = editor.getSelection(true);
+						let range = editor.getSelection(true) as RangeStatic;
 						editor.updateContents(new Delta()
 							.retain(range.index)
 							.delete(range.length)
@@ -262,22 +252,16 @@ export default class ReactQuillv2 extends React.Component<ReactQuillv2Props, Rea
 		
 		this.handleSelectionChange = (range: RangeStatic, oldRange: RangeStatic, source: Sources) => {
 			if (this.onEditorChangeSelection) {
-				this.onEditorChangeSelection(
-					range, source,
-					unprivilegedEditor
-				);
+				// @ts-ignore
+				this.onEditorChangeSelection(range, source, unprivilegedEditor);
 			}
 		}
 		this.handleTextChange = (delta: Delta, oldDelta: Delta, source: Sources) => {
 			if (this.onEditorChangeText) {
-				this.onEditorChangeText(
-					editor.root.innerHTML, delta, source,
-					unprivilegedEditor
-				);
-				this.onEditorChangeSelection(
-					editor.getSelection(), source,
-					unprivilegedEditor
-				);
+				//  @ts-ignore
+				this.onEditorChangeText(editor.root.innerHTML, delta, source, unprivilegedEditor);
+				// @ts-ignore				
+				this.onEditorChangeSelection(editor.getSelection(), source, unprivilegedEditor);
 			}
 		}
 
@@ -303,7 +287,7 @@ export default class ReactQuillv2 extends React.Component<ReactQuillv2Props, Rea
 		editor.off('editor-change', this.handleEditorChange);
 	}
 
-	setEditorReadOnly(editor: IQuill, value: boolean) {
+	setEditorReadOnly(editor: IQuill, value: boolean | undefined) {
 		value? editor.disable()
 		     : editor.enable();
 	}
@@ -314,7 +298,7 @@ export default class ReactQuillv2 extends React.Component<ReactQuillv2Props, Rea
 	the cursor won't move.
 	*/
 	setEditorContents(editor: IQuill, value: string) {
-		var sel = editor.getSelection();
+		var sel = editor.getSelection() as RangeStatic;
 
 		if (typeof value === 'string') {
 			editor.setContents(editor.clipboard.convert(value));
@@ -325,14 +309,14 @@ export default class ReactQuillv2 extends React.Component<ReactQuillv2Props, Rea
 		if (sel && editor.hasFocus()) this.setEditorSelection(editor, sel);
 	}
 
-	setEditorSelection(editor: IQuill, range: RangeStatic) {
+	setEditorSelection(editor: IQuill, range: RangeStatic | null) {
 		if (range) {
 			// Validate bounds before applying.
 			var length = editor.getLength();
 			range.index = Math.max(0, Math.min(range.index, length-1));
 			range.length = Math.max(0, Math.min(range.length, (length-1) - range.index));
+			editor.setSelection(range);
 		}
-		editor.setSelection(range);
 	}
 
 	/*
@@ -340,15 +324,15 @@ export default class ReactQuillv2 extends React.Component<ReactQuillv2Props, Rea
 	exposes read-only accessors found on the editor instance,
 	without any state-modificating methods.
 	*/
-	makeUnprivilegedEditor(editor) {
-		var e = editor;
+	makeUnprivilegedEditor(editor: Quill) {
 		return {
-			getLength:    function(){ return e.getLength.apply(e, arguments); },
-			getText:      function(){ return e.getText.apply(e, arguments); },
-			getHTML:      function(){ return e.root.innerHTML },
-			getContents:  function(){ return e.getContents.apply(e, arguments); },
-			getSelection: function(){ return e.getSelection.apply(e, arguments); },
-			getBounds:    function(){ return e.getBounds.apply(e, arguments); },
+			getLength:    function(){ return editor.getLength.apply(editor, []); },
+			getText:      function(){ return editor.getText.apply(editor, []); },
+			getHTML:      function(){ return editor.root.innerHTML },
+			getContents:  function(){ return editor.getContents.apply(editor, []); },
+			// @ts-ignore
+			getSelection: function(){ return editor.getSelection.apply(editor, [false]); },
+			getBounds:    function(){ return editor.getBounds.apply(editor, [0]); },
 		};
 	}
 
@@ -403,7 +387,7 @@ export default class ReactQuillv2 extends React.Component<ReactQuillv2Props, Rea
 
 		// If we need to regenerate the component, we can avoid a detailed
 		// in-place update step, and just let everything rerender.
-		if (this.shouldComponentRegenerate(nextProps, nextState)) {
+		if (this.shouldComponentRegenerate(nextProps)) {
 			return this.regenerate();
 		}
 	}
@@ -427,8 +411,11 @@ export default class ReactQuillv2 extends React.Component<ReactQuillv2Props, Rea
 
 	// OBS: This is where custom handlers are registered!
 	componentDidMount() {
+		const editingArea = this.getEditingArea() as HTMLElement | null;
+		if (!editingArea) return;
+
 		this.editor = this.createEditor(
-			this.getEditingArea(),
+			editingArea,
 			this.getEditorConfig()
 		);
 			
@@ -445,7 +432,7 @@ export default class ReactQuillv2 extends React.Component<ReactQuillv2Props, Rea
 		// this allows the react component to listen for events in quill
 		// but it is still a problem to edit quill based on react events.
 		if (this.props.editorHandlers) {
-			this.props.editorHandlers.forEach(handler => {
+			this.props.editorHandlers.forEach((handler: any) => {
 				handler(this.editor)
 			})
 		}
@@ -480,7 +467,6 @@ export default class ReactQuillv2 extends React.Component<ReactQuillv2Props, Rea
 	}
 
 	shouldComponentUpdate(nextProps: ReactQuillv2Props, nextState: ReactQuillv2State) {
-		// console.log("shouldComponentUpdate: ", nextProps.enable, this.props.enable )
 		if (nextProps.enable !== this.props.enable) {
 			if (this.editor) this.editor.enable(nextProps.enable)
 		}
@@ -491,7 +477,7 @@ export default class ReactQuillv2 extends React.Component<ReactQuillv2Props, Rea
 		}
 		
 		// Compare props that require React updating the DOM.
-		return some(this.cleanProps, (prop) => {
+		return some(ReactQuillv2.cleanProps, (prop: keyof ReactQuillv2Props) => {
 			// Note that `isEqual` compares deeply, making it safe to perform
 			// non-immutable updates, at the cost of performance.
 			// need to see if the context was updated
@@ -499,9 +485,9 @@ export default class ReactQuillv2 extends React.Component<ReactQuillv2Props, Rea
 		});
 	}
 
-	shouldComponentRegenerate(nextProps, nextState) {
+	shouldComponentRegenerate(nextProps: ReactQuillv2Props) {
 		// Whenever a `dirtyProp` changes, the editor needs reinstantiation.
-		return some(this.dirtyProps, (prop) => {
+		return some(ReactQuillv2.dirtyProps, (prop: keyof ReactQuillv2Props) => {
 			// Note that `isEqual` compares deeply, making it safe to perform
 			// non-immutable updates, at the cost of performance.
 			return !isEqual(nextProps[prop], this.props[prop]);
@@ -512,13 +498,13 @@ export default class ReactQuillv2 extends React.Component<ReactQuillv2Props, Rea
 	If we could not update settings from the new props in-place, we have to tear
 	down everything and re-render from scratch.
 	*/
-	componentWillUpdate(nextProps, nextState) {
+	componentWillUpdate(_: ReactQuillv2Props, nextState: ReactQuillv2State) {
 		if (this.state.generation !== nextState.generation) {
 			this.componentWillUnmount();
 		}
 	}
 
-	componentDidUpdate(prevProps, prevState) {
+	componentDidUpdate(_: ReactQuillv2Props, prevState: ReactQuillv2State) {
 		if (this.state.generation !== prevState.generation) {
 			this.componentDidMount();
 		}
@@ -540,29 +526,29 @@ export default class ReactQuillv2 extends React.Component<ReactQuillv2Props, Rea
 		return this.editor;
 	}
 
-	getEditingArea() {
-		return ReactDOM.findDOMNode(this.editingArea);
+	getEditingArea(): Element | null {
+		return ReactDOM.findDOMNode(this.editingArea) as Element | null;
 	}
 
-	getEditorContents() {
+	getEditorContents(): string {
 		return this.state.value;
 	}
 
-	getEditorSelection() {
+	getEditorSelection(): RangeStatic | null {
 		return this.state.selection;
 	}
 
 	/*
 	True if the value is a Delta instance or a Delta look-alike.
 	*/
-	isDelta(value) {
+	isDelta(value: any) {
 		return value && value.ops;
     }
     
 	/*
 	Special comparison function that knows how to compare Deltas.
 	*/
-	isEqualValue(value, nextValue) {
+	isEqualValue(value: Delta, nextValue: Delta) {
 		if (this.isDelta(value) && this.isDelta(nextValue)) {
 			return isEqual(value.ops, nextValue.ops);
 		} else {
@@ -578,21 +564,21 @@ export default class ReactQuillv2 extends React.Component<ReactQuillv2Props, Rea
 		// Cache selection and contents in Quill's native format to be restored later
 		if (this.editor) {
 			this.quillDelta = this.editor.getContents();
-			this.quillSelection = this.editor.getSelection();
+			this.quillSelection = this.editor.getSelection() as RangeStatic;
 		}
 		this.setState({
 			generation: this.state.generation + 1,
 		});
 	}
 
-	onEditorChangeText(value, delta, source, editor) {
+	onEditorChangeText(value: string, delta: Delta, source: Sources, editor: IQuill) {
 		var currentContents = this.getEditorContents(); // the component state
 
 		// We keep storing the same type of value as what the user gives us,
 		// so that value comparisons will be more stable and predictable.
 		var nextContents = this.isDelta(currentContents)
 			? editor.getContents()
-			: editor.getHTML(); // 
+			: editor.getHTML();
 		
 		if (!this.isEqualValue(nextContents, currentContents)) {
 			// Taint this `delta` object, so we can recognize whether the user
@@ -608,7 +594,7 @@ export default class ReactQuillv2 extends React.Component<ReactQuillv2Props, Rea
 		}
 	}
 
-	onEditorChangeSelection(nextSelection, source, editor) {
+	onEditorChangeSelection(nextSelection: RangeStatic | null, source: Sources, editor: IQuill) {
 		var currentSelection = this.getEditorSelection();
 		var hasGainedFocus = !currentSelection && nextSelection;
 		var hasLostFocus = currentSelection && !nextSelection;
@@ -631,11 +617,11 @@ export default class ReactQuillv2 extends React.Component<ReactQuillv2Props, Rea
 	}
 
 	focus() {
-		this.editor.focus();
+		if (this.editor) this.editor.focus();
 	}
 
 	blur() {
-		this.setEditorSelection(this.editor, null);
+		if (this.editor) this.setEditorSelection(this.editor, null);
 	}
 
 
@@ -644,24 +630,24 @@ export default class ReactQuillv2 extends React.Component<ReactQuillv2Props, Rea
 	
 	//__________________Custom Editing Methods____________________
 	toggleBold() { // Is this just an example?
-        let quill = this.rqRef.getEditor()
-        quill.format('bold', true); // need access to the quill instance...
+        // let quill = this.rqRef.getEditor()
+        // quill.format('bold', true); // need access to the quill instance...
 	}
 
 
     render() {
-
-		return ( // THE EDITOR (maybe make more of these props?)
-			DOM.div({
-				id: this.props.id,
-				style: this.style,
-				key: this.state.generation,
-				className: ['quill'].concat(this.className).join(' '),
-				onKeyPress: this.onKeyPress,
-				onKeyDown: this.onKeyDown,
-				onKeyUp: this.onKeyUp },
-				<div key={this.state.generation} ref={(element: HTMLDivElement) => { this.editingArea = element }} />
-			)
+		return (
+			<div 
+				key={this.state.generation} 
+				ref={(element: HTMLDivElement) => { this.editingArea = element }} 
+				id={this.props.id}
+				style={this.style}
+				className={['quill'].concat(this.className).join(' ')}
+				onKeyUp={this.props.onKeyUp}
+				onKeyPress={this.props.onKeyPress}
+				onKeyDown={this.props.onKeyDown}
+			
+			/>			
 		)
 	}
 }  

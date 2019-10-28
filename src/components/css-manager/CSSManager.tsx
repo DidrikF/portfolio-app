@@ -30,7 +30,7 @@ interface CSSAttribute {
 }
 
 export interface CSSManagerProps {
-  styleSheetRef: any[], 
+  styleSheetRef: React.Ref<HTMLStyleElement>, 
   updateApplicationStyles: (x: Partial<>) => something, 
   closeCSSM: () => something,
   style: any

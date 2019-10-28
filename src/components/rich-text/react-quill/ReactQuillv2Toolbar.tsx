@@ -1,83 +1,31 @@
 import React from 'react'; 
 import ReactDOMServer from 'react-dom/server'
 import { find, isEqual } from 'lodash'
-import PropTypes from 'prop-types'
 import DOM from 'react-dom-factories'
-import Quill from 'quill'
+import { Id, KeyValue } from '../../../../types/basic-types';
+import { ToolbarItem } from '../quill-toolbar-config';
 
-// import Quill from './quill/quill'
-
-var defaultColors = [
-	'rgb(  0,   0,   0)', 'rgb(230,   0,   0)', 'rgb(255, 153,   0)',
-	'rgb(255, 255,   0)', 'rgb(  0, 138,   0)', 'rgb(  0, 102, 204)',
-	'rgb(153,  51, 255)', 'rgb(255, 255, 255)', 'rgb(250, 204, 204)',
-	'rgb(255, 235, 204)', 'rgb(255, 255, 204)', 'rgb(204, 232, 204)',
-	'rgb(204, 224, 245)', 'rgb(235, 214, 255)', 'rgb(187, 187, 187)',
-	'rgb(240, 102, 102)', 'rgb(255, 194, 102)', 'rgb(255, 255, 102)',
-	'rgb(102, 185, 102)', 'rgb(102, 163, 224)', 'rgb(194, 133, 255)',
-	'rgb(136, 136, 136)', 'rgb(161,   0,   0)', 'rgb(178, 107,   0)',
-	'rgb(178, 178,   0)', 'rgb(  0,  97,   0)', 'rgb(  0,  71, 178)',
-	'rgb(107,  36, 178)', 'rgb( 68,  68,  68)', 'rgb( 92,   0,   0)',
-	'rgb(102,  61,   0)', 'rgb(102, 102,   0)', 'rgb(  0,  55,   0)',
-	'rgb(  0,  41, 102)', 'rgb( 61,  20,  10)',
-].map(function(color){ return { value: color } });
-
-
-var defaultItems = [
-	{ label:'Formats', type:'group', items: [
-		{ label:'Font', type:'font', items: [
-			{ label:'Sans Serif',  value:'sans-serif', selected:true },
-			{ label:'Serif',       value:'serif' },
-			{ label:'Monospace',   value:'monospace' }
-		]},
-		{ label:'Size', type:'size', items: [
-			{ label:'Small',  value:'10px' },
-			{ label:'Normal', value:'13px', selected:true },
-			{ label:'Large',  value:'18px' },
-			{ label:'Huge',   value:'32px' }
-		]},
-		{ label:'Alignment', type:'align', items: [
-			{ label:'', value:'', selected:true },
-			{ label:'', value:'center' },
-			{ label:'', value:'right' },
-			{ label:'', value:'justify' }
-		]}
-	]},
-
-	{ label:'Text', type:'group', items: [
-		{ type:'bold', label:'Bold' },
-		{ type:'italic', label:'Italic' },
-		{ type:'strike', label:'Strike' },
-		{ type:'underline', label:'Underline' },
-		{ type:'color', label:'Color', items:defaultColors },
-		{ type:'background', label:'Background color', items:defaultColors },
-		{ type:'link', label:'Link' }
-	]},
-
-	{ label:'Blocks', type:'group', items: [
-		{ type:'list', value:'bullet' },
-		{ type:'list', value:'ordered' }
-	]},
-
-	{ label:'Blocks', type:'group', items: [
-		{ type:'image', label:'Image' }
-	]}
-
-];
 
 // var icons = Quill.import('ui/icons');
 // icons['bold'] = '<i class="fa fa-bold" aria-hidden="true"></i>';
 // icons['sideImage'] = '<i class="fa fa-image" aria-hidden="true"></i>'; // can investigate this solution further, but I have a workaroud in css.
 
+export type ReactQuillv2ToolbarProps = {
+	id: Id;
+	className?: string;
+	style?: KeyValue<string>;
+	items: ToolbarItem[];
+	theme?: string;
+}
 
-export default class ReactQuillv2Toolbar extends React.Component {
-    constructor(props) {
+export default class ReactQuillv2Toolbar extends React.Component<ReactQuillv2ToolbarProps> {
+
+    constructor(props: ReactQuillv2ToolbarProps) {
         super(props)
 
         this.renderItem = this.renderItem.bind(this)
         this.getClassName = this.getClassName.bind(this)
     }
-
 
 	componentDidMount() {
 		console.warn(
@@ -87,21 +35,21 @@ export default class ReactQuillv2Toolbar extends React.Component {
 		);
 	}
 
-	shouldComponentUpdate(nextProps, nextState) {
+	shouldComponentUpdate(nextProps: ReactQuillv2ToolbarProps) {
 		return !isEqual(nextProps, this.props);
 	}
 
     // looks like I can just repalce all the rendering code with  my own toolbar, and just remember to use
     // the same class names as quill expects. 
-	renderGroup(item, key) {
+	renderGroup(item: ToolbarItem, key: number): JSX.Element {
 		return DOM.span({
 			key: item.label || key,
 			className:'ql-formats' },
-			item.items.map(this.renderItem)
+			(item.items as ToolbarItem[]).map(this.renderItem)
 		);
 	}
 
-	renderChoiceItem(item, key) {
+	renderChoiceItem(item: ToolbarItem, key: number): JSX.Element {
 		return DOM.option({
 			key: item.label || item.value || key,
 			value: item.value },
@@ -109,8 +57,8 @@ export default class ReactQuillv2Toolbar extends React.Component {
 		);
     }
     
-	renderChoices(item, key) {
-		var choiceItems = item.items.map(this.renderChoiceItem);
+	renderChoices(item: ToolbarItem, key: number): JSX.Element {
+		var choiceItems = (item.items as ToolbarItem[]).map(this.renderChoiceItem);
 		var selectedItem = find(item.items, function(item){ return item.selected });
 		var attrs = {
 			key: item.label || key,
@@ -121,7 +69,7 @@ export default class ReactQuillv2Toolbar extends React.Component {
 		return DOM.select(attrs, choiceItems);
 	}
 
-	renderButton(item, key) {
+	renderButton(item: ToolbarItem, key: number): JSX.Element {
 		return DOM.button({
 			type: 'button',
 			key: item.label || item.value || key,
@@ -132,7 +80,7 @@ export default class ReactQuillv2Toolbar extends React.Component {
 		);
     }
     
-	renderAction(item, key) {
+	renderAction(item: ToolbarItem, key: number): JSX.Element {
 		return DOM.button({
 			key: item.label || item.value || key,
 			className: 'ql-'+item.type,
@@ -142,7 +90,7 @@ export default class ReactQuillv2Toolbar extends React.Component {
 	}
 
 	/* jshint maxcomplexity: false */
-	renderItem(item, key) {
+	renderItem(item: ToolbarItem, key: number) {
 		switch (item.type) {
 			case 'group':
 				return this.renderGroup(item, key);
@@ -184,16 +132,5 @@ export default class ReactQuillv2Toolbar extends React.Component {
 			dangerouslySetInnerHTML: { __html:html }
 		});
 	}
-
 }
 
-ReactQuillv2Toolbar.defaultProps = {
-    items: defaultItems
-};
-
-ReactQuillv2Toolbar.propTypes = {
-    id:        PropTypes.string,
-    className: PropTypes.string,
-    style:     PropTypes.object,
-    items:     PropTypes.array
-}

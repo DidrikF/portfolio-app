@@ -4,9 +4,9 @@ import { GlobalContext } from '../../contexts/GlobalContext'
 import RichTextToolbarPortal from './RichTextToolbarPortal';
 import PageToolbarPortal from './PageToolbarPortal'
 import ClassSelector from '../css-manager/ClassSelector';
-import { quillItems } from './quil-toobar-config'
+import { quillItems } from './quill-toolbar-config'
 
-import _ from './react-quill/quill-extensions' // Evaluate the module
+import * as _ from './react-quill/quill-extensions' // Evaluate the module
 import Quill from 'quill'
 
 import ReactQuillv2 from './react-quill/ReactQuillv2';
@@ -145,22 +145,12 @@ class RichText extends React.Component<RichTextProps> {
 
                     
                     <ReactQuillv2 
-                        enable={this.context.editing ? true : false}
-                        sectionId={this.props.sectionId}
+                        value={this.props.componentState.state} 
                         id={this.props.id}
                         flashMessage={this.context.flashMessage}
-                        // Pass in reference to PageToolbarPortal?
-
-
-                        /**might not need */
-                        sectionIndex={this.props.sectionIndex}
-                        gridSectionIndex={this.props.gridSectionIndex}
-                        componentStateIndex={this.props.componentStateIndex}
-                        
+                        enable={this.context.editing ? true : false}
                         editorHandlers={this.editorHandlers} // does not respond to updates, this is dirty
-                        miniToolbarHandlers={this.miniToolbarHandlers}
-
-                        value={this.props.componentState.state} 
+                        miniToolbarHandlers={this.props.miniToolbarHandlers}
                         onChange={this.updateComponentState} // need to wrap this and make it called onChange
                     />
 

@@ -1,13 +1,25 @@
 
-import React from 'react';
+import React, { ChangeEvent } from 'react';
 import axios from 'axios';
 import { GlobalContext } from '../../contexts/GlobalContext'  
 
 import localforage from 'localforage'
 
+export type LoginProps = {
+    setAuthenticated: (value: boolean) => void;
+    setShowLogin: (value: boolean) => void;
+    loadProtectedData: () => void;
+}
 
-class Login extends React.Component {
-    constructor(props) {
+export type LoginState = {
+    email: string;
+    password: string;
+}
+
+class Login extends React.Component<LoginProps, LoginState> {
+    static contextType = GlobalContext
+    
+    constructor(props: LoginProps) {
         super(props)
         this.state = {
             email: '',
@@ -15,20 +27,18 @@ class Login extends React.Component {
         }
         this.handle_input_change = this.handle_input_change.bind(this)
         this.handle_submit = this.handle_submit.bind(this)
-
     }
 
-    handle_input_change(event) {
-        const target = event.target;
-        const value = target.type === 'checkbox' ? target.checked : target.value;
-        const name = target.name;
+    handle_input_change(event: React.ChangeEvent<HTMLInputElement> & {target: { type: string, checked: any , value: any, name: string}}) {
+        const value = event.target.type === 'checkbox' ? event.target.checked : event.target.value;
+        const name = event.target.name;
 
         this.setState({
             [name]: value
-        });
+        } as any);
     }
 
-    handle_submit(event) {
+    handle_submit(event: React.SyntheticEvent) {
         event.preventDefault()
         axios.post('/login', {
             email: this.state.email,
@@ -44,7 +54,7 @@ class Login extends React.Component {
             this.props.loadProtectedData();
             
             
-        }).catch(error => {
+        }).catch(() => {
             this.context.flashMessage({text: "Failed to login", type: "error"}, 3)
 
         })
@@ -53,7 +63,7 @@ class Login extends React.Component {
     render() {
         return (
             <form className="Login__container" onSubmit={this.handle_submit}>
-                <button className="Auth__close-button" onClick={(e) => { this.props.setShowLogin(false) }}><i className="material-icons">clear</i></button>
+                <button className="Auth__close-button" onClick={() => { this.props.setShowLogin(false) }}><i className="material-icons">clear</i></button>
                 <h3>Login Form</h3>
                 <div className='Auth__formgroup'>
                     <label className='Auth__label'>
@@ -72,8 +82,5 @@ class Login extends React.Component {
         )
     }
 }
-
-
-Login.contextType = GlobalContext
 
 export default Login;

@@ -1,7 +1,7 @@
 import React, { Key } from 'react'
 import axios from 'axios'
 import update from 'immutability-helper';
-import { Route, HashRouter } from "react-router-dom"; 
+import { Route, HashRouter, RouteProps } from "react-router-dom"; 
 
 import localforage from 'localforage'
 import _ from 'lodash'
@@ -60,9 +60,9 @@ export type Message = {
 }
 
 export type AppState = {
-    styleSheetRef: React.RefObject<StyleSheet>,
+    styleSheetRef: React.RefObject<HTMLStyleElement>,
     scrollableHeight: number,
-    sideNavigationStyle: KeyValue<string>,
+    sideNavigationStyle: KeyValue<string>,  
     CSSMStyle: KeyValue<string>,
     mainContentStyle: KeyValue<string>,
     gridLayouts: import('./components/core/grid').GridLayouts,
@@ -99,52 +99,57 @@ export type IGlobalContext = {
 }
 
 class App extends React.Component<null, AppState> {
-    state: AppState = {
-        styleSheetRef: React.createRef(),
-        scrollableHeight: 0,
-        sideNavigationStyle: {
-            width: "0px"
-        },
-        CSSMStyle: {
-            width: "0px",
-        },
-        mainContentStyle: {
-            marginLeft: "0px",
-            marginRight: "0px",
-        },
-        gridLayouts: gridLayouts,
-        defaultGridLayout: 'oneColumn',
-        defaultSectionPadding: '0px',
-        messages: [],
-        user: {},
-        pages: [],
-        activePage: "",
-        templates: [],
+    
+    constructor(props: null) {
+        super(props);
 
-        globalContextObj: {
-            cssDocument: [],
-            pathPrefix: '',
-            toggleEdit: this.toggleEdit,
-            editing: -1,
-            setActiveRichTextEditor: this.setActiveRichTextEditor,
-            activeRichTextEditor: '', 
-            
-            updateSectionInFocus: this.updateSectionInFocus, 
-            sectionInFocus: '',
-            sectionInFocusIndex: -1,
-            
-            updateGridSectionInFocus: this.updateGridSectionInFocus,
-            gridSectionInFocus: '',
-            gridSectionInFocusIndex: -1,
-
-            updateComponentInFocus: this.updateComponentInFocus,
-            componentInFocus: '',
-            componentInFocusIndex: -1, 
-
-            enableSpacing: false,
-
-            authenticated: false,
-            flashMessage: this.flashMessage,
+        this.state = {
+            styleSheetRef: React.createRef(),
+            scrollableHeight: 0,
+            sideNavigationStyle: {
+                width: "0px"
+            },
+            CSSMStyle: {
+                width: "0px",
+            },
+            mainContentStyle: {
+                marginLeft: "0px",
+                marginRight: "0px",
+            },
+            gridLayouts: gridLayouts,
+            defaultGridLayout: 'oneColumn',
+            defaultSectionPadding: '0px',
+            messages: [],
+            user: {},
+            pages: [],
+            activePage: "",
+            templates: [],
+    
+            globalContextObj: {
+                cssDocument: [],
+                pathPrefix: '',
+                toggleEdit: this.toggleEdit,
+                editing: -1,
+                setActiveRichTextEditor: this.setActiveRichTextEditor,
+                activeRichTextEditor: '', 
+                
+                updateSectionInFocus: this.updateSectionInFocus, 
+                sectionInFocus: '',
+                sectionInFocusIndex: -1,
+                
+                updateGridSectionInFocus: this.updateGridSectionInFocus,
+                gridSectionInFocus: '',
+                gridSectionInFocusIndex: -1,
+    
+                updateComponentInFocus: this.updateComponentInFocus,
+                componentInFocus: '',
+                componentInFocusIndex: -1, 
+    
+                enableSpacing: false,
+    
+                authenticated: false,
+                flashMessage: this.flashMessage,
+            }
         }
     }
 
@@ -590,7 +595,7 @@ class App extends React.Component<null, AppState> {
  
     // #REFACTOR: use a switch statement instead... Extract code to make different components.
     addComponent = (componentType: string, template: ComponentTemplate) => {
-        this.setState(state => {
+        this.setState<any>((state: AppState): Partial<AppState> | undefined => {
             let { sectionInFocusIndex, gridSectionInFocusIndex, componentInFocusIndex} = this.state.globalContextObj
             
             if ((sectionInFocusIndex === -1) || (gridSectionInFocusIndex === -1)) {
@@ -599,15 +604,15 @@ class App extends React.Component<null, AppState> {
             if (componentInFocusIndex === -1) {
                 componentInFocusIndex = 0
             }
-            let newComponent;
+            let newComponent: ComponentState | undefined = undefined;
 
             if (componentType === 'rich text') {
                 newComponent = {
                     id: getId(),
+                    type: 'rich text',
                     style: {},
                     className: "",
                     styleInput: "",
-                    type: 'rich text',
                     state: "<div>Rich text...</div>"
                 }
             } else if (componentType === 'image') {
@@ -616,17 +621,21 @@ class App extends React.Component<null, AppState> {
                 console.log("Template for component creation: ", template); 
                 newComponent = {
                     id: getId(),
+                    type: template.template.type,
                     style: template.template.style || {},
                     className: template.template.className || "",
                     styleInput: "",
-                    type: template.template.type,
                     state: template.template.state,
                 }
             }
-            state.pages[state.globalContextObj.editing].sections[sectionInFocusIndex].gridSections[gridSectionInFocusIndex].componentStates.splice(componentInFocusIndex + 1, 0, newComponent)
-            return {
-                pages: state.pages
+
+            if (newComponent) {
+                state.pages[state.globalContextObj.editing].sections[sectionInFocusIndex].gridSections[gridSectionInFocusIndex].componentStates.splice(componentInFocusIndex + 1, 0, newComponent)
+                return {
+                    pages: state.pages
+                }
             }
+            return undefined;
         })
     }
 
@@ -883,14 +892,16 @@ class App extends React.Component<null, AppState> {
 
     // OBS: does not look right
     setScrollableHeight = () => {
-        const userInfoElement: HTMLElement = document.getElementById("SN__user-info");
-        const accountInfoElement: HTMLElement = document.getElementById("SN__account-info")
+        const userInfoElement = document.getElementById("SN__user-info");
+        const accountInfoElement = document.getElementById("SN__account-info")
         const documentHeight = document.documentElement.clientHeight
-        const scrollableHeight = documentHeight - userInfoElement.offsetHeight - accountInfoElement.offsetHeight
-
-        this.setState({
-            scrollableHeight: scrollableHeight
-        })
+        if (userInfoElement && accountInfoElement) {
+            const scrollableHeight = documentHeight - userInfoElement.offsetHeight - accountInfoElement.offsetHeight
+    
+            this.setState({
+                scrollableHeight: scrollableHeight
+            })
+        }
     }
     
     // #REFACTOR: more data loading here?
@@ -1023,7 +1034,7 @@ class App extends React.Component<null, AppState> {
                             {
                                 this.state.pages.map((page, pageIndex) => {
                                     return (
-                                        <Route key={page.id} exact path={page.path} render={(props) => <Page {
+                                        <Route key={page.id} exact path={page.path} render={(props: RouteProps) => <Page {
                                             ...props}
                                             id={page.id}
                                             pageIndex={pageIndex}
@@ -1058,9 +1069,9 @@ class App extends React.Component<null, AppState> {
                             }
                             { this.state.globalContextObj.authenticated &&
                                 <React.Fragment>
-                                    <Route exact path="/image-uploader" render={(props) => <ImageUploader {...props} flashMessage={this.flashMessage} />} />
-                                    <Route exact path="/file-uploader" render={(props) => <FileUploader {...props} flashMessage={this.flashMessage} />} />
-                                    <Route exact path="/account" render={(props) => <AccountPage {...props} flashMessage={this.flashMessage} />} />
+                                    <Route exact path="/image-uploader" render={(props: RouteProps) => <ImageUploader {...props} flashMessage={this.flashMessage} />} />
+                                    <Route exact path="/file-uploader" render={(props: RouteProps) => <FileUploader {...props} flashMessage={this.flashMessage} />} />
+                                    <Route exact path="/account" render={(props: RouteProps) => <AccountPage {...props} flashMessage={this.flashMessage} />} />
                                 </React.Fragment>
                             }
 

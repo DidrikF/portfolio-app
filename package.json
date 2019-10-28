@@ -90,6 +90,7 @@
     "@types/react-cropper": "^0.10.6",
     "@types/react-dom": "^16.9.1",
     "@types/react-dom-factories": "^1.0.2",
+    "@types/react-router-dom": "^5.1.0",
     "@types/uuid": "^3.4.5",
     "node-sass": "^4.12.0",
     "npm-watch": "^0.6.0",
