@@ -1,4 +1,4 @@
-import { Item, ICSSDocument } from "./CSSManager";
+import { CSSItem, ICSSDocument } from "./CSSManager";
 
 export const mediaQueries = {
     mobile: "",
@@ -6,13 +6,13 @@ export const mediaQueries = {
     desktop: "@media only screen and (min-width: 1000px) "
 }
 
-export function combineCssDocuments(cssDocuments: ICSSDocument[]): Item[] {
-    return cssDocuments.reduce((combined: Item[], doc: ICSSDocument) => {
+export function combineCssDocuments(cssDocuments: ICSSDocument[]): CSSItem[] {
+    return cssDocuments.reduce((combined: CSSItem[], doc: ICSSDocument) => {
         return [...combined, ...doc.items]
     }, []);
 }
 
-export function itemsToCss(items: Item[], baseIndentation: string) {
+export function itemsToCss(items: CSSItem[], baseIndentation: string) {
     const attributeIndentation = baseIndentation + "\t";
     let css = ""; 
     items.forEach(item => {
@@ -25,7 +25,7 @@ export function itemsToCss(items: Item[], baseIndentation: string) {
     return css;
 }
 
-export function cssDocumentToString(combinedCssDocument: Item[]) {
+export function cssDocumentToString(combinedCssDocument: CSSItem[]) {
     let css = ""; 
 
     // sort based on media query

@@ -1,10 +1,27 @@
 import React from 'react'
 import axios from 'axios';
-import { SketchPicker } from 'react-color'
+import { SketchPicker, ColorResult } from 'react-color'
+
+import { ColorPallet } from '../../../types/platform_types';
+import { Message } from '../../App';
+
+export type ColorManagerProps = {
+    flashMessage: (message: Message, duration: number) => void;
+}
 
 
-class ColorManager extends React.Component {
-    constructor(props) {
+export type ColorManagerState = {
+    colorPallets: ColorPallet[]; 
+    editing: boolean;
+    activePallet: number;
+    activeColor: number;
+    showColorPicker: boolean;
+    colorPickerColor: string;
+    colorPickerState: any;
+}
+
+class ColorManager extends React.Component<ColorManagerProps, ColorManagerState> {
+    constructor(props: ColorManagerProps) {
         super(props)
         
         this.state = {
@@ -30,7 +47,7 @@ class ColorManager extends React.Component {
     }
 
     toggleEditing() {
-        this.setState((state, props) => {
+        this.setState<any>((state: ColorManagerState): Partial<ColorManagerState> => {
             if (state.editing === true) {
                 return {
                     activePallet: -1,
@@ -47,7 +64,7 @@ class ColorManager extends React.Component {
         })
     }
 
-    chooseColorHandler(e, colorPalletIndex, colorIndex) {
+    chooseColorHandler(event: React.MouseEvent<HTMLElement>, colorPalletIndex: number, colorIndex: number) {
         // open the pallet (with add button)
         this.setState({
             activePallet: colorPalletIndex,
@@ -56,8 +73,8 @@ class ColorManager extends React.Component {
         })
     }
 
-    handleColorChange(color) {
-        this.setState((state, props) => {
+    handleColorChange(color: ColorResult) {
+        this.setState((state) => {
             if ((state.activePallet >= 0) && (state.activeColor >= 0)) {
                 state.colorPallets[state.activePallet][state.activeColor]["hex"] = color.hex
             }
@@ -70,8 +87,8 @@ class ColorManager extends React.Component {
         })
     }
 
-    addColor(colorPalletIndex) {
-        this.setState((state, props) => {
+    addColor(colorPalletIndex: number) {
+        this.setState((state) => {
             const color = {
                 hex: "#000",
             }
@@ -86,8 +103,8 @@ class ColorManager extends React.Component {
         })
     }
 
-    deleteColor(colorPalletIndex, colorIndex) {
-        this.setState((state, props) => {
+    deleteColor(colorPalletIndex: number, colorIndex: number) {
+        this.setState((state) => {
             state.colorPallets[colorPalletIndex].splice(colorIndex, 1)
             return {
                 colorPallets: state.colorPallets,
@@ -96,8 +113,8 @@ class ColorManager extends React.Component {
     }
 
     addColorPallet() {
-        this.setState((state, props) => {
-            const colorPallet = []
+        this.setState((state) => {
+            const colorPallet: ColorPallet = [];
             state.colorPallets.push(colorPallet)
             return {
                 colorPallets: state.colorPallets,
@@ -105,8 +122,8 @@ class ColorManager extends React.Component {
         })
     }
 
-    deleteColorPallet(colorPalletIndex) {
-        this.setState((state, props) => {
+    deleteColorPallet(colorPalletIndex: number) {
+        this.setState((state) => {
             state.colorPallets.splice(colorPalletIndex, 1)
             return {
                 colorPallets: state.colorPallets,
@@ -114,7 +131,7 @@ class ColorManager extends React.Component {
         })
     }
 
-    clickCopyHandler(colorPalletIndex, colorIndex) {
+    clickCopyHandler(colorPalletIndex: number, colorIndex: number) {
         const color = this.state.colorPallets[colorPalletIndex][colorIndex].hex
         navigator.clipboard.writeText(color).then(() => {
             this.props.flashMessage({text: `"${color}" was written to the clipboard`, type: "success" }, 3)
@@ -123,9 +140,9 @@ class ColorManager extends React.Component {
         })
     }
 
-    handleColorClick(e, colorPalletIndex, colorIndex) {
+    handleColorClick(event: React.MouseEvent<HTMLElement>, colorPalletIndex: number, colorIndex: number) {
         if (this.state.editing) {
-            this.chooseColorHandler(e, colorPalletIndex, colorIndex)
+            this.chooseColorHandler(event, colorPalletIndex, colorIndex)
         } else {
             this.clickCopyHandler(colorPalletIndex, colorIndex)
         }
@@ -138,8 +155,8 @@ class ColorManager extends React.Component {
                     colorPallets: response.data.pallets
                 })
             }
-        }).catch(error => {
-            this.props.flashMessage({text: "Failed to load color pallets, please reload the app.", type: "error"})
+        }).catch(() => {
+            this.props.flashMessage({text: "Failed to load color pallets, please reload the app.", type: "error"}, 3)
         })
     }
 
@@ -151,7 +168,7 @@ class ColorManager extends React.Component {
                 })
             }
             this.props.flashMessage({text: "Successfully saved pallets!", type: "success"}, 3);
-        }).catch(error => {
+        }).catch(() => {
             this.props.flashMessage({text: "Failed to save color pallets, please try again.", type: "error"}, 3)
         })
     }
@@ -211,11 +228,13 @@ class ColorManager extends React.Component {
                         <button className="SN__button-normal SN__button--create" onClick={this.saveColorPallets}>Save Pallets</button>
 
                         {this.state.showColorPicker &&
-                            <SketchPicker
-                                className="Page__color-pallet"
-                                color={this.state.colorPickerState}
-                                onChangeComplete={this.handleColorChange}
-                            />
+                            <div className="Page__color-pallet">
+                                <SketchPicker
+                                    // className="Page__color-pallet"
+                                    color={this.state.colorPickerState}
+                                    onChangeComplete={this.handleColorChange}
+                                />
+                            </div>
                         }
                     </div>
                 </div>

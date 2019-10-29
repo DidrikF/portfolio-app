@@ -7,9 +7,20 @@ import Section from './Section'
 import ClassSelector from '../css-manager/ClassSelector'
 import { GlobalContext } from '../../contexts/GlobalContext'  
 
+
+export type PageProps = {
+    updatePageStyles: () => void;
+    applyPageStyles: () => void;
+    updatePageState: () => void;
+}
+
+export type PageState = {
+    pageTemplateTitle: string;
+    sectionTemplateTitle: string;
+}
   
-class Page extends React.Component {
-    constructor(props) {
+class Page extends React.Component<PageProps, PageState> {
+    constructor(props: PageProps) {
         super(props)
 
         this.state = {

@@ -79,6 +79,7 @@
   },
   "devDependencies": {
     "@fortawesome/fontawesome-free": "^5.11.2",
+    "@types/cropperjs": "^1.1.5",
     "@types/jest": "^24.0.18",
     "@types/koa": "^2.0.50",
     "@types/koa-static": "^4.0.1",
@@ -87,6 +88,7 @@
     "@types/node": "^12.7.12",
     "@types/quill": "^2.0.3",
     "@types/react": "^16.9.5",
+    "@types/react-color": "^3.0.1",
     "@types/react-cropper": "^0.10.6",
     "@types/react-dom": "^16.9.1",
     "@types/react-dom-factories": "^1.0.2",

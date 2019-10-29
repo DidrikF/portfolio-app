@@ -117,7 +117,7 @@ class ImageUploader extends React.Component<ImageUploaderProps, ImageUploaderSta
         })
     }
 
-    handleInputChange = (event: React.SyntheticEvent<HTMLInputElement> & {target: any}) => {
+    handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const name = event.target.name as 'aspectRatio' | 'pageWidth' | 'pageHeight' | 'imageToView' | 'cropDataUrl';
         const value = event.target.value as string;
         this.setState({
@@ -140,9 +140,9 @@ class ImageUploader extends React.Component<ImageUploaderProps, ImageUploaderSta
         })
     }
 
-    setAspectRatio = (event: KeyboardEvent & {target: any}) => {
+    setAspectRatio = (event: React.KeyboardEvent<HTMLInputElement>) => {
         if (event.key !== "Enter") return
-        const value = event.target.value
+        const value = (event.target as any).value
         let ratio = evaluate(value)
         if (typeof ratio === 'number') {
             this.setState({
@@ -369,16 +369,17 @@ class ImageUploader extends React.Component<ImageUploaderProps, ImageUploaderSta
                             <button className="FU__main-button" onClick={this.commitCrop}><i className="material-icons">update</i></button>
                         </div>
                         <input className="FU__cropper-aspect-ratio-input" name="aspectRatio" value={this.state.aspectRatio} onChange={this.handleInputChange} onKeyUp={this.setAspectRatio}/>
-                        <Cropper
+                        {/*
+                        // @ts-ignore*/}
+                        <Cropper 
                             ref={(cropper: any) => { this.cropper = cropper; }}
                             // @ts-ignore
-                            src={this.state.imageBeingCropped ? this.state.imageBeingCropped.path : null}
+                            src={this.state.imageBeingCropped ? this.state.imageBeingCropped.path : undefined}
                             className="FU__cropper"
                             style={{
                                 width: this.state.pageWidth,// this.state.pageWidth
                                 height: "500px",
                             }}
-                            // Cropper.js options
                             aspectRatio={this.state.numericAspectRatio}
                             guides={false}
                             crop={this.crop}

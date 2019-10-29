@@ -9,11 +9,11 @@ export interface CSSDocumentProps {
   mediaQueries: KeyValue<string>,
   createItem: () => void,
   deleteItem: (id: Id) => void, 
-  handleScopeChange: (event: React.SyntheticEvent & {target: HTMLInputElement}, editingId: Id) => void,
-  handleQueryChange: (event: React.SyntheticEvent & {target: HTMLInputElement}, editingId: Id) => void,
-  handleSelectorChange: (event: React.SyntheticEvent & {target: HTMLInputElement}, editingId: Id) => void,
-  handleAttributeInputChange: (event: React.SyntheticEvent & {target: HTMLInputElement}, index: number, editingId: Id) => void,
-  addAttribute: (attributeIndex: number, editingId: Id) => void,
+  handleScopeChange: (event: React.ChangeEvent<HTMLInputElement>, editingId: Id) => void,
+  handleQueryChange: (event: React.ChangeEvent<HTMLSelectElement>, editingId: Id) => void,
+  handleSelectorChange: (event: React.ChangeEvent<HTMLInputElement>, editingId: Id) => void,
+  handleAttributeInputChange: (event: React.ChangeEvent<HTMLInputElement>, index: number, editingId: Id) => void,
+  addAttribute: (attributeIndex: number | undefined, editingId: Id) => void,
   deleteAttribute: (attributeIndex: number, editingId: Id) => void,
 }
 
@@ -83,7 +83,7 @@ class CSSDocument extends React.Component<CSSDocumentProps, any> {
                             })
                             }
                           </div>
-                          <select onChange={(e) => this.props.handleQueryChange(e, item.id)}>
+                          <select onChange={(event) => this.props.handleQueryChange(event, item.id)}>
                             {Object.keys(this.props.mediaQueries).map(queryName => {
                               return (
                                 <option value={queryName}>
@@ -99,7 +99,6 @@ class CSSDocument extends React.Component<CSSDocumentProps, any> {
                             placeholder="CSS Selector"
                             name="selector"
                             value={item.selector}
-                            itemid={item.id}
                             onChange={(e) => this.props.handleSelectorChange(e, item.id)}
                           />
                           <table className="CSSM__attributes">

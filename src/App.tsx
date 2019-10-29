@@ -18,7 +18,7 @@ import AccountPage from './components/account/AccountPage'
 import ImageUploader from './components/uploaders/ImageUploader'
 import FileUploader from './components/uploaders/FileUploader'
 
-import CSSManager from './components/css-manager/CSSManager'
+import CSSManager, { CSSItem } from './components/css-manager/CSSManager'
 import CSSDocument from './components/css-manager/CSSDocument';
 import { cssDocumentToString, combineCssDocuments } from './components/css-manager/helpers';
 
@@ -78,7 +78,7 @@ export type AppState = {
 }
 
 export type IGlobalContext = {
-    cssDocument: CSSDocument[],
+    cssDocument: CSSItem[],
     pathPrefix: string,
     toggleEdit: (event: React.SyntheticEvent & {target: any}) => void,
     editing: number,
@@ -98,7 +98,7 @@ export type IGlobalContext = {
     flashMessage: (message: Message, duration: number) => void
 }
 
-class App extends React.Component<null, AppState> {
+class App extends React.Component<any, AppState> {
     
     constructor(props: null) {
         super(props);
@@ -153,7 +153,7 @@ class App extends React.Component<null, AppState> {
         }
     }
 
-    updateApplicationStyles = (cssDocument: CSSDocument[]) => {
+    updateApplicationStyles = (cssDocument: CSSItem[]) => {
         this.setState<any>((state: AppState): Partial<AppState> => {
             state.globalContextObj.cssDocument = cssDocument;
             return {

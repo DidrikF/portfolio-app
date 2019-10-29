@@ -86,3 +86,5 @@ export type ImageMetadata = {
     width: number;
     height: number;
 }
+
+export type ColorPallet = {hex: string}[]

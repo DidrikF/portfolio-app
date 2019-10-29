@@ -10,30 +10,30 @@ import { Id, KeyValue } from '../../../types/basic-types';
 import { IGlobalContext } from '../../App'
 
 export interface ICSSDocument {
-  _id?: string,
-  id: Id,
-  name: string,
-  items: Item[],
+  _id?: string;
+  id: Id;
+  name: string;
+  items: CSSItem[];
 }
 
-export  interface Item {
-  id: Id,
-  mediaQuery: string,
-  selector: string,
-  scopes: KeyValue<boolean>,
+export  interface CSSItem {
+  id: Id;
+  mediaQuery: string;
+  selector: string;
+  scopes: KeyValue<boolean>;
   attributes: CSSAttribute[]
 }
 
 interface CSSAttribute {
-  key: string,
+  key: string;
   value: string
 }
 
 export interface CSSManagerProps {
-  styleSheetRef: React.Ref<HTMLStyleElement>, 
-  updateApplicationStyles: (x: Partial<>) => something, 
-  closeCSSM: () => something,
-  style: any
+  styleSheetRef: React.Ref<HTMLStyleElement>;
+  updateApplicationStyles: (cssDocument: CSSItem[]) => void; 
+  closeCSSM: () => void;
+  style: KeyValue<string>;
 }
 
 export interface CSSManagerState {
@@ -68,6 +68,8 @@ function initiateScopes(scopes: string[]): {[key: string]: boolean} {
 }
 
 class CSSManager extends React.Component<CSSManagerProps, CSSManagerState> {
+  static contextType = GlobalContext;
+
   constructor(props: CSSManagerProps) {
     super(props)
     this.state = {
@@ -94,7 +96,7 @@ class CSSManager extends React.Component<CSSManagerProps, CSSManagerState> {
     this.saveCssDocuments = this.saveCssDocuments.bind(this);
   }
 
-  private handleNameChange = (event: React.SyntheticEvent<HTMLInputElement, InputEvent>) => {
+  private handleNameChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const value: string = (event.target as any).value
     this.setState({
       cssDocumentName: value,
@@ -148,7 +150,7 @@ class CSSManager extends React.Component<CSSManagerProps, CSSManagerState> {
   createMediaQuery() {
   }
 
-  createItem() {
+  createItem(): void {
     this.setState<any>((state: CSSManagerState): Partial<CSSManagerState> | undefined => {
       const cssDocumentIndex = state.cssDocuments.findIndex(doc => doc.id === state.activeDoc);
       if (cssDocumentIndex <= -1) return;
@@ -166,7 +168,7 @@ class CSSManager extends React.Component<CSSManagerProps, CSSManagerState> {
     });
   }
 
-  deleteItem(id: Id) { // maybe not rely on the index at all, and do all manipulation based on the ID
+  deleteItem(id: Id): void { // maybe not rely on the index at all, and do all manipulation based on the ID
     this.setState<any>((state: CSSManagerState): Partial<CSSManagerState> | undefined => {
       const cssDocumentIndex = state.cssDocuments.findIndex(doc => doc.id === state.activeDoc);
       if (cssDocumentIndex <= -1) return
@@ -179,15 +181,15 @@ class CSSManager extends React.Component<CSSManagerProps, CSSManagerState> {
     });
   }
 
-  handleScopeChange(event: React.SyntheticEvent, editingId: Id) {
+  handleScopeChange(event:  React.ChangeEvent<HTMLInputElement>, editingId: Id): void {
     event.persist();
     this.setState<any>((state: CSSManagerState): Partial<CSSManagerState> | undefined => {
       const cssDocumentIndex = state.cssDocuments.findIndex(doc => doc.id === state.activeDoc);
       if (cssDocumentIndex <= -1) return
 
       const itemIndex = state.cssDocuments[cssDocumentIndex].items.findIndex(item => item.id === editingId);
-      const scopeName = e.target.value;
-      const checked = e.target.checked;
+      const scopeName = event.target.value;
+      const checked = event.target.checked;
       state.cssDocuments[cssDocumentIndex].items[itemIndex]["scopes"][scopeName] = checked;
       return {
         cssDocuments: state.cssDocuments,
@@ -195,7 +197,7 @@ class CSSManager extends React.Component<CSSManagerProps, CSSManagerState> {
     })
   }
 
-  handleQueryChange(e: React.SyntheticEvent & {target: HTMLInputElement}, editingId: Id) {
+  handleQueryChange(e: React.ChangeEvent<HTMLSelectElement>, editingId: Id): void {
     e.persist();
     const name = e.target.value;
     this.setState<any>((state: CSSManagerState): Partial<CSSManagerState> | undefined => {
@@ -211,7 +213,7 @@ class CSSManager extends React.Component<CSSManagerProps, CSSManagerState> {
     })
   }
 
-  handleSelectorChange(e: React.SyntheticEvent & {target: HTMLInputElement}, editingId: Id) {
+  handleSelectorChange(e: React.ChangeEvent<HTMLInputElement>, editingId: Id): void {
     e.persist();
     const value = e.target.value;
     this.setState<any>((state: CSSManagerState): Partial<CSSManagerState> | undefined => {
@@ -228,7 +230,7 @@ class CSSManager extends React.Component<CSSManagerProps, CSSManagerState> {
     });
   }
 
-  handleAttributeInputChange(e: React.SyntheticEvent & {target: HTMLInputElement}, index: number, editingId: Id) {
+  handleAttributeInputChange(e: React.ChangeEvent<HTMLInputElement>, index: number, editingId: Id): void {
     const name = e.target.name as keyof CSSAttribute;
     const value = e.target.value;
     this.setState<any>((state: CSSManagerState): Partial<CSSManagerState> | undefined => {
@@ -246,7 +248,7 @@ class CSSManager extends React.Component<CSSManagerProps, CSSManagerState> {
     });
   }
 
-  addAttribute(attributeIndex: number, editingId: Id) {
+  addAttribute(attributeIndex: number | undefined, editingId: Id): void {
     this.setState<any>((state: CSSManagerState): Partial<CSSManagerState> | undefined => {
       const cssDocumentIndex = state.cssDocuments.findIndex(doc => doc.id === state.activeDoc);
       if (cssDocumentIndex <= -1) return;
@@ -270,7 +272,7 @@ class CSSManager extends React.Component<CSSManagerProps, CSSManagerState> {
   }
 
 
-  deleteAttribute(attributeIndex: number, editingId: Id) {
+  deleteAttribute(attributeIndex: number, editingId: Id): void {
     this.setState<any>((state: CSSManagerState): Partial<CSSManagerState> | undefined => {
       const cssDocumentIndex = state.cssDocuments.findIndex(doc => doc.id === state.activeDoc);
       if (cssDocumentIndex <= -1) return;
@@ -305,9 +307,11 @@ class CSSManager extends React.Component<CSSManagerProps, CSSManagerState> {
     });
   }
 
-  applyStylesToStyleSheet(combinedCssDocument: Item[]) {
+  applyStylesToStyleSheet(combinedCssDocument: CSSItem[]) {
     const css = cssDocumentToString(combinedCssDocument);
-    this.props.styleSheetRef.current.innerHTML = css;
+    if (this.props.styleSheetRef) {
+      (this.props.styleSheetRef as any).current.innerHTML = css;
+    }
   }
 
   saveCssDocuments() {
@@ -349,7 +353,7 @@ class CSSManager extends React.Component<CSSManagerProps, CSSManagerState> {
 
   render(): JSX.Element {
 
-    let activeCssDocument = this.state.cssDocuments.find(doc => doc.id === this.state.activeDoc);
+    let activeCssDocument = this.state.cssDocuments.find(doc => doc.id === this.state.activeDoc) as ICSSDocument;
     return (
       <div className="CSSM__container" style={this.props.style}>
         <div style={{width: "300px"}}>
@@ -378,7 +382,8 @@ class CSSManager extends React.Component<CSSManagerProps, CSSManagerState> {
           </div>
           { !!activeCssDocument &&
             <CSSDocument
-              cssDocument={activeCssDocument}
+              onDragEnd={this.onDragEnd}
+              cssDocument={(activeCssDocument)}
               mediaQueries={this.state.mediaQueries}
               createItem={this.createItem}
               deleteItem={this.deleteItem}
@@ -388,7 +393,6 @@ class CSSManager extends React.Component<CSSManagerProps, CSSManagerState> {
               handleAttributeInputChange={this.handleAttributeInputChange}
               addAttribute={this.addAttribute}
               deleteAttribute={this.deleteAttribute}
-              onDragEnd={this.onDragEnd}
             />
           }
           <button onClick={(e) => { e.preventDefault(); this.updateApplicationStateAndSave() }}>Apply and Save</button>
@@ -398,9 +402,6 @@ class CSSManager extends React.Component<CSSManagerProps, CSSManagerState> {
   }
 
 }
-
-CSSManager.contextType = GlobalContext as IGlobalContext;
-
 
 export default CSSManager
 
