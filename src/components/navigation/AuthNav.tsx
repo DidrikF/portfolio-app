@@ -1,32 +1,36 @@
 import React from 'react'
-import { BrowserRouter as Router, Route, Link, NavLink, HashRouter, Redirect } from "react-router-dom"; 
+import { Link } from "react-router-dom"; 
 import ColorManager from '../color-manager/ColorManager'
 import { GlobalContext } from '../../contexts/GlobalContext'  
+import { IGlobalContext } from '../../App';
+import { Page as PageObj, PageType, SectionTemplate, ComponentTemplate } from '../../../types/platform_types';
 
-/* Need
-state.scrollableHeight
-state.pages
-toggleEdit
-deletePage
-createPage
 
-clearFocus
-toggleSpacing
-addSection
+export type AuthNavProps = {
+    pages: PageObj[];
+    scrollableHeight: number | string; 
+    createPage: (type: PageType, pageTitle: string) => void;
+    deletePage: (pageIndex: number) => void;
+    toggleEdit: (event: React.MouseEvent<HTMLButtonElement> & {target: any}) => void;
+    saveActivePage: () => void;
+    clearFocus: (event?: KeyboardEvent | React.MouseEvent<HTMLAnchorElement, MouseEvent>) => void;
+    toggleSpacing: () => void;
+    addSection: (template?: SectionTemplate) => void;
+    deleteObject: () => void;
+    moveObject: (places: number) => void;
+    addComponent: (componentType: string, template?: ComponentTemplate) => void;
+}
 
-addComponent
+export type AuthNavState = {
+    newPageTitle: string;
+    newProjectTitle: string;
+} 
 
-// State can be moved to this component...
-state.newPageTitle // simply add arguments to the createPage method
-changePageTitle
-
-state.newProjectTitle
-changePageTitle
-
-*/
-
-class AuthNav extends React.Component {
-    constructor(props) {
+class AuthNav extends React.Component<AuthNavProps, AuthNavState> {
+    static contextType: React.Context<IGlobalContext> = GlobalContext;
+    context!: React.ContextType<typeof GlobalContext>
+    
+    constructor(props: AuthNavProps) {
         super(props)
 
         this.state = {
@@ -38,15 +42,15 @@ class AuthNav extends React.Component {
         this.changePageTitle = this.changePageTitle.bind(this)
     }
 
-    changePageTitle(e) {
+    changePageTitle(event: React.ChangeEvent<HTMLInputElement>) {
         this.setState({
-            newPageTitle: e.target.value,
+            newPageTitle: event.target.value,
         })
     }
 
-    changeProjectTitle(e) {
+    changeProjectTitle(event: React.ChangeEvent<HTMLInputElement>) {
         this.setState({
-            newProjectTitle: e.target.value
+            newProjectTitle: event.target.value
         })
     }
 
@@ -72,8 +76,8 @@ class AuthNav extends React.Component {
                                                     <Link
                                                         to={page.path} 
                                                         className="SN__item"
-                                                        activeClassName="SN__item--active"
-                                                        onlyActiveOnIndex
+                                                        // activeClassName="SN__item--active"
+                                                        // onlyActiveOnIndex
                                                     >
                                                         <i className="material-icons">pages</i><span>{page.title + " "}</span>
                                                         <button className="SN__button SN__edit-button" onClick={this.props.toggleEdit} value={pageIndex}>
@@ -112,8 +116,8 @@ class AuthNav extends React.Component {
                                                         <Link 
                                                             to={page.path} 
                                                             className="SN__item"
-                                                            activeClassName="SN__item--active" // not working, do not know why
-                                                            onlyActiveOnIndex
+                                                            // activeClassName="SN__item--active" // not working, do not know why
+                                                            // onlyActiveOnIndex
                                                         >
                                                             <i className="material-icons">pages</i><span>{page.title}</span>
                                                             <button className="SN__button SN__edit-button" onClick={this.props.toggleEdit} value={pageIndex}>
@@ -190,8 +194,8 @@ class AuthNav extends React.Component {
                                                 pathname: '/image-uploader',  
                                             }} 
                                             className="SN__item"
-                                            activeClassName="SN__item--active" // not working, do not know why
-                                            >
+                                            // activeClassName="SN__item--active" // not working, do not know why
+                                        >
                                             <i className="material-icons">cloud_upload</i><span>Image Uploader</span>
                                         </Link>
                                     </li>
@@ -201,8 +205,8 @@ class AuthNav extends React.Component {
                                                 pathname: '/file-uploader',  
                                             }} 
                                             className="SN__item"
-                                            activeClassName="SN__item--active" // not working, do not know why
-                                            >
+                                            // activeClassName="SN__item--active" // not working, do not know why
+                                        >
                                             <i className="material-icons">cloud_upload</i><span>File Uploader</span>
                                         </Link>
                                     </li>
@@ -216,8 +220,5 @@ class AuthNav extends React.Component {
         )
     }
 }
-
-AuthNav.contextType = GlobalContext;
-
 
 export default AuthNav

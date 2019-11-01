@@ -16,15 +16,15 @@ import { Id } from '../../../types/basic-types';
 import { IGlobalContext } from '../../App';
 
 export type RichTextProps = {
-    updateComponentState: (componentUpdate: Partial<ComponentState>, sectionIndex: number, gridSectionIndex: number, componentStateIndex: number) => void;
+    id: Id;
+    componentState: ComponentState;
+    sectionId: Id;
     sectionIndex: number;
     gridSectionIndex: number;
     componentStateIndex: number;
-    id: Id;
+    miniToolbarHandlers?: any; 
+    updateComponentState: (componentUpdate: Partial<ComponentState>, sectionIndex: number, gridSectionIndex: number, componentStateIndex: number) => void;
     applyComponentStyles: (sectionIndex: number, gridSectionIndex: number, componentStateIndex: number) => void;
-    componentState: ComponentState;
-    sectionId: Id;
-    miniToolbarHandlers: any; 
 }
 
 // Is it possible to refactor this away?
@@ -40,6 +40,9 @@ export function updateHeightOfVideos() {
 }
 
 class RichText extends React.Component<RichTextProps> {
+    static contextType: React.Context<IGlobalContext> = GlobalContext;
+    context!: React.ContextType<typeof GlobalContext>
+
     editorHandlers = [
         (quill: Quill) => {
             quill.once((Quill as any).events.EDITOR_CHANGE, updateHeightOfVideos);

@@ -6,11 +6,24 @@ import axios from "axios";
 import { GlobalContext } from '../../contexts/GlobalContext';
 import Login from '../authentication/Login';
 import Register from '../authentication/Register';
+import { IGlobalContext } from "../../App";
 
 
-class AccountInfo extends React.Component {
+export type AccountInfoProps = {
+    setAuthenticated: (value: boolean) => void;
+    loadProtectedData: () => void;
+}
 
-    constructor(props) {
+export type AccountInfoState = {
+    showLogin: boolean;
+    showRegister: boolean;
+}
+
+class AccountInfo extends React.Component<AccountInfoProps, AccountInfoState> {
+    static contextType: React.Context<IGlobalContext> = GlobalContext;
+    context!: React.ContextType<typeof GlobalContext>
+
+    constructor(props: AccountInfoProps) {
         super(props);
         this.state = {
             showLogin: false,
@@ -23,12 +36,12 @@ class AccountInfo extends React.Component {
     }
 
     // # REFACTOR: only one setter method for top level app state manipulation
-    setShowLogin(value) {
+    setShowLogin(value: boolean) {
         this.setState({
             showLogin: value,
         });
     }
-    setShowRegister(value) {
+    setShowRegister(value: boolean) {
         this.setState({
             showRegister: value,
         });
@@ -71,7 +84,7 @@ class AccountInfo extends React.Component {
                                                 pathname: '/account',  
                                             }} 
                                             className="SN__item"
-                                            activeClassName="SN__item--active" // not working, do not know why
+                                            // activeClassName="SN__item--active" // not working, do not know why
                                         >
                                             <i className="material-icons">person</i><span>Account</span>
                                         </Link>
@@ -83,8 +96,6 @@ class AccountInfo extends React.Component {
                         { this.state.showLogin &&
                             <div className="SN__login-form">
                                 <Login // Need to be able to update the global context, this is why it is "easier" to render it here.
-                                    showLogin={this.state.showLogin}
-                                    authenticated={this.context.authenticated}
                                     setAuthenticated={this.props.setAuthenticated}
                                     setShowLogin={this.setShowLogin}
                                     loadProtectedData={this.props.loadProtectedData}
@@ -95,7 +106,6 @@ class AccountInfo extends React.Component {
                         { this.state.showRegister &&
                             <div className="SN__login-form">
                                 <Register // Need to be able to update the global context, this is why it is "easier" to render it here.
-                                    showRegister={this.state.showRegister}
                                     setShowRegister={this.setShowRegister}
                                     // setUser={setUser} // need to implement in the future to support multiple users.
                                 />
@@ -107,7 +117,5 @@ class AccountInfo extends React.Component {
         )
     }
 }
-
-AccountInfo.contextType = GlobalContext;
 
 export default AccountInfo;

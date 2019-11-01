@@ -4,6 +4,7 @@ import axios from 'axios';
 import { GlobalContext } from '../../contexts/GlobalContext'  
 
 import localforage from 'localforage'
+import { IGlobalContext } from '../../App';
 
 export type LoginProps = {
     setAuthenticated: (value: boolean) => void;
@@ -17,7 +18,8 @@ export type LoginState = {
 }
 
 class Login extends React.Component<LoginProps, LoginState> {
-    static contextType = GlobalContext
+    static contextType: React.Context<IGlobalContext> = GlobalContext;
+    context!: React.ContextType<typeof GlobalContext>
     
     constructor(props: LoginProps) {
         super(props)

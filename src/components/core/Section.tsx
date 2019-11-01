@@ -7,16 +7,44 @@ import PageToolbarPortal from '../rich-text/PageToolbarPortal'
 import ClassSelector from '../css-manager/ClassSelector';
 import { gridLayouts } from './grid'
 import RichText from '../rich-text/RichText'
+import { IGlobalContext } from '../../App';
+import { Id } from '../../../types/basic-types';
+import { Page as PageObj, GridSection as GridSectionObj, Section as SectionObj, ComponentState, Template, TemplateType } from '../../../types/platform_types';
 
-class Section extends React.Component {
-    constructor(props) {
+export type SectionProps = {
+    id: Id;
+    sectionIndex: number;
+    section: SectionObj;
+    templates: Template<PageObj | SectionObj | ComponentState>[];
+    updateGridSectionState: (gridSectionUpdate: Partial<GridSectionObj>, sectionInFocusIndex: number, gridSectionInFocusIndex: number) => void;
+    applyGridSectionStyles: (sectionInFocusIndex: number, gridSectionInFocusIndex: number) => void;
+    updateSectionState: (sectionUpdate: Partial<GridSectionObj>, gridSectionInFocusIndex: number) => void;
+    applySectionStyles: (sectionInFocusIndex: number) => void;
+    addComponent: (type: string, template: Template<ComponentState>) => void;
+    createTemplate: (type: TemplateType, templateTitle: string) => void;
+    deleteTemplate: (templateIndex: number) => void;    
+    updateComponentState: (componentUpdate: Partial<ComponentState>, sectionIndex: number, gridSectionIndex: number, componentStateIndex: number) => void;
+    applyComponentStyles: (sectionIndex: number, gridSectionIndex: number, componentStateIndex: number) => void;
+    updateSectionLayout: (event: React.ChangeEvent<HTMLSelectElement>) => void;
+}
+
+export type SectionState = {
+    componentTemplateTitle: string;
+    gridLayouts: any; // not sure... want a way to define my own grids.
+}
+
+class Section extends React.Component<SectionProps, SectionState> {
+    static contextType: React.Context<IGlobalContext> = GlobalContext;
+    context!: React.ContextType<typeof GlobalContext>
+
+    sectionRef: React.Ref<HTMLDivElement>;
+
+    constructor(props: SectionProps) {
         super(props)
         this.sectionRef = React.createRef()
-        // this.columnRef = React.createRef()
 
         this.state = {
             componentTemplateTitle: "",
-
             gridLayouts: gridLayouts,
         }
         
@@ -36,76 +64,66 @@ class Section extends React.Component {
         // this.onBlur = this.onBlur.bind(this)
     }
 
-    handleInputChange(e) {
-        const value = e.target.value
-        const name = e.target.name
+    handleInputChange(event: React.ChangeEvent<HTMLInputElement>) {
+        const name = event.target.name as keyof SectionState;
+        const value = event.target.value
         this.setState({
             [name]: value,
-        })
+        } as SectionState)
     } 
 
 
-    onFocus (e) { 
-        // e.stopPropagation()
-        // console.log('section on focus props: ', this.props.id, this.props.sectionIndex)
-        this.context.updateSectionInFocus(this.props.id, this.props.sectionIndex)
+    onFocus (event: React.MouseEvent<HTMLDivElement>) { 
+        this.context.updateSectionInFocus(this.props.id, this.props.sectionIndex);
     }
 
-    gridSectionOnFocus(gridSectionId, gridSectionIndex) {
+    gridSectionOnFocus(gridSectionId: Id, gridSectionIndex: number) {
         this.context.updateGridSectionInFocus(gridSectionId, gridSectionIndex)
     }
-    /*
-    onBlur() { 
-        console.log("section on blur: ", this.sectionsInFocus, this.props.id)
-        if (this.context.sectionInFocus === this.props.id) {
-            this.context.updateSectionInFocus('')
-        }
-    }
-    */
 
-    handleGridSectionInputChange(e) {
-        const value = e.target.value
-        const name = e.target.name
+    handleGridSectionInputChange(event: React.ChangeEvent<HTMLTextAreaElement>) {
+        const name = event.target.name as keyof GridSectionObj;
+        const value = event.target.value
 
         const gridSectionUpdate = {
             [name]: value,
-        }
+        } as Partial<GridSectionObj>
 
         this.props.updateGridSectionState(gridSectionUpdate, this.context.sectionInFocusIndex, this.context.gridSectionInFocusIndex)
     }
  
 
-    applyGridSectionStyles(e) {
+    applyGridSectionStyles(event: React.MouseEvent) {
         this.props.applyGridSectionStyles(this.context.sectionInFocusIndex, this.context.gridSectionInFocusIndex)
     }
 
 
 
-    handleSectionInputChange(e) {
-        const name = e.target.name
-        const value = e.target.value
+    handleSectionInputChange(event: React.ChangeEvent<HTMLTextAreaElement>) {
+        const name = event.target.name
+        const value = event.target.value
         const sectionUpdate = {
             [name]: value,
-        }
+        } as Partial<SectionObj>
 
         this.props.updateSectionState(sectionUpdate, this.context.sectionInFocusIndex)
     }
 
-    applySectionStyles(e) {
+    applySectionStyles(event: React.MouseEvent) {
         this.props.applySectionStyles(this.context.sectionInFocusIndex)
     }
 
-    updateSelectedSectionClasses(classes) {
+    updateSelectedSectionClasses(classes: string) {
         const sectionUpdate = {
             className: classes,
-        }
+        } as Partial<SectionObj>
         this.props.updateSectionState(sectionUpdate, this.context.sectionInFocusIndex);
     }
 
-    updateSelectedGridSectionClasses(classes) {
+    updateSelectedGridSectionClasses(classes: string) {
         const gridSectionUpdate = {
             className: classes,
-        }
+        } as Partial<GridSectionObj>
         this.props.updateGridSectionState(gridSectionUpdate, this.context.sectionInFocusIndex, this.context.gridSectionInFocusIndex);
     }
 
@@ -118,12 +136,15 @@ class Section extends React.Component {
         // window.removeEventListener("resize", this.updateDimensions.bind(this)); // Dont think this works
     }
 
-    componentDidUpdate(prevProps) {
+    componentDidUpdate(prevProps: SectionProps) {
+        /*
         if ((prevProps.enableSpacing !== this.props.enableSpacing) || 
             (prevProps.selectedLayout !== this.props.selectedLayout)
         ) {
             // this.updateDimensions()
+            // Change grid logic?
         }
+        */
     }
 
     contextChanged() {
@@ -147,7 +168,7 @@ class Section extends React.Component {
                     style={{
                         ...this.props.section.style,
                     }}
-                    >
+                >
 
                     { (this.context.sectionInFocus === this.props.id) && 
                          <PageToolbarPortal>
@@ -199,7 +220,7 @@ class Section extends React.Component {
                                                         <li>
                                                             <a 
                                                                 className="SN__item" 
-                                                                onClick={() => this.props.addComponent("template", template)} 
+                                                                onClick={() => this.props.addComponent("template", template as Template<ComponentState>)} 
                                                                 title={`Add ${template.title} as a component to the section.`}
                                                             >
                                                                 <i className="material-icons">note_add</i><span>{template.title}</span>
@@ -210,6 +231,7 @@ class Section extends React.Component {
                                                         </li>        
                                                     )
                                                 }
+                                                return undefined;
                                             })
                                         }
                                     </ul>
@@ -239,13 +261,12 @@ class Section extends React.Component {
                                     'border': this.context.enableSpacing ? ((this.context.gridSectionInFocus === gridSection.id) ? '1px solid blue' : '1px dashed grey') : 'none',
                                 }} 
                             >
-                            
                                 <div 
-                                className={`GridSection ${gridSection.className} ${this.context.enableSpacing ? "spacing" : ""}`}
-                                style={gridSection.style} // hold grid styles, I need to solve this...
-                                key={gridSection.id}
-                                onClick={(e) => { this.gridSectionOnFocus(gridSection.id, i); }}
-                                > {/* gridSection.style['width'] */}
+                                    className={`GridSection ${gridSection.className} ${this.context.enableSpacing ? "spacing" : ""}`}
+                                    style={gridSection.style} // hold grid styles, I need to solve this...
+                                    key={gridSection.id}
+                                    onClick={(e) => { this.gridSectionOnFocus(gridSection.id, i); }}
+                                >
 
                                 {/* Grid Section Toolbar (very similar to section toolbar */}
                                 { (!this.context.componentInFocus && (this.context.gridSectionInFocus === gridSection.id)) && 
@@ -273,19 +294,15 @@ class Section extends React.Component {
                                 }
                                 
                                 {gridSection.componentStates.map((componentState, j) => {
-                                    // Need to accomedate for different component types here
                                     return (<RichText 
                                         key={componentState.id}
-                                        sectionId={this.props.id}
                                         id={componentState.id}
-
-                                        deleteObject={this.props.deleteObjects}
-                                        
+                                        componentState={componentState} 
+                                        sectionId={this.props.id}
                                         sectionIndex={this.props.sectionIndex}
                                         gridSectionIndex={i}
                                         componentStateIndex={j}
-                                        
-                                        componentState={componentState} 
+                                        miniToolbarHandlers={undefined}
                                         updateComponentState={this.props.updateComponentState} // need to wrap this and make it called onChange
                                         applyComponentStyles={this.props.applyComponentStyles}
                                         />)
@@ -299,7 +316,5 @@ class Section extends React.Component {
         )
     }
 }
-
-Section.contextType = GlobalContext
 
 export default Section

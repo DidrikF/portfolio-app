@@ -18,7 +18,8 @@ export type RegisterState = {
 }
 
 class Register extends React.Component<RegisterProps, RegisterState> {
-    static contextType = GlobalContext;
+    static contextType: React.Context<IGlobalContext> = GlobalContext;
+    context!: React.ContextType<typeof GlobalContext>
     
     constructor(props: RegisterProps) {
         super(props)
@@ -68,8 +69,6 @@ class Register extends React.Component<RegisterProps, RegisterState> {
 
     render() {
         return (
-
-
             <form className="Register__container" onSubmit={this.handle_submit}>
                 <button className="Auth__close-button" onClick={() => { this.props.setShowRegister(false) }}><i className="material-icons">clear</i></button>
                 <h3>Registration Form</h3>

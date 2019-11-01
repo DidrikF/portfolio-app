@@ -1,6 +1,13 @@
 import React from 'react'
 
-class Input extends React.Component { 
+export type InputProps = {
+    editable: boolean;
+    inputName: string;
+    state: string;
+    handleStateChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
+} 
+
+class Input extends React.Component<InputProps> { 
     render () {
         return (
             this.props.editable ? 

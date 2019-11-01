@@ -1,9 +1,17 @@
 import React from 'react'
 import { BrowserRouter as Router, Route, Link, NavLink, HashRouter, Redirect } from "react-router-dom"; 
 import { GlobalContext } from '../../contexts/GlobalContext'  
+import { Page as PageObj } from '../../../types/platform_types';
+import { IGlobalContext } from '../../App';
 
+export type ViewNavProps = {
+    pages: PageObj[];
+    scrollableHeight: number | string;
+}
 
-class ViewNav extends React.Component {
+class ViewNav extends React.Component<ViewNavProps> {
+    static contextType: React.Context<IGlobalContext> = GlobalContext;
+    context!: React.ContextType<typeof GlobalContext>
 
     render () {
         return (
@@ -18,7 +26,7 @@ class ViewNav extends React.Component {
                             <div className='SN__widget'>
                                 <ul>
                                     {
-                                        this.props.pages.map((page, pageIndex) => {
+                                        this.props.pages.map((page) => {
                                             if (page.type !== "page") {
                                                 return null
                                             }
@@ -27,8 +35,8 @@ class ViewNav extends React.Component {
                                                     <Link
                                                         to={page.path} 
                                                         className="SN__item"
-                                                        activeClassName="SN__item--active"
-                                                        onlyActiveOnIndex
+                                                        // activeClassName="SN__item--active"
+                                                        // onlyActiveOnIndex
                                                     >
                                                         <i className="material-icons">pages</i><span>{page.title + " "}</span>
                                                     </Link>
@@ -46,7 +54,7 @@ class ViewNav extends React.Component {
                             <div className="SN__widget">
                                 <ul>
                                     {
-                                        this.props.pages.map((page, pageIndex) => {
+                                        this.props.pages.map((page) => {
                                             if (page.type !== 'project') {
                                                 return null
                                             }
@@ -55,8 +63,8 @@ class ViewNav extends React.Component {
                                                         <Link 
                                                             to={page.path} 
                                                             className="SN__item"
-                                                            activeClassName="SN__item--active" // not working, do not know why
-                                                            onlyActiveOnIndex
+                                                            // activeClassName="SN__item--active" // not working, do not know why
+                                                            // onlyActiveOnIndex
                                                         >
                                                             <i className="material-icons">pages</i><span>{page.title}</span>
                                                         </Link>
@@ -73,7 +81,5 @@ class ViewNav extends React.Component {
         )
     }
 }
-
-ViewNav.contextType = GlobalContext;
 
 export default ViewNav

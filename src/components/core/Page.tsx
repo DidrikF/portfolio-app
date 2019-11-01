@@ -1,17 +1,34 @@
 import React from 'react'
-import axios from 'axios'
-
 
 import PageToolbarPortal from '../rich-text/PageToolbarPortal'
 import Section from './Section'
 import ClassSelector from '../css-manager/ClassSelector'
 import { GlobalContext } from '../../contexts/GlobalContext'  
 
+import { Page as PageObj, Section as SectionObj, GridSection as GridSectionObj, Template, TemplateType, ComponentState } from '../../../types/platform_types';
+import { Id } from '../../../types/basic-types';
+import { IGlobalContext } from '../../App'
 
 export type PageProps = {
-    updatePageStyles: () => void;
-    applyPageStyles: () => void;
-    updatePageState: () => void;
+    pageIndex: number;
+    page: PageObj;
+    id: Id;
+    templates: Template<PageObj | SectionObj | ComponentState>[];
+    applyPageStyles: (pageIndex: number) => void;
+    updatePageState: (pageUpdate: Partial<PageObj>, pageIndex: number) => void;
+    setPageStateFromTemplate: (template: Template<PageObj>) => void;
+    createTemplate: (type: TemplateType, templateTitle: string) => void;
+    addSection: (section: Template<SectionObj>) => void;
+    deleteTemplate: (templateIndex: number) => void;
+
+    updateGridSectionState: (gridSectionUpdate: Partial<GridSectionObj>, sectionInFocusIndex: number, gridSectionInFocusIndex: number) => void;
+    applyGridSectionStyles: (sectionInFocusIndex: number, gridSectionInFocusIndex: number) => void;
+    updateSectionState: (sectionUpdate: Partial<GridSectionObj>, gridSectionInFocusIndex: number) => void;
+    applySectionStyles: (sectionInFocusIndex: number) => void;
+    addComponent: (type: string, template: Template<ComponentState>) => void;
+    updateComponentState: (componentUpdate: Partial<ComponentState>, sectionIndex: number, gridSectionIndex: number, componentStateIndex: number) => void;
+    applyComponentStyles: (sectionIndex: number, gridSectionIndex: number, componentStateIndex: number) => void;
+    updateSectionLayout: (event: React.ChangeEvent<HTMLSelectElement>) => void;
 }
 
 export type PageState = {
@@ -20,6 +37,9 @@ export type PageState = {
 }
   
 class Page extends React.Component<PageProps, PageState> {
+    static contextType: React.Context<IGlobalContext> = GlobalContext;
+    context!: React.ContextType<typeof GlobalContext>
+
     constructor(props: PageProps) {
         super(props)
 
@@ -29,28 +49,28 @@ class Page extends React.Component<PageProps, PageState> {
         }
 
         this.handleInputChange = this.handleInputChange.bind(this)
-        this.handlePageInputChange = this.handlePageInputChange.bind(this)
+        this.updatePageJsonStyle = this.updatePageJsonStyle.bind(this)
         this.applyPageStyles = this.applyPageStyles.bind(this)
         
         this.updateSelectedClasses = this.updateSelectedClasses.bind(this)
     }
 
 
-    handleInputChange(e) {
-        const name = e.target.name
+    handleInputChange(event: React.ChangeEvent<HTMLInputElement>) {
+        const name = event.target.name as keyof PageState;
         this.setState({
-            [name]: e.target.value
-        })
+            [name]: event.target.value
+        } as PageState);
     }
 
 
-    handlePageInputChange(e) {
-        const name = e.target.name
-        const value = e.target.value
+    updatePageJsonStyle(event: React.ChangeEvent<HTMLTextAreaElement>) {
+        const name = event.target.name
+        const value = event.target.value
 
         const pageUpdate = {
             [name]: value,
-        }
+        } as Partial<PageObj>;
 
         this.props.updatePageState(pageUpdate, this.props.pageIndex)
     }
@@ -59,10 +79,10 @@ class Page extends React.Component<PageProps, PageState> {
         this.props.applyPageStyles(this.props.pageIndex)
     }
 
-    updateSelectedClasses(selectedClasses) {
+    updateSelectedClasses(selectedClasses: string) {
         const pageUpdate = {
-            className: selectedClasses, // .join(", ")
-        };
+            className: selectedClasses,
+        } as Partial<PageObj>;
         this.props.updatePageState(pageUpdate, this.props.pageIndex);
     }
     
@@ -86,7 +106,7 @@ class Page extends React.Component<PageProps, PageState> {
                                 placeholder="Styles in JSON format"
                                 name="styleInput"
                                 value={this.props.page.styleInput}
-                                onChange={this.handlePageInputChange} // OBS
+                                onChange={this.updatePageJsonStyle} // OBS
                             >
 
                             </textarea>
@@ -109,7 +129,7 @@ class Page extends React.Component<PageProps, PageState> {
                                                 <li>
                                                     <a 
                                                         className="SN__item" 
-                                                        onClick={() => this.props.setPageStateFromTemplate(template)} 
+                                                        onClick={() => this.props.setPageStateFromTemplate(template as Template<PageObj>)} 
                                                         title={`Apply ${template.title} as a template to the current page`}
                                                     >
                                                         <i className="material-icons">note_add</i><span>{template.title}</span>
@@ -121,6 +141,7 @@ class Page extends React.Component<PageProps, PageState> {
                                                 </li>        
                                             )
                                         }
+                                        return undefined;
                                     })
                                 }
                             </ul>
@@ -150,7 +171,7 @@ class Page extends React.Component<PageProps, PageState> {
                                                 <li>
                                                     <a 
                                                         className="SN__item" 
-                                                        onClick={() => this.props.addSection(template)} 
+                                                        onClick={() => this.props.addSection(template as Template<SectionObj>)} 
                                                         title={`Add ${template.title} as a section to the page.`}
                                                     >
                                                         <i className="material-icons">note_add</i><span>{template.title}</span>
@@ -161,6 +182,7 @@ class Page extends React.Component<PageProps, PageState> {
                                                 </li>        
                                             )
                                         }
+                                        return undefined;
                                     })
                                 }
                             </ul>
@@ -187,33 +209,21 @@ class Page extends React.Component<PageProps, PageState> {
                     return (
                         <Section 
                             key={section.id} 
-                            sectionIndex={index}
-                            
                             id={section.id}
+                            sectionIndex={index}
                             section={section}
-                            enableSpacing={this.props.enableSpacing}
-                            selectedLayout={section.selectedLayout}
-                            
-                            addComponent={this.props.addComponent}
-                            
                             templates={this.props.templates}
-                            createTemplate={this.props.createTemplate}
-                            deleteTemplate={this.props.deleteTemplate}
-
-                            containerRef={this.props.containerRef}
-
-
-                            updateSectionState={this.props.updateSectionState}
-                            applySectionStyles={this.props.applySectionStyles}
-                            updateSectionLayout={this.props.updateSectionLayout}
+                            
                             updateGridSectionState={this.props.updateGridSectionState}
                             applyGridSectionStyles={this.props.applyGridSectionStyles}
-
-                            moveObject={this.props.moveObject} // #OBS remove i think
-                            deleteObject={this.props.deleteObject} // #OBS remove i think
-                            
+                            updateSectionState={this.props.updateSectionState}
+                            applySectionStyles={this.props.applySectionStyles}
+                            addComponent={this.props.addComponent}
+                            createTemplate={this.props.createTemplate}
+                            deleteTemplate={this.props.deleteTemplate}
                             updateComponentState={this.props.updateComponentState} 
                             applyComponentStyles={this.props.applyComponentStyles}
+                            updateSectionLayout={this.props.updateSectionLayout}
                         />
                     )
                 })
@@ -222,6 +232,5 @@ class Page extends React.Component<PageProps, PageState> {
         )
     }
 }
-Page.contextType = GlobalContext;
 
 export default Page

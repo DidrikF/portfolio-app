@@ -80,7 +80,7 @@ export type AppState = {
 export type IGlobalContext = {
     cssDocument: CSSItem[],
     pathPrefix: string,
-    toggleEdit: (event: React.SyntheticEvent & {target: any}) => void,
+    toggleEdit: (e: React.MouseEvent<HTMLButtonElement> & {target: any}) => void,
     editing: number,
     setActiveRichTextEditor: Function,
     activeRichTextEditor: string,
@@ -99,6 +99,8 @@ export type IGlobalContext = {
 }
 
 class App extends React.Component<any, AppState> {
+    static contextType: React.Context<IGlobalContext> = GlobalContext;
+    context!: React.ContextType<typeof GlobalContext>
     
     constructor(props: null) {
         super(props);
@@ -239,8 +241,8 @@ class App extends React.Component<any, AppState> {
 
 
     // ________________Global context related_____________________
-    toggleEdit = (e: React.SyntheticEvent & {target: any}) => {
-        let value: number = e.target.value ? parseInt(e.target.value, 10) : -1 // e.target.value is a string
+    toggleEdit = (e: React.MouseEvent<HTMLButtonElement> & {target: any}) => {
+        let value: number = e.target.value ? parseInt(e.target.value, 10) : -1
         this.setState<any>((state: AppState): Partial<AppState> => {
             let globalContextObj = state.globalContextObj
             globalContextObj.editing = value
@@ -301,8 +303,8 @@ class App extends React.Component<any, AppState> {
             }
         })
     }
-    clearFocus = (event?: KeyboardEvent) => {
-        if (event && event.key !== "Escape") return;
+    clearFocus = (event?: KeyboardEvent | React.MouseEvent<HTMLAnchorElement, MouseEvent>) => {
+        if (event && (event as KeyboardEvent).key !== "Escape") return;
 
         this.setState((state) => {
             let globalContextObj = state.globalContextObj 
@@ -482,7 +484,7 @@ class App extends React.Component<any, AppState> {
         return section;
     }
 
-    addSection = (template: SectionTemplate) => {
+    addSection = (template?: SectionTemplate) => {
         let section: SectionObj;
         if (template && template.template) {
             section = this.makeSectionFromUserTemplate(template);
@@ -499,7 +501,7 @@ class App extends React.Component<any, AppState> {
 
     }
     
-    updateSectionLayout = (e: React.SyntheticEvent & {target: any}) => {
+    updateSectionLayout = (e: React.ChangeEvent<HTMLSelectElement>) => {
         if (this.state.globalContextObj.sectionInFocusIndex < 0) return
         const layoutName = e.target.value
         if (!window.confirm(`Are you sure you want to change layout to "${layoutName}"? \nThe current state of the section will be lost.`)) return
@@ -594,7 +596,7 @@ class App extends React.Component<any, AppState> {
      }
  
     // #REFACTOR: use a switch statement instead... Extract code to make different components.
-    addComponent = (componentType: string, template: ComponentTemplate) => {
+    addComponent = (componentType: string, template?: ComponentTemplate) => {
         this.setState<any>((state: AppState): Partial<AppState> | undefined => {
             let { sectionInFocusIndex, gridSectionInFocusIndex, componentInFocusIndex} = this.state.globalContextObj
             
@@ -618,7 +620,7 @@ class App extends React.Component<any, AppState> {
             } else if (componentType === 'image') {
                 // ...
             } else if (componentType === "template") {
-                console.log("Template for component creation: ", template); 
+                template = template as ComponentTemplate;
                 newComponent = {
                     id: getId(),
                     type: template.template.type,
@@ -1036,33 +1038,25 @@ class App extends React.Component<any, AppState> {
                                     return (
                                         <Route key={page.id} exact path={page.path} render={(props: RouteProps) => <Page {
                                             ...props}
-                                            id={page.id}
                                             pageIndex={pageIndex}
                                             page={page}
-                                            
-                                            // #REFACTOR: Toolbars are contained within pages/sections... (maybe I cannot remove any of these)
+                                            id={page.id}
                                             templates={this.state.templates}
-                                            createTemplate={this.createTemplate}
-                                            deleteTemplate={this.deleteTemplate}
-                                            setPageStateFromTemplate={this.setPageStateFromTemplate}
-
-                                            addComponent={this.addComponent}
-                                            addSection={this.addSection}
-
-                                            enableSpacing={this.state.globalContextObj.enableSpacing}
-                                            
-                                            updatePageState={this.updatePageState}
+                            
                                             applyPageStyles={this.applyPageStyles}
-                                            updateSectionLayout={this.updateSectionLayout}
-                                            updateSectionState={this.updateSectionState}
-                                            applySectionStyles={this.applySectionStyles}
+                                            updatePageState={this.updatePageState}
+                                            setPageStateFromTemplate={this.setPageStateFromTemplate}
+                                            createTemplate={this.createTemplate}
+                                            addSection={this.addSection}
+                                            deleteTemplate={this.deleteTemplate}
                                             updateGridSectionState={this.updateGridSectionState}
                                             applyGridSectionStyles={this.applyGridSectionStyles}
+                                            updateSectionState={this.updateSectionState}
+                                            applySectionStyles={this.applySectionStyles}
+                                            addComponent={this.addComponent}
                                             updateComponentState={this.updateComponentState}
                                             applyComponentStyles={this.applyComponentStyles}
-
-                                            moveObject={this.moveObject} // #OBS remove i think
-                                            deleteObject={this.deleteObject} // #OBS remove i think
+                                            updateSectionLayout={this.updateSectionLayout}
                                         />} />
                                     )
                                 })
@@ -1109,8 +1103,6 @@ class App extends React.Component<any, AppState> {
         )
     }
 }
-
-App.contextType = GlobalContext
 
 export default App
 

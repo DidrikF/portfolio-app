@@ -61,6 +61,8 @@ let scopes = [
   "rich text",
 ];
 
+export type ScopeType = 'all' | 'page' | 'section' | 'gridSection' | 'component' | 'rich text';
+
 function initiateScopes(scopes: string[]): {[key: string]: boolean} {
   const scopeObject: {[key: string]: boolean}  = {};
   scopes.forEach(scope => scopeObject[scope] = false);

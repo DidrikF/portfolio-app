@@ -31,6 +31,7 @@ export type Section = {
     styleInput?: string;
     layoutName: "One column" | "Two columns" | "Three columns"; 
     gridSections: GridSection[];
+    selectedLayout: string;
 }
 
 export type GridSection = {
@@ -60,17 +61,19 @@ export type User = {
 	image?: string
 }
 
-export type Template<T extends (Page | Section | GridSection | ComponentState)>  = {
+export type TemplateType = 'page' | 'section' | 'component'
+
+export type Template<T extends Page | Section | ComponentState>  = {
     _id?: string;
     owner: import('./basic-types').Email;
     title: string;
-    type: string;
+    type: TemplateType;
     template: T;
 }
 
 export type PageTemplate = Template<Page>
 export type SectionTemplate = Template<Section>;
-export type GridSectionTemplate = Template<GridSection>
+// export type GridSectionTemplate = Template<GridSection>
 export type ComponentTemplate = Template<ComponentState>;
 
 export type FileMetadata = {

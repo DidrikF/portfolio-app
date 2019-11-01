@@ -1,20 +1,28 @@
 import React from 'react';
+import { CSSItem, ScopeType } from './CSSManager';
 
+export type ClassSelectorProps = {
+    cssDocument: CSSItem[];
+    scope: ScopeType;
+    heading: string;
+    activeClasses?: string;
+    updateSelectedClasses: (classes: string) => void;
+}
 
-class ClassSelector extends React.Component {    
-    constructor(props) {
+class ClassSelector extends React.Component<ClassSelectorProps> {    
+    constructor(props: ClassSelectorProps) {
         super(props);
         this.handleInputChange = this.handleInputChange.bind(this);
     } 
 
-    handleInputChange(e) {
+    handleInputChange(e: React.ChangeEvent<HTMLInputElement>) {
         const clsName = e.target.name;
         const checked = e.target.checked;
         let updatedClasses = null;
 
         if (checked === true) {
             updatedClasses = [...this.props.activeClasses.split(/\s+/), clsName];
-        } else if (checked === false) {
+        } else {
             updatedClasses = this.props.activeClasses.split(/\s+/)
             updatedClasses = updatedClasses.filter(cls => (cls !== clsName));
         }
@@ -41,32 +49,28 @@ class ClassSelector extends React.Component {
                     accumulator.add(className)
                 }
                 return accumulator
-            }, new Set());
+            }, new Set()) as Set<string>;
+        
+        let classesArray: string[] = [];
 
         if (classes) {
-            classes = Array.from(classes);
-        } else {
-            classes = [];
+            classesArray = Array.from(classes) as string[];
         }
-        // console.log("classes from css document: ", classes)
 
         const activeClasses = this.props.activeClasses.split(/\s+/);        
-        classes = [...classes, ...activeClasses];
+        classesArray = [...classesArray, ...activeClasses];
 
-        // console.log("active classes: ", activeClasses)
+        classesArray = classesArray.filter(cls => cls !== "")
 
-        classes = classes.filter(cls => cls !== "")
+        const clsState: {[cls: string]: boolean} = {};
 
-        const clsState = {};
-
-        for(let cls of classes) {
+        for(let cls of classesArray) {
             if (activeClasses.includes(cls)) {
                 clsState[cls] = true;
             } else {
                 clsState[cls] = false;
             }
         }
-        // console.log("clsState: ", clsState)
 
         return (
             <div className="SN__container">
