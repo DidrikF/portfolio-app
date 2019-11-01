@@ -12,6 +12,7 @@ import { IGlobalContext } from "../../App";
 export type AccountInfoProps = {
     setAuthenticated: (value: boolean) => void;
     loadProtectedData: () => void;
+    id: string;
 }
 
 export type AccountInfoState = {
@@ -65,7 +66,7 @@ class AccountInfo extends React.Component<AccountInfoProps, AccountInfoState> {
         
         return (
             <React.Fragment>
-                <div id="SN__account-info" className="SN__container">
+                <div id={this.props.id} className="SN__container">
                     <p className="SN__menu-title">ACCOUNT</p>
                     <div className='SN__widget'> {/* Section__toolbarMenu */}
                         <ul>
@@ -77,7 +78,7 @@ class AccountInfo extends React.Component<AccountInfoProps, AccountInfoState> {
                             } 
                             { this.context.authenticated &&
                                 <React.Fragment>
-                                    <li><a className="SN__item" onClick={ this.logout }><i class="fas fa-sign-out-alt"></i><span>Log out</span></a></li>
+                                    <li><a className="SN__item" onClick={ this.logout }><i className="fas fa-sign-out-alt"></i><span>Log out</span></a></li>
                                     <li>          
                                         <Link 
                                             to={{

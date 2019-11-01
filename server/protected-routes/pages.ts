@@ -1,9 +1,8 @@
-import Router = require("koa-router");
 import { Context } from "koa";
 
 import { Page } from '../models';
 
-export default (protectedRouter: Router): Router => {
+export default (protectedRouter: any): any => {
     protectedRouter.post("/pages", async (ctx: Context) => {
         try {
             console.log(ctx.request.body)

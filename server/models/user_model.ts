@@ -1,6 +1,6 @@
 import * as mongoose from 'mongoose';
 
-type UserDocument = import('../../types/platform_types').User & mongoose.Document;
+export type UserDocument = import('../../types/platform_types').User & mongoose.Document;
 
 var UserSchema: mongoose.Schema = new mongoose.Schema({
 	email: {

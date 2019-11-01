@@ -1,10 +1,10 @@
-import Router = require("koa-router");
+import * as Router from 'koa-router';
 import { Context } from "koa";
 import * as validator from 'validator';
 import * as bcrypt from 'bcrypt';
 import * as jwt from 'jsonwebtoken';
 
-import { ColorPallets, IColorPallets, User, IUser } from '../models';
+import { ColorPallets, IColorPallets, User, UserDocument } from '../models';
 
 
 export default function (publicRouter: Router): Router {
@@ -21,7 +21,7 @@ export default function (publicRouter: Router): Router {
         
             ctx.request.body.password = password
     
-            let user: IUser = new User(ctx.request.body)
+            let user: UserDocument = new User(ctx.request.body)
             user = await user.save()
             console.log('### ' + user.email + ' registered successfully!')
     
@@ -115,7 +115,7 @@ function register_validator(ctx: Context) {
     return true
 }
 
-async function createDefaultUserResources(user: IUser) {
+async function createDefaultUserResources(user: UserDocument) {
     try {
         let colorPallets: IColorPallets = new ColorPallets({
             owner: user.email,

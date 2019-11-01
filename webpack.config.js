@@ -1,3 +1,74 @@
+/* eslint-disable no-var, strict, prefer-arrow-callback */
+'use strict';
+
+var path = require('path');
+
+
+var babelOptions = {
+  "presets": [
+    "react",
+    [
+      "es2015",
+      {
+        "modules": false
+      }
+    ],
+    "es2016"
+  ]
+};
+
+module.exports = {
+  cache: true,
+  mode: "development",
+  entry: {
+    main: './src/index.tsx',
+    vendor: [
+      'babel-polyfill',
+      'events',
+      // 'fbemitter',
+      // 'flux',
+      'react',
+      'react-dom'
+    ]
+  },
+  output: {
+    path: path.resolve(__dirname, './dist/scripts'),
+    filename: '[name].js',
+    chunkFilename: '[chunkhash].js'
+  },
+  module: {
+    rules: [{
+      test: /\.ts(x?)$/,
+      exclude: /node_modules/,
+      use: [
+        {
+          loader: 'babel-loader',
+          options: babelOptions
+        },
+        {
+          loader: 'ts-loader'
+        }
+      ]
+    }, {
+      test: /\.js$/,
+      exclude: /node_modules/,
+      use: [
+        {
+          loader: 'babel-loader',
+          options: babelOptions
+        }
+      ]
+    }]
+  },
+  plugins: [
+  ],
+  resolve: {
+    extensions: ['.ts', '.tsx', '.js']
+  },
+};
+
+
+/*
 const path = require("path");
 
 
@@ -16,20 +87,11 @@ module.exports = {
         rules: [
             {
                 test: /\.tsx?$/,
-                include: [
-                    path.resolve(__dirname, "src"),
-                    path.resolve(__dirname, "server"),
-                ],
-                exclude: /node_modules/,
-                use: ['babel-loader', 'ts-loader'],
+                loader: "ts-loader"
             },
             {
                 test: /\.jsx?$/,
-                include: [
-                    path.resolve(__dirname, "src"),
-                    path.resolve(__dirname, "server"),
-                ],
-                use: 'babel-loader',
+                loader: 'babel-loader',
 
             },
             {
@@ -52,3 +114,6 @@ module.exports = {
 
 
 }
+
+
+*/

@@ -10,6 +10,10 @@ export type ClassSelectorProps = {
 }
 
 class ClassSelector extends React.Component<ClassSelectorProps> {    
+    static defaultProps = {
+        activeClasses: '',
+    }
+    
     constructor(props: ClassSelectorProps) {
         super(props);
         this.handleInputChange = this.handleInputChange.bind(this);
@@ -21,9 +25,9 @@ class ClassSelector extends React.Component<ClassSelectorProps> {
         let updatedClasses = null;
 
         if (checked === true) {
-            updatedClasses = [...this.props.activeClasses.split(/\s+/), clsName];
+            updatedClasses = [...(this.props.activeClasses as string).split(/\s+/), clsName];
         } else {
-            updatedClasses = this.props.activeClasses.split(/\s+/)
+            updatedClasses = (this.props.activeClasses as string).split(/\s+/)
             updatedClasses = updatedClasses.filter(cls => (cls !== clsName));
         }
 
@@ -57,7 +61,7 @@ class ClassSelector extends React.Component<ClassSelectorProps> {
             classesArray = Array.from(classes) as string[];
         }
 
-        const activeClasses = this.props.activeClasses.split(/\s+/);        
+        const activeClasses = (this.props.activeClasses as string).split(/\s+/);        
         classesArray = [...classesArray, ...activeClasses];
 
         classesArray = classesArray.filter(cls => cls !== "")

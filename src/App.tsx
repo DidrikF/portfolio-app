@@ -1065,7 +1065,7 @@ class App extends React.Component<any, AppState> {
                                 <React.Fragment>
                                     <Route exact path="/image-uploader" render={(props: RouteProps) => <ImageUploader {...props} flashMessage={this.flashMessage} />} />
                                     <Route exact path="/file-uploader" render={(props: RouteProps) => <FileUploader {...props} flashMessage={this.flashMessage} />} />
-                                    <Route exact path="/account" render={(props: RouteProps) => <AccountPage {...props} flashMessage={this.flashMessage} />} />
+                                    <Route exact path="/account" render={(props: RouteProps) => <AccountPage {...props} />} />
                                 </React.Fragment>
                             }
 

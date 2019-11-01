@@ -5,7 +5,7 @@ import { GlobalContext } from '../../contexts/GlobalContext'
 import { IGlobalContext } from '../../App';
 
 export type AccountPageProps = {
-
+    
 }
 
 export type AccountPageState = {
