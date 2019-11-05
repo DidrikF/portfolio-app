@@ -2,7 +2,7 @@ import React from 'react';
 import Dropzone from 'react-dropzone';
 import { evaluate } from 'mathjs'
 import Cropper from 'react-cropper'
-import 'cropperjs/dist/cropper.css';
+// import 'cropperjs/dist/cropper.css';
 import axios from 'axios';
 import { ImageMetadata } from '../../../types/platform_types';
 import { updateWidth, setPageHeight } from './helpers';

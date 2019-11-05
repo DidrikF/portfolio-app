@@ -1,4 +1,4 @@
-import Router = require("koa-router");
+import * as Router from "koa-router";
 import { Context } from "koa";
 
 import { Page } from '../models'; 
