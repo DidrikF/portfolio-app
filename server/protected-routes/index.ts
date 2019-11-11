@@ -1,4 +1,4 @@
-import * as Router from 'koa-router';
+import Router from 'koa-router';
 import authCheckRoutes from './authcheck';
 import pagesRoutes from './pages';
 import cssDocumentsRoutes from './cssdocuments';

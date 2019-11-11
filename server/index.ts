@@ -1,9 +1,8 @@
 import * as dotenv from 'dotenv';
-import * as Koa from 'koa';
-import * as koaBody from 'koa-body';
+import Koa from 'koa';
+import koaStatic from 'koa-static';
+import koaBody from 'koa-body';
 import * as mongoose from 'mongoose';
-
-import * as koaStatic from 'koa-static';
 
 import { authorize } from './middleware';
 import publicRouter from './public-routes';

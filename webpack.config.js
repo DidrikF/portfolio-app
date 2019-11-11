@@ -1,12 +1,12 @@
 const path = require("path");
 
 
-module.exports = {
+const frontendWebpackConfig = {
   mode: "development",
+  target: "web",
   devtool: 'inline-source-map',
   entry: {
     app: ["./src/index.tsx"],
-    // server: ["./server/index.ts"],
   },
   resolve: {
     extensions: [ '.tsx', '.ts', '.js' ],
@@ -15,11 +15,15 @@ module.exports = {
     path: path.resolve(__dirname, "dist"),
     filename: '[name].js'
   },
+  plugins: [require('webpack-fail-plugin')],
   module: {
     rules: [
       {
         test: /\.tsx?$/,
-        use: "ts-loader",
+        loader: "ts-loader",
+        options: {
+          configFile: "./tsconfig.client.json",
+        },
         exclude: /node_modules/,
       },
       {
@@ -78,6 +82,41 @@ module.exports = {
       }
     ]
   },
-
-
 }
+
+
+const backendWebpackConfig = {
+  mode: "development",
+  target: "node",
+  devtool: 'source-map',
+  entry: {
+    server: ["./server/index.ts"],
+  },
+  resolve: {
+    extensions: ['.ts', '.js' ],
+  },
+  output: {
+    path: path.resolve(__dirname, "dist"),
+    filename: '[name].js'
+  },
+  plugins: [require('webpack-fail-plugin')],
+  module: {
+    rules: [
+      {
+        test: /\.tsx?$/,
+        loader: "ts-loader",
+        options: {
+          configFile: "tsconfig.server.json",
+        },
+        // exclude: /node_modules/,
+      },
+      {
+        test: /\.jsx?$/,
+        use: 'babel-loader',
+        // exclude: /node_modules/,
+      },
+    ]
+  },
+}
+
+module.exports = backendWebpackConfig

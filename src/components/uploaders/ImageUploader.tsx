@@ -380,6 +380,7 @@ class ImageUploader extends React.Component<ImageUploaderProps, ImageUploaderSta
                                 width: this.state.pageWidth,// this.state.pageWidth
                                 height: "500px",
                             }}
+                            // @ts-ignore
                             aspectRatio={this.state.numericAspectRatio}
                             guides={false}
                             crop={this.crop}
