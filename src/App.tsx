@@ -28,6 +28,9 @@ import { getId, deepStyleMerge } from './helpers'
 import { gridLayouts } from './components/core/grid'
 import { updateHeightOfVideos } from './components/rich-text/RichText';
 
+import { Id } from '../types/basic-types';
+import { PageType, SectionTemplate, ComponentTemplate, PageTemplate } from '../types/platform_types';
+import { Grid } from './components/core/grid';
 type KeyValue<T> = import('../types/basic-types').KeyValue<T>;
 
 // Is this a good way to avoid name crashes? namespaces? adding prefixes?
@@ -37,9 +40,6 @@ type GridSectionObj = import('../types/platform_types').GridSection;
 type ComponentState = import('../types/platform_types').ComponentState;
 type TemplateObj = import('../types/platform_types').Template<any>;
 type UserObj = Partial<import('../types/platform_types').User>;
-import { Id } from '../types/basic-types';
-import { PageType, SectionTemplate, ComponentTemplate, PageTemplate } from '../types/platform_types';
-import { Grid } from './components/core/grid';
 /**
  * Refactoring:
  * Use css to set min height of a page, not javascript
@@ -952,7 +952,7 @@ class App extends React.Component<any, AppState> {
     }
 
     // #REFACTOR: remove once the toolbar issue and is solved in css 
-    componentDidUpdate = (_: any, prevState: AppState) => {
+    componentDidUpdate = (event: any, prevState: AppState) => {
         if (
             !_.isEqual(prevState.user, this.state.user) || 
             (prevState.pages.length !== this.state.pages.length) || 

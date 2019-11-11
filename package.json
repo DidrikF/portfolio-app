@@ -47,6 +47,7 @@
     "nodemon": "nodemon",
     "cbuild": "webpack",
     "cwatch": "webpack --watch",
+    "server": "ts-node --project ./tsconfig.server.json server/index.ts",
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",

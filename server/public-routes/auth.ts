@@ -1,8 +1,8 @@
 import * as Router from 'koa-router';
 import { Context } from "koa";
 import * as validator from 'validator';
-import * as bcrypt from 'bcrypt';
-import * as jwt from 'jsonwebtoken';
+const bcrypt = require('bcrypt');
+import jwt from 'jsonwebtoken';
 
 import { ColorPallets, IColorPallets, User, UserDocument } from '../models';
 

@@ -1,8 +1,8 @@
-import * as dotenv from 'dotenv';
 import Koa from 'koa';
 import koaStatic from 'koa-static';
 import koaBody from 'koa-body';
-import * as mongoose from 'mongoose';
+import mongoose from 'mongoose';
+import dotenv from 'dotenv';
 
 import { authorize } from './middleware';
 import publicRouter from './public-routes';
@@ -48,3 +48,6 @@ app.on('error', (err: Error) => {
 
 app.listen(4000);
 
+app.on("connection", (...args) => {
+    console.log("Connection on port 4000");
+})
